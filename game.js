@@ -566,6 +566,8 @@ class Renderer {
     ctx.save();
     ctx.translate(x, y);
 
+    const skin = getSkinColors();
+
     // Drop shadow
     ctx.shadowColor = 'rgba(0,0,0,0.45)';
     ctx.shadowBlur = 16;
@@ -584,7 +586,6 @@ class Renderer {
     ctx.shadowOffsetY = 0;
 
     // Main tile face with gradient — uses selected skin
-    const skin = getSkinColors();
     const grad = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
     grad.addColorStop(0, skin.face);
     grad.addColorStop(0.3, skin.face);
@@ -1055,6 +1056,16 @@ class Game {
     document.getElementById('prefs-close-btn').addEventListener('click', () => {
       document.getElementById('prefs-overlay').classList.add('hidden');
     });
+
+    document.getElementById('tutorial-btn').addEventListener('click', () => {
+      document.getElementById('game-dropdown').classList.add('hidden');
+      showTutorial();
+    });
+
+    // Show tutorial on first visit
+    if (!localStorage.getItem('domino_tutorial_done')) {
+      setTimeout(() => showTutorial(), 800);
+    }
 
     // Music engine
     this.music = new MusicEngine();
@@ -3350,6 +3361,118 @@ class SFX {
 function getPlayerName() {
   return localStorage.getItem('domino_player_name') || 'Human';
 }
+// --- Tutorial System ---
+function tutTileSVG(a, b, w, h, highlight) {
+  const pw = w || 50, ph = h || 90;
+  const pipPos = (n, s) => ({0:[],1:[[0,0]],2:[[-s,-s],[s,s]],3:[[-s,-s],[0,0],[s,s]],4:[[-s,-s],[s,-s],[-s,s],[s,s]],5:[[-s,-s],[s,-s],[0,0],[-s,s],[s,s]],6:[[-s,-s],[s,-s],[-s,0],[s,0],[-s,s],[s,s]]}[n]||[]);
+  const dots = (val, cy) => pipPos(val, pw*0.14).map(([x,y]) => `<circle cx="${pw/2+x}" cy="${cy+y}" r="${pw*0.07}" fill="#333"/>`).join('');
+  const stroke = highlight ? '#f0b840' : 'rgba(160,150,120,0.5)';
+  const sw = highlight ? 2.5 : 1.5;
+  const glow = highlight ? `filter="drop-shadow(0 0 6px rgba(232,167,53,0.5))"` : '';
+  return `<svg class="tut-tile-svg" width="${pw}" height="${ph}" viewBox="0 0 ${pw} ${ph}" ${glow}>
+    <defs><linearGradient id="tf${a}${b}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffef8"/><stop offset=".3" stop-color="#f5f0dc"/><stop offset="1" stop-color="#e8e0c4"/></linearGradient></defs>
+    <rect x="1" y="1" width="${pw-2}" height="${ph-2}" rx="${pw*0.12}" fill="url(#tf${a}${b})" stroke="${stroke}" stroke-width="${sw}"/>
+    <line x1="${pw*0.2}" y1="${ph/2}" x2="${pw*0.8}" y2="${ph/2}" stroke="rgba(0,0,0,0.12)" stroke-width="1.5"/>
+    ${dots(a, ph*0.25)} ${dots(b, ph*0.75)}
+  </svg>`;
+}
+
+const TUTORIAL_STEPS = [
+  {
+    title: 'Welcome to All Fives!',
+    body: 'All Fives is a classic domino game where you score points by making the <strong>open ends add up to multiples of 5</strong>. Let\'s learn how to play!',
+    visual: () => `<div class="tut-visual">${tutTileSVG(5,5,60,108,true)} ${tutTileSVG(6,4,60,108)} ${tutTileSVG(3,2,60,108)} ${tutTileSVG(1,0,60,108)}</div>`
+  },
+  {
+    title: 'The Tiles',
+    body: 'A standard set has <strong>28 tiles</strong> with every combination from 0-0 to 6-6. Each tile has two halves with pip values.',
+    visual: () => `<div class="tut-visual">${tutTileSVG(0,0,44,80)} ${tutTileSVG(1,2,44,80)} ${tutTileSVG(3,5,44,80)} ${tutTileSVG(6,6,44,80)} <span style="opacity:0.4;font-size:0.9rem;">...28 total</span></div>`
+  },
+  {
+    title: 'Starting the Game',
+    body: 'The player with the <strong>highest double</strong> plays first. That tile becomes the <strong>spinner</strong> — the center of the board that can branch in all 4 directions.',
+    visual: () => `<div class="tut-visual">${tutTileSVG(6,6,70,126,true)}</div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">The 6-6 is the highest double — it goes first</div>`
+  },
+  {
+    title: 'Playing Tiles',
+    body: 'On your turn, play a tile that <strong>matches</strong> an open end. The matching numbers connect, and the other number becomes the new open end.',
+    visual: () => `<div class="tut-visual">
+      ${tutTileSVG(6,3,50,90)} <span class="tut-plus">→</span> ${tutTileSVG(6,6,50,90,true)} <span class="tut-plus">←</span> ${tutTileSVG(6,1,50,90)}
+    </div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">Both tiles match the 6 on the spinner</div>`
+  },
+  {
+    title: 'Scoring — Multiples of 5',
+    body: 'After each play, add up <strong>all open ends</strong>. If the total is a <strong>multiple of 5</strong>, you score that many points!',
+    visual: () => `<div class="tut-highlight">
+      <div style="text-align:center;opacity:0.6;font-size:0.85rem;">Open ends: 3 + 1 + 6 = 10</div>
+      <div class="tut-score-example">+10 points! ⭐⭐</div>
+    </div>`
+  },
+  {
+    title: 'Doubles Count Both Sides',
+    body: 'When a <strong>double</strong> is at an open end, <strong>both halves count</strong> for scoring. A 4-4 at the end counts as 8, not 4!',
+    visual: () => `<div class="tut-visual">${tutTileSVG(4,4,50,90,true)}</div>
+    <div class="tut-highlight"><div style="text-align:center;opacity:0.6;font-size:0.85rem;">This counts as <strong>4 + 4 = 8</strong> toward the end sum</div></div>`
+  },
+  {
+    title: 'The Spinner Branches',
+    body: 'The spinner can be played on <strong>all 4 sides</strong>. The north and south arms open once both left and right have tiles. This creates more scoring opportunities!',
+    visual: () => `<div class="tut-visual" style="flex-direction:column;gap:4px;">
+      <div>${tutTileSVG(5,5,40,72)}</div>
+      <div style="display:flex;align-items:center;gap:4px;">${tutTileSVG(3,5,40,72)} ${tutTileSVG(5,5,40,72,true)} ${tutTileSVG(5,2,40,72)}</div>
+      <div>${tutTileSVG(5,1,40,72)}</div>
+    </div><div style="text-align:center;opacity:0.5;font-size:0.8rem;">4 open ends: N, S, L, R</div>`
+  },
+  {
+    title: 'Drawing & Passing',
+    body: 'Can\'t play? You must <strong>draw from the boneyard</strong> until you get a playable tile. If the boneyard is empty, you <strong>pass</strong>.',
+    visual: () => `<div style="text-align:center;font-size:2.5rem;margin:16px 0;">🦴</div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">The boneyard = leftover tiles face-down</div>`
+  },
+  {
+    title: 'End of Round',
+    body: 'A round ends when someone plays their last tile (<strong>dominoes!</strong>) or the game is blocked. The winner gets <strong>bonus points</strong> from opponents\' remaining tiles, rounded to the nearest 5.',
+    visual: () => `<div class="tut-highlight"><div style="text-align:center;">Opponent has ${tutTileSVG(3,6,36,64)} ${tutTileSVG(2,2,36,64)} left<br><span style="opacity:0.6;font-size:0.85rem;">= 13 pips → rounded to <strong>15 bonus points!</strong></span></div></div>`
+  },
+  {
+    title: 'Winning the Game',
+    body: 'First to reach the <strong>target score</strong> (usually 200) wins! Use the <strong>💡 Hint</strong> button for AI-powered move suggestions (costs 5 points). Press <strong>?</strong> for keyboard shortcuts.',
+    visual: () => `<div style="text-align:center;font-size:3rem;margin:16px 0;">🏆</div><div style="text-align:center;opacity:0.6;font-size:0.9rem;">Good luck and have fun!</div>`
+  }
+];
+
+function showTutorial(onClose) {
+  let step = 0;
+  const overlay = document.getElementById('tutorial-overlay');
+  const content = document.getElementById('tutorial-step-content');
+  const dots = document.getElementById('tut-dots');
+  const prevBtn = document.getElementById('tut-prev');
+  const nextBtn = document.getElementById('tut-next');
+
+  function render() {
+    const s = TUTORIAL_STEPS[step];
+    content.innerHTML = `
+      <div class="tut-title">${s.title}</div>
+      <div class="tut-subtitle">Step ${step + 1} of ${TUTORIAL_STEPS.length}</div>
+      ${s.visual ? s.visual() : ''}
+      <div class="tut-body">${s.body}</div>
+    `;
+    dots.innerHTML = TUTORIAL_STEPS.map((_, i) =>
+      `<div class="tut-dot ${i === step ? 'active' : ''}"></div>`
+    ).join('');
+    prevBtn.disabled = step === 0;
+    nextBtn.textContent = step === TUTORIAL_STEPS.length - 1 ? 'Start Playing!' : 'Next →';
+  }
+
+  prevBtn.onclick = () => { if (step > 0) { step--; render(); } };
+  nextBtn.onclick = () => {
+    if (step < TUTORIAL_STEPS.length - 1) { step++; render(); }
+    else { overlay.classList.add('hidden'); localStorage.setItem('domino_tutorial_done', '1'); if (onClose) onClose(); }
+  };
+
+  overlay.classList.remove('hidden');
+  render();
+}
+
 // --- AI Personalities ---
 const AI_PERSONALITIES = [
   { id: 'aggressive', name: 'Aggressive', desc: 'Plays heavy tiles first, targets scoring', icon: '🔥',
@@ -3411,7 +3534,7 @@ class MusicEngine {
   constructor() {
     this.ctx = null;
     this.playing = false;
-    this.enabled = localStorage.getItem('domino_music') !== '0';
+    this.enabled = localStorage.getItem('domino_music') === '1';
     this.intensity = 0;
     this._nodes = [];
   }

@@ -97,6 +97,7 @@
       <button id="menu-btn" class="btn-menu" title="Menu (M)">☰</button>
       <div id="game-dropdown" class="hidden">
         <button class="dd-item" id="rules-btn">📖 Rules</button>
+        <button class="dd-item" id="tutorial-btn">🎓 Tutorial</button>
         <button class="dd-item" id="log-btn">📋 Game Log</button>
         <button class="dd-item" id="stats-btn">📊 Stats & Achievements</button>
         <button class="dd-item" id="prefs-btn">🎨 Preferences</button>
@@ -193,6 +194,17 @@
           <h2>Preferences</h2>
           <div id="prefs-content"></div>
           <button class="gm-btn" id="prefs-close-btn" style="text-align:center;margin-top:16px;">Close</button>
+        </div>
+      </div>
+      <!-- Tutorial overlay -->
+      <div id="tutorial-overlay" class="hidden">
+        <div class="tutorial-panel">
+          <div id="tutorial-step-content"></div>
+          <div class="tutorial-nav">
+            <button class="tut-btn-prev" id="tut-prev">← Back</button>
+            <div class="tut-dots" id="tut-dots"></div>
+            <button class="tut-btn-next" id="tut-next">Next →</button>
+          </div>
         </div>
       </div>
     </div>
