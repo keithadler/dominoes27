@@ -1127,17 +1127,6 @@ class Game {
     this.music = new MusicEngine();
     this.music.init();
 
-    // Menu music toggle
-    const menuMusicToggle = document.getElementById('menu-music-toggle');
-    if (menuMusicToggle) {
-      menuMusicToggle.checked = this.music.enabled;
-      menuMusicToggle.addEventListener('change', () => {
-        if (!this.music._chillTrack) this.music.init();
-        this.music.toggle();
-        menuMusicToggle.checked = this.music.enabled;
-      });
-    }
-
     const startMusicOnClick = () => {
       if (this.music.enabled && !this.music.playing) {
         this.music.start();
