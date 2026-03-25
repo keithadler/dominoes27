@@ -1635,7 +1635,7 @@ class Game {
 
     overlay.innerHTML = `
       <div style="text-align:center;animation:announceIn 0.5s ease-out forwards;">
-        <div style="font-size:4rem;font-weight:900;letter-spacing:6px;margin-bottom:16px;background:linear-gradient(180deg,#fff 20%,#f0b840 60%,#c07800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ROUND ${this._roundNum}</div>
+        <div style="font-size:6rem;font-weight:900;letter-spacing:8px;margin-bottom:20px;background:linear-gradient(180deg,#fff 20%,#f0b840 60%,#c07800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;line-height:1;">ROUND ${this._roundNum}</div>
         <div style="margin-bottom:20px;">${tileHTML}</div>
         <div style="font-size:1.4rem;font-weight:700;color:rgba(255,255,255,0.9);">${whoLabel} the highest double</div>
       </div>
@@ -1824,8 +1824,16 @@ class Game {
         setTimeout(() => this._aiTurn(player), 1400);
         return;
       } else {
+        // AI must pass — show dialogue and pause
         this._hideThinking();
-        this._nextTurn();
+        this._showSpeechBubble(player, 'I pass. 😤');
+        this.gameLog.push({
+          turn: this._logTurn++,
+          player: player.name,
+          avatar: player.avatar,
+          action: 'pass'
+        });
+        setTimeout(() => this._nextTurn(), 1500);
         return;
       }
     }
@@ -1862,9 +1870,9 @@ class Game {
       drawBtn.disabled = true;
       passBtn.style.display = 'none';
       const pts = this.teamMode && this.teams ? this.teams[player.team].score : player.score;
-      let moveCount = 0;
-      for (const t of player.hand) moveCount += this.board.getValidPlacements(t).length;
-      hintBtn.disabled = pts < 5 || moveCount <= 1;
+      // Count playable tiles (not total moves)
+      const playableTiles = player.hand.filter(t => this.board.canPlay(t));
+      hintBtn.disabled = pts < 5 || playableTiles.length <= 1;
     }
   }
 
