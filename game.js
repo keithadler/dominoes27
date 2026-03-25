@@ -1062,9 +1062,9 @@ class Game {
       showTutorial();
     });
 
-    // Show tutorial on first visit
+    // Show tutorial on first visit — immediately, no delay
     if (!localStorage.getItem('domino_tutorial_done')) {
-      setTimeout(() => showTutorial(), 800);
+      showTutorial();
     }
 
     // Music engine
@@ -1393,6 +1393,8 @@ class Game {
       this.roundOver = false;
       this.selectedTile = null;
       this.selectedEl = null;
+      // Stop previous spinner loop
+      if (this._spinnerRAF) { cancelAnimationFrame(this._spinnerRAF); this._spinnerRAF = null; }
       this.gameLog = this.gameLog || [];
       this._logTurn = (this.gameLog.length > 0 ? this.gameLog[this.gameLog.length - 1].turn + 1 : 1);
 
@@ -1417,6 +1419,14 @@ class Game {
       this._suppressToast = true;
       const staleToast = document.getElementById('turn-indicator');
       if (staleToast) { staleToast.classList.remove('visible'); staleToast.classList.add('fading'); }
+
+      // Clear the board and hide arrow immediately
+      if (this.renderer) {
+        this.renderer.resize();
+        this.renderer.clear();
+      }
+      const arrow = document.getElementById('floating-arrow');
+      if (arrow) arrow.style.display = 'none';
 
       // Animate dealing then proceed
       this._animateDeal(() => {
@@ -2592,12 +2602,33 @@ class Game {
       spawnConfetti();
     } else {
       trackStat('loseStreak', 1);
-      addXP(10); // consolation XP
+      addXP(10);
     }
     checkAchievements(this);
     if (humanWon && unlockAchievement('domino_win')) showAchievementPopup('domino_win');
 
-    this.showScreen('gameover-screen');
+    // Show "GAME OVER!" on the board first, then transition
+    const overlay = document.getElementById('countdown-overlay');
+    if (overlay) {
+      overlay.classList.remove('hidden');
+      const winnerName = this.teamMode
+        ? (this.teams[0].score >= this.teams[1].score ? this.teams[0].name : this.teams[1].name)
+        : this.players.reduce((a, b) => a.score > b.score ? a : b).name;
+      const msg = humanWon ? '🏆 You Win!' : `${winnerName} Wins!`;
+      overlay.innerHTML = `
+        <div style="text-align:center;animation:announceIn 0.5s ease-out forwards;">
+          <div style="font-size:4rem;font-weight:900;letter-spacing:4px;background:linear-gradient(180deg,#fff 20%,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;">GAME OVER</div>
+          <div style="font-size:1.8rem;font-weight:800;color:#f0b840;margin-bottom:4px;">${msg}</div>
+        </div>
+      `;
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.innerHTML = '';
+        this.showScreen('gameover-screen');
+      }, 3000);
+    } else {
+      this.showScreen('gameover-screen');
+    }
   }
 
   _showScorePopup(score, player) {
@@ -3467,6 +3498,11 @@ function showTutorial(onClose) {
   nextBtn.onclick = () => {
     if (step < TUTORIAL_STEPS.length - 1) { step++; render(); }
     else { overlay.classList.add('hidden'); localStorage.setItem('domino_tutorial_done', '1'); if (onClose) onClose(); }
+  };
+  document.getElementById('tut-skip').onclick = () => {
+    overlay.classList.add('hidden');
+    localStorage.setItem('domino_tutorial_done', '1');
+    if (onClose) onClose();
   };
 
   overlay.classList.remove('hidden');

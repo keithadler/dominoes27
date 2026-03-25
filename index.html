@@ -196,18 +196,7 @@
           <button class="gm-btn" id="prefs-close-btn" style="text-align:center;margin-top:16px;">Close</button>
         </div>
       </div>
-      <!-- Tutorial overlay -->
-      <div id="tutorial-overlay" class="hidden">
-        <div class="tutorial-panel">
-          <div id="tutorial-step-content"></div>
-          <div class="tutorial-nav">
-            <button class="tut-btn-prev" id="tut-prev">← Back</button>
-            <div class="tut-dots" id="tut-dots"></div>
-            <button class="tut-btn-next" id="tut-next">Next →</button>
-          </div>
-        </div>
-      </div>
-    </div>
+      <!-- Tutorial overlay moved to app level -->    </div>
 
     <!-- Game Over Screen -->
     <div id="gameover-screen" class="screen">
@@ -217,6 +206,18 @@
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
           <button id="rematch-btn" class="btn-start">Rematch</button>
           <button id="play-again" class="btn-start" style="background:linear-gradient(145deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05));color:#fff;box-shadow:none;">New Game</button>
+        </div>
+      </div>
+    </div>
+    <!-- Tutorial overlay — at app level so it works on any screen -->
+    <div id="tutorial-overlay" class="hidden">
+      <div class="tutorial-panel">
+        <button id="tut-skip" style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:4px 8px;">✕ Skip</button>
+        <div id="tutorial-step-content"></div>
+        <div class="tutorial-nav">
+          <button class="tut-btn-prev" id="tut-prev">← Back</button>
+          <div class="tut-dots" id="tut-dots"></div>
+          <button class="tut-btn-next" id="tut-next">Next →</button>
         </div>
       </div>
     </div>
