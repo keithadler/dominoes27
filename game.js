@@ -756,10 +756,15 @@ class Renderer {
   drawHandTile(container, tile, playable, onClick, onHover, onLeave) {
     const el = document.createElement('div');
     el.className = 'hand-tile' + (playable ? ' playable' : ' not-playable');
+
+    // Apply skin colors to hand tile
+    const skin = getSkinColors();
+    el.style.background = `linear-gradient(160deg, ${skin.face} 0%, ${skin.faceDark} 100%)`;
+
     el.innerHTML = `
-      <div class="half">${this._pipHTML(tile.a)}</div>
+      <div class="half">${this._pipHTML(tile.a, skin.pip)}</div>
       <div class="divider"></div>
-      <div class="half">${this._pipHTML(tile.b)}</div>
+      <div class="half">${this._pipHTML(tile.b, skin.pip)}</div>
     `;
     if (playable) {
       el.addEventListener('click', () => onClick(tile, el));
@@ -770,17 +775,18 @@ class Renderer {
     return el;
   }
 
-  _pipHTML(n) {
+  _pipHTML(n, pipColor) {
     const size = 50;
     const s = size * 0.24;
     const pipR = 5;
+    const color = pipColor || '#222';
     const positions = this._pipPositions(n, s);
     let dots = positions.map(([x, y]) => {
       const cx = size/2 + x;
       const cy = size/2 + y;
       return `
         <circle cx="${cx}" cy="${cy}" r="${pipR + 1}" fill="rgba(0,0,0,0.08)"/>
-        <circle cx="${cx}" cy="${cy}" r="${pipR}" fill="#222"/>
+        <circle cx="${cx}" cy="${cy}" r="${pipR}" fill="${color}"/>
         <circle cx="${cx - 1.2}" cy="${cy - 1.2}" r="${pipR * 0.4}" fill="rgba(255,255,255,0.25)"/>
       `;
     }).join('');
@@ -799,62 +805,107 @@ const PHRASES = {
     low: [
       'Lucky!', 'Ooh, nice!', 'Didn\'t expect that!', 'Hey, points!',
       'Wait, I scored?', 'Cool cool cool', 'I\'ll take it!', 'Surprise!',
-      'Not bad for me!', 'Beginner\'s luck 😅'
+      'Not bad for me!', 'Beginner\'s luck 😅', 'Whoa, that worked?',
+      'Even a blind squirrel...', 'I meant to do that!', 'Happy accident! 🎨',
+      'Don\'t mind if I do!', 'Is this right?', 'Haha, yes!',
+      'My first good play!', 'Mom would be proud 🥲', 'I\'m learning!'
     ],
     mid: [
       'Read it and weep!', 'That\'s how it\'s done 💪', 'Calculated.',
       'You saw that coming, right?', 'Boom! 🎯', 'Easy money.',
-      'Taking notes?', 'Textbook play.', 'Cha-ching! 💰', 'Smooth operator.'
+      'Taking notes?', 'Textbook play.', 'Cha-ching! 💰', 'Smooth operator.',
+      'Like clockwork ⚙️', 'That\'s what I do.', 'Pay attention.',
+      'Clean. 🧹', 'Money in the bank.', 'You\'re welcome.',
+      'Not my first rodeo 🤠', 'Saw it a mile away.', 'Standard procedure.',
+      'All skill, no luck.', 'Write that down. 📝'
     ],
     high: [
       'Too easy. 🥱', 'Is that all you got?', 'Bow down. 👑',
       'I do this in my sleep.', 'You\'re welcome for the lesson.',
       'Masterclass in session.', 'GG already? 😏', 'Levels to this game.',
       'Call me the GOAT. 🐐', 'Domino KING. 👑', 'Fear the bones.',
-      'That\'s called TALENT.', 'I don\'t miss. 🎯'
+      'That\'s called TALENT.', 'I don\'t miss. 🎯', 'Child\'s play. 🧸',
+      'Are you even trying?', 'I could do this blindfolded.',
+      'Another day, another victim.', 'Kneel. 🧎', 'Pathetic resistance.',
+      'I\'m built different. 💅', 'Stay in your lane.', 'Witness greatness.',
+      'You should screenshot this.', 'Hall of fame play. 🏛️',
+      'They\'ll write about this one.', 'Legendary. 🔥'
     ]
   },
   teammate: {
     low: [
       'Nice one, partner!', 'We got this!', 'Teamwork! 🤝',
-      'Go us!', 'Great play!', 'Yay team! 🎉'
+      'Go us!', 'Great play!', 'Yay team! 🎉',
+      'That helps!', 'Good thinking!', 'Way to go!',
+      'I believe in us!', 'Together we\'re strong! 💪', 'Keep it up!'
     ],
     mid: [
       'That\'s my partner! 💪', 'We\'re cooking now! 🔥', 'Unstoppable duo!',
-      'Keep it rolling!', 'They can\'t handle us!', 'Dream team! ⭐'
+      'Keep it rolling!', 'They can\'t handle us!', 'Dream team! ⭐',
+      'Synergy! 🔗', 'We read each other\'s minds!', 'Perfect setup!',
+      'That\'s the play I wanted!', 'We\'re in the zone! 🎯', 'Chemistry! ⚗️',
+      'Like we practiced!', 'Tag team champions! 🏅'
     ],
     high: [
       'WE\'RE INEVITABLE. 🔥', 'They never had a chance!', 'Dynamic duo strikes again!',
-      'Partner in CRIME! 💎', 'We run this table. 👑', 'Legends only. 🏆'
+      'Partner in CRIME! 💎', 'We run this table. 👑', 'Legends only. 🏆',
+      'Bow before the TEAM.', 'Unbeatable. Unstoppable. Us. 💪',
+      'This is what domination looks like.', 'They should just forfeit.',
+      'Two heads, one crown. 👑👑', 'We don\'t lose. Period.',
+      'History in the making!', 'The dream team delivers AGAIN.'
     ]
   },
   draw: {
     low: [
       'I got nothing... 😬', 'Ugh, drawing again.', 'This is rough.',
-      'Help me out here!', 'Not my day... 😅', 'Boneyard, my old friend.'
+      'Help me out here!', 'Not my day... 😅', 'Boneyard, my old friend.',
+      'Come on, give me something!', 'Please be good... 🤞',
+      'I\'m in trouble.', 'This is embarrassing.', 'Why me? 😩',
+      'The bones have forsaken me.', 'One more try...',
+      'I swear I had a plan.', 'Well, this is awkward.'
     ],
     mid: [
       'Hmm, nothing fits.', 'Drawing... not ideal.', 'Boneyard time. 🦴',
-      'Regrouping...', 'Just a minor setback.', 'I\'ll bounce back.'
+      'Regrouping...', 'Just a minor setback.', 'I\'ll bounce back.',
+      'Temporary inconvenience.', 'Building my arsenal... 🔧',
+      'Not worried. Yet.', 'Slight detour.', 'The comeback starts now.',
+      'Loading... ⏳', 'Patience pays off.', 'Gathering intel. 🕵️'
     ],
     high: [
       'Strategic draw. 🧠', 'All part of the plan.', 'Loading up ammo...',
-      'You think this helps you? 😏', 'I\'ll be back stronger.', 'Patience is a virtue.'
+      'You think this helps you? 😏', 'I\'ll be back stronger.', 'Patience is a virtue.',
+      'Lulling you into false security.', 'I WANTED to draw. 🧐',
+      'More tiles, more power.', 'You should be worried.',
+      'This changes nothing.', 'Calculated risk. 📊',
+      'I see three moves ahead.', 'The boneyard fears ME.',
+      'Every draw makes me stronger. 💪'
     ]
   },
   domino: {
     low: [
       'I did it! 😲', 'Wait... I won?!', 'Woohoo! 🎉',
-      'Can\'t believe it!', 'Finally! 😭', 'That was close!'
+      'Can\'t believe it!', 'Finally! 😭', 'That was close!',
+      'OMG it happened!', 'Pinch me! 🤯', 'Is this real life?',
+      'I\'m shaking!', 'Best day ever!', 'Against all odds! 🌟',
+      'Never give up!', 'Dreams DO come true!'
     ],
     mid: [
       'DOMINO! 🎯', 'Clean sweep!', 'That\'s game! 💪',
-      'Read \'em and weep!', 'Nothing left! ✨', 'Bone dry over here! 🦴'
+      'Read \'em and weep!', 'Nothing left! ✨', 'Bone dry over here! 🦴',
+      'Empty handed and proud!', 'Cleared the rack! 🧹',
+      'That\'s how you finish.', 'No tiles, no problem.',
+      'Mic drop. 🎤', 'And THAT\'S a wrap!', 'Goodnight! 🌙',
+      'Table cleared. Next? 😎'
     ],
     high: [
       'DOMINO, BABY! 👑', 'Flawless victory. 🏆', 'Was there ever any doubt? 😏',
       'Sit DOWN. 🪑', 'Another one bites the dust.', 'I AM the table. 🐐',
-      'GG EZ. 💀', 'Perfection. 💎', 'You never had a chance.'
+      'GG EZ. 💀', 'Perfection. 💎', 'You never had a chance.',
+      'Absolute DESTRUCTION. 🔥', 'Bow. Now. 🧎',
+      'That wasn\'t even my final form.', 'Speed run complete. ⚡',
+      'Delete the app. You\'re done.', 'I don\'t play games. I END them.',
+      'Another trophy for the case. 🏆🏆🏆',
+      'They should name a move after me.', 'GOAT things. 🐐'
     ]
   }
 };
@@ -1094,7 +1145,7 @@ class Game {
     document.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
       // Prevent default for game keys when in placement mode
-      if (this.selectedTile && this._pendingPlacements && 'lrns'.includes(key)) {
+      if ((this.selectedTile || this._hoverTile) && 'lrns'.includes(key)) {
         e.preventDefault();
       }
       const gameScreen = document.getElementById('game-screen');
@@ -1128,7 +1179,7 @@ class Game {
       // Check both click-selected placements and hover placements
       const activePlacements = this._pendingPlacements || this._hoverPlacements;
       const activeTile = this.selectedTile || this._hoverTile;
-      if (activePlacements && activePlacements.length > 0 && activeTile && 'lrns'.includes(key)) {
+      if (activePlacements && activePlacements.length > 0 && activeTile && 'lrns'.includes(key) && this.players[this.currentPlayer] && this.players[this.currentPlayer].isHuman) {
         const dirMap = { l: 'left', r: 'right', n: 'north', s: 'south' };
         const dir = dirMap[key];
         if (dir) {
@@ -2979,10 +3030,37 @@ class Game {
         infoSection.innerHTML = `
           <img class="human-avatar" src="${human.avatar}" alt="${human.name}" style="border-color:${avatarBorder};${isTurn ? 'box-shadow:0 0 16px hsla('+hc.h+','+hc.s+'%,'+(hc.l+20)+'%,0.4);' : ''}">
           <div class="human-info-text">
-            <span class="human-name">${human.name} ${turnLabel}</span>
+            <span class="human-name" id="human-name-label" style="cursor:pointer;" title="Double-click to edit">${human.name} ${turnLabel}</span>
             <span class="human-record">${rec.wins}W ${rec.losses}L</span>
           </div>
         `;
+
+        // Double-click to edit name
+        const nameLabel = document.getElementById('human-name-label');
+        if (nameLabel && !nameLabel._dblBound) {
+          nameLabel._dblBound = true;
+          nameLabel.addEventListener('dblclick', () => {
+            const current = getPlayerName();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'name-edit';
+            input.value = current;
+            input.maxLength = 12;
+            input.style.width = '120px';
+            input.style.fontSize = '0.9rem';
+            nameLabel.replaceWith(input);
+            input.focus();
+            input.select();
+            const finish = () => {
+              const newName = input.value.trim() || 'Human';
+              setPlayerName(newName);
+              if (this.players && this.players[0]) this.players[0].name = newName;
+              this._updateUI();
+            };
+            input.addEventListener('blur', finish);
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); finish(); } });
+          });
+        }
       }
 
       this._renderOpponentHands();
@@ -3155,8 +3233,13 @@ class Game {
     const container = document.getElementById('prefs-content');
     if (!container) return;
     const currentSkin = getTileSkin();
+    const currentName = getPlayerName();
 
     container.innerHTML = `
+      <div class="pref-group">
+        <div class="pref-label">Player Name</div>
+        <input type="text" id="pref-name-input" class="name-edit" maxlength="12" value="${currentName}" style="width:100%;">
+      </div>
       <div class="pref-group">
         <div class="pref-label">Tile Skin</div>
         <div class="skin-options">
@@ -3176,6 +3259,17 @@ class Game {
         </label>
       </div>
     `;
+
+    // Name change
+    const nameInput = document.getElementById('pref-name-input');
+    if (nameInput) {
+      nameInput.addEventListener('change', () => {
+        const name = nameInput.value.trim() || 'Human';
+        setPlayerName(name);
+        if (this.players && this.players[0]) this.players[0].name = name;
+        this._updateUI();
+      });
+    }
 
     // Skin click handlers
     container.querySelectorAll('.skin-option').forEach(el => {
