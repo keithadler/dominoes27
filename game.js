@@ -232,7 +232,7 @@ class AI {
     this.difficulty = difficulty; // 'easy', 'medium', 'hard'
   }
 
-  choosePlay(hand, board) {
+  choosePlay(hand, board, personality) {
     const playable = [];
     for (const tile of hand) {
       const placements = board.getValidPlacements(tile);
@@ -249,7 +249,7 @@ class AI {
     // Score each possible play
     const scored = playable.map(play => {
       const score = this._simulateScore(play, board);
-      const strategyScore = this._strategyScore(play, hand, board);
+      const strategyScore = this._strategyScore(play, hand, board, personality);
       return { ...play, score, strategyScore, total: score + strategyScore };
     });
 
@@ -280,26 +280,25 @@ class AI {
     return sim.getScore();
   }
 
-  _strategyScore(play, hand, board) {
+  _strategyScore(play, hand, board, personality) {
     let score = 0;
     const tile = play.tile;
+    const tw = personality ? personality.tweaks : {};
 
-    // Prefer doubles (they block opponents)
-    if (tile.isDouble) score += 2;
+    if (tile.isDouble) score += 2 + (tw.preferBlock || 0);
+    score += tile.pips * (0.3 + (tw.preferHeavy || 0) * 0.15);
 
-    // Prefer heavier tiles (more pips = more points if opponent is stuck)
-    score += tile.pips * 0.3;
-
-    // Prefer tiles that keep more options open
     const remaining = hand.filter(t => !t.equals(tile));
     const sim = this._cloneBoard(board);
     sim.placeTile(tile, play.placement);
     const openVals = sim.getOpenValues();
     const futurePlayable = remaining.filter(t => openVals.some(v => t.has(v)));
-    score += futurePlayable.length * 1.5;
+    score += futurePlayable.length * (1.5 + (tw.futureWeight || 0) * 0.5);
 
-    // Penalize leaving yourself with few options
     if (remaining.length > 0 && futurePlayable.length === 0) score -= 5;
+
+    // Chaos factor
+    if (tw.chaos) score += (Math.random() - 0.5) * tw.chaos * 2;
 
     return score;
   }
@@ -574,7 +573,7 @@ class Renderer {
     ctx.shadowOffsetY = 5;
 
     // Bottom edge (3D depth)
-    ctx.fillStyle = '#b0a888';
+    ctx.fillStyle = skin.depth;
     this._roundRect(ctx, -w/2, -h/2 + depth, w, h, r);
     ctx.fill();
 
@@ -584,11 +583,12 @@ class Renderer {
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
 
-    // Main tile face with gradient
+    // Main tile face with gradient — uses selected skin
+    const skin = getSkinColors();
     const grad = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
-    grad.addColorStop(0, '#fffef8');
-    grad.addColorStop(0.3, '#f5f0dc');
-    grad.addColorStop(1, '#e8e0c4');
+    grad.addColorStop(0, skin.face);
+    grad.addColorStop(0.3, skin.face);
+    grad.addColorStop(1, skin.faceDark);
     ctx.fillStyle = grad;
     this._roundRect(ctx, -w/2, -h/2, w, h, r);
     ctx.fill();
@@ -696,6 +696,7 @@ class Renderer {
   }
 
   _draw3DPips(ctx, cx, cy, count, size) {
+    const skin = getSkinColors();
     const pipR = 4;
     const s = size * 0.32;
     const positions = this._pipPositions(count, s);
@@ -704,26 +705,22 @@ class Renderer {
       const x = cx + px;
       const y = cy + py;
 
-      // Pip indent shadow
       ctx.beginPath();
       ctx.arc(x, y, pipR + 1, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(0,0,0,0.08)';
       ctx.fill();
 
-      // Pip body with radial gradient
       const pipGrad = ctx.createRadialGradient(x - 1, y - 1, 0, x, y, pipR);
-      pipGrad.addColorStop(0, '#555');
-      pipGrad.addColorStop(0.7, '#222');
-      pipGrad.addColorStop(1, '#111');
+      pipGrad.addColorStop(0, skin.pip);
+      pipGrad.addColorStop(1, skin.pip);
       ctx.beginPath();
       ctx.arc(x, y, pipR, 0, Math.PI * 2);
       ctx.fillStyle = pipGrad;
       ctx.fill();
 
-      // Pip highlight
       ctx.beginPath();
       ctx.arc(x - 1.2, y - 1.2, pipR * 0.4, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
       ctx.fill();
     }
   }
@@ -1049,6 +1046,24 @@ class Game {
       });
     }
 
+    // Preferences
+    document.getElementById('prefs-btn').addEventListener('click', () => {
+      document.getElementById('game-dropdown').classList.add('hidden');
+      this._renderPrefs();
+      document.getElementById('prefs-overlay').classList.remove('hidden');
+    });
+    document.getElementById('prefs-close-btn').addEventListener('click', () => {
+      document.getElementById('prefs-overlay').classList.add('hidden');
+    });
+
+    // Music engine
+    this.music = new MusicEngine();
+
+    // Init music on first interaction
+    document.addEventListener('click', () => {
+      if (!this.music.ctx) this.music.init();
+    }, { once: true });
+
     // Canvas click for choosing end
     const canvas = document.getElementById('board-canvas');
     canvas.addEventListener('click', (e) => this._onBoardClick(e));
@@ -1282,18 +1297,21 @@ class Game {
       const opp1 = new Player(names[0], false, 1);
       opp1.team = 1;
       opp1.ai = new AI(diffs[0]);
+      opp1.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
       opp1.avatar = avatarURL(seeds[0]);
       this.players.push(opp1);
 
       const partner = new Player(names[1], false, 2);
       partner.team = 0;
       partner.ai = new AI(diffs[1]);
+      partner.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
       partner.avatar = avatarURL(seeds[1]);
       this.players.push(partner);
 
       const opp2 = new Player(names[2], false, 3);
       opp2.team = 1;
       opp2.ai = new AI(diffs[2]);
+      opp2.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
       opp2.avatar = avatarURL(seeds[2]);
       this.players.push(opp2);
 
@@ -1311,6 +1329,7 @@ class Game {
         const name = names[i];
         const p = new Player(name, false, i + 1);
         p.ai = new AI(diffs[i]);
+        p.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
         p.avatar = avatarURL(seeds[i]);
         this.players.push(p);
       }
@@ -1352,6 +1371,8 @@ class Game {
     }
 
     this.showScreen('game-screen');
+    if (this.music) { this.music.init(); this.music.start(); }
+    this._updateXPBar();
     this.startRound();
   }
 
@@ -1723,7 +1744,7 @@ class Game {
       }
     }
 
-    const play = player.ai.choosePlay(player.hand, this.board);
+    const play = player.ai.choosePlay(player.hand, this.board, player.personality);
     if (!play) {
       this._hideThinking();
       this._nextTurn();
@@ -2556,9 +2577,11 @@ class Game {
     if (humanWon) {
       trackStat('gamesWon', 1);
       trackStat('winStreak', 1);
+      addXP(50);
       spawnConfetti();
     } else {
       trackStat('loseStreak', 1);
+      addXP(10); // consolation XP
     }
     checkAchievements(this);
     if (humanWon && unlockAchievement('domino_win')) showAchievementPopup('domino_win');
@@ -2603,6 +2626,8 @@ class Game {
       spawnParticles(window.innerWidth / 2, window.innerHeight * 0.45, 15 + score, 'particle-gold');
       trackStat('playScore', score);
       trackStat('totalScore', score);
+      addXP(score);
+      this._updateXPBar();
       if (score >= 20) { if (unlockAchievement('score_20')) showAchievementPopup('score_20'); }
       if (score >= 25) { if (unlockAchievement('score_25')) showAchievementPopup('score_25'); }
     }
@@ -2737,6 +2762,13 @@ class Game {
       }
     } else if (lastTileEl) {
       lastTileEl.innerHTML = '';
+    }
+
+    // Update music intensity based on score closeness
+    if (this.music && this.players) {
+      const maxScore = Math.max(...this.players.map(p => p.score));
+      const intensity = Math.min(1, maxScore / this.targetScore);
+      this.music.setIntensity(intensity);
     }
 
     // Turn toast notification — suppress during countdown/announcement
@@ -2977,6 +3009,7 @@ class Game {
           <span class="opp-name${isTurn ? ' active-turn' : ''}" style="${!isTurn ? 'color:hsla(' + c.h + ',' + c.s + '%,' + (c.l + 30) + '%,0.9);' : ''}">${teamIcon}${player.name}</span>
           ${teamLabel}
           <span class="opp-record">${rec.wins}W ${rec.losses}L</span>
+          ${player.personality ? '<span class="personality-badge">' + player.personality.icon + ' ' + player.personality.name + '</span>' : ''}
         </div>
       `;
       el.appendChild(label);
@@ -3074,6 +3107,59 @@ class Game {
           </div>`;
         }).join('')}
       </div>
+    `;
+  }
+  _renderPrefs() {
+    const container = document.getElementById('prefs-content');
+    if (!container) return;
+    const currentSkin = getTileSkin();
+
+    container.innerHTML = `
+      <div class="pref-group">
+        <div class="pref-label">Tile Skin</div>
+        <div class="skin-options">
+          ${TILE_SKINS.map(s => `
+            <div class="skin-option ${s.id === currentSkin ? 'active' : ''}" data-skin="${s.id}">
+              <div class="skin-preview" style="background:linear-gradient(135deg,${s.face},${s.faceDark});border-color:${s.border};"></div>
+              <span>${s.name}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="pref-group">
+        <div class="pref-label">Audio</div>
+        <label class="music-toggle">
+          <input type="checkbox" id="music-toggle-cb" ${this.music && this.music.enabled ? 'checked' : ''}>
+          <span>Background Music</span>
+        </label>
+      </div>
+    `;
+
+    // Skin click handlers
+    container.querySelectorAll('.skin-option').forEach(el => {
+      el.addEventListener('click', () => {
+        setTileSkin(el.dataset.skin);
+        this._renderPrefs();
+        this._renderBoard();
+      });
+    });
+
+    // Music toggle
+    const musicCb = document.getElementById('music-toggle-cb');
+    if (musicCb) {
+      musicCb.addEventListener('change', () => {
+        if (this.music) this.music.toggle();
+      });
+    }
+  }
+
+  _updateXPBar() {
+    const wrap = document.getElementById('xp-bar-wrap');
+    if (!wrap) return;
+    const xp = getXPProgress();
+    wrap.innerHTML = `
+      <span class="xp-level">Lv.${xp.level}</span>
+      <div class="xp-bar"><div class="xp-fill" style="width:${xp.pct}%"></div></div>
     `;
   }
   _renderLog() {
@@ -3264,6 +3350,119 @@ class SFX {
 function getPlayerName() {
   return localStorage.getItem('domino_player_name') || 'Human';
 }
+// --- AI Personalities ---
+const AI_PERSONALITIES = [
+  { id: 'aggressive', name: 'Aggressive', desc: 'Plays heavy tiles first, targets scoring', icon: '🔥',
+    tweaks: { preferHeavy: 3, preferScore: 2, preferBlock: 0 } },
+  { id: 'defensive', name: 'Defensive', desc: 'Keeps options open, avoids risk', icon: '🛡️',
+    tweaks: { preferHeavy: -1, preferScore: 1, preferBlock: 2 } },
+  { id: 'chaotic', name: 'Chaotic', desc: 'Unpredictable, random choices', icon: '🎲',
+    tweaks: { preferHeavy: 0, preferScore: 0, preferBlock: 0, chaos: 5 } },
+  { id: 'calculated', name: 'Calculated', desc: 'Maximizes future options', icon: '🧠',
+    tweaks: { preferHeavy: 0, preferScore: 1.5, preferBlock: 1, futureWeight: 3 } },
+  { id: 'bully', name: 'Bully', desc: 'Targets the leader, plays to block', icon: '😈',
+    tweaks: { preferHeavy: 1, preferScore: 1, preferBlock: 4 } },
+];
+
+// --- Tile Skins ---
+const TILE_SKINS = [
+  { id: 'classic', name: 'Classic', face: '#fffef8', faceDark: '#e8e0c4', pip: '#333', border: 'rgba(160,150,120,0.6)', depth: '#b0a888' },
+  { id: 'marble', name: 'Marble', face: '#f0f0f0', faceDark: '#d0d0d0', pip: '#444', border: 'rgba(180,180,180,0.5)', depth: '#a0a0a0' },
+  { id: 'wood', name: 'Wood', face: '#d4a574', faceDark: '#a0703c', pip: '#2a1a0a', border: 'rgba(120,80,40,0.5)', depth: '#8a5a2a' },
+  { id: 'neon', name: 'Neon', face: '#1a1a2e', faceDark: '#0a0a1e', pip: '#0ff', border: 'rgba(0,255,255,0.4)', depth: '#0a0a18' },
+  { id: 'gold', name: 'Gold', face: '#fff8e0', faceDark: '#e8c860', pip: '#6a4a00', border: 'rgba(200,160,40,0.5)', depth: '#c09830' },
+  { id: 'midnight', name: 'Midnight', face: '#2a2a3e', faceDark: '#1a1a2e', pip: '#f0b840', border: 'rgba(100,100,140,0.4)', depth: '#18182a' },
+];
+
+function getTileSkin() {
+  return localStorage.getItem('domino_tile_skin') || 'classic';
+}
+function setTileSkin(id) {
+  localStorage.setItem('domino_tile_skin', id);
+}
+function getSkinColors() {
+  const id = getTileSkin();
+  return TILE_SKINS.find(s => s.id === id) || TILE_SKINS[0];
+}
+
+// --- XP / Leveling ---
+function getXP() {
+  try { return JSON.parse(localStorage.getItem('domino_xp') || '{"xp":0,"level":1}'); } catch(e) { return {xp:0,level:1}; }
+}
+function addXP(amount) {
+  const data = getXP();
+  data.xp += amount;
+  const xpPerLevel = 100;
+  while (data.xp >= data.level * xpPerLevel) {
+    data.xp -= data.level * xpPerLevel;
+    data.level++;
+  }
+  localStorage.setItem('domino_xp', JSON.stringify(data));
+  return data;
+}
+function getXPProgress() {
+  const data = getXP();
+  const needed = data.level * 100;
+  return { level: data.level, xp: data.xp, needed, pct: Math.round(data.xp / needed * 100) };
+}
+
+// --- Dynamic Music (Web Audio) ---
+class MusicEngine {
+  constructor() {
+    this.ctx = null;
+    this.playing = false;
+    this.enabled = localStorage.getItem('domino_music') !== '0';
+    this.intensity = 0;
+    this._nodes = [];
+  }
+  init() {
+    if (this.ctx) return;
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  start() {
+    if (!this.enabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.playing) return;
+    this.playing = true;
+    this._playLoop();
+  }
+  stop() {
+    this.playing = false;
+    this._nodes.forEach(n => { try { n.stop(); } catch(e) {} });
+    this._nodes = [];
+  }
+  setIntensity(val) { this.intensity = Math.max(0, Math.min(1, val)); }
+  toggle() {
+    this.enabled = !this.enabled;
+    localStorage.setItem('domino_music', this.enabled ? '1' : '0');
+    if (this.enabled) this.start(); else this.stop();
+  }
+  _playLoop() {
+    if (!this.playing || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    // Ambient chord — changes with intensity
+    const baseFreq = 110;
+    const chordNotes = [1, 1.5, 2, 2.5];
+    const vol = 0.02 + this.intensity * 0.02;
+    for (const mult of chordNotes) {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = baseFreq * mult * (1 + this.intensity * 0.5);
+      gain.gain.setValueAtTime(vol, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 3);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 3);
+      this._nodes.push(osc);
+    }
+    // Clean up old nodes
+    this._nodes = this._nodes.filter(n => { try { return n.context.currentTime < n.stop; } catch(e) { return false; } });
+    setTimeout(() => this._playLoop(), 2800 - this.intensity * 800);
+  }
+}
+
 function setPlayerName(name) {
   localStorage.setItem('domino_player_name', name || 'Human');
 }

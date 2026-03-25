@@ -84,6 +84,7 @@
       </div>
       <div id="bottom-bar">
         <div id="human-info">
+          <div id="xp-bar-wrap"></div>
           <div id="player-controls">
             <button id="draw-btn" class="btn-draw" disabled>Draw</button>
             <button id="pass-btn" class="btn-pass" style="display:none">Pass</button>
@@ -98,6 +99,7 @@
         <button class="dd-item" id="rules-btn">📖 Rules</button>
         <button class="dd-item" id="log-btn">📋 Game Log</button>
         <button class="dd-item" id="stats-btn">📊 Stats & Achievements</button>
+        <button class="dd-item" id="prefs-btn">🎨 Preferences</button>
         <button class="dd-item" id="shortcuts-btn">❓ Shortcuts</button>
         <button class="dd-item dd-danger" id="ragequit-btn">💀 Rage Quit (counts as loss)</button>
       </div>
@@ -183,6 +185,14 @@
           <h2>Stats & Achievements</h2>
           <div id="stats-content"></div>
           <button class="gm-btn" id="stats-close-btn" style="text-align:center;margin-top:16px;">Close</button>
+        </div>
+      </div>
+      <!-- Preferences overlay -->
+      <div id="prefs-overlay" class="hidden">
+        <div class="stats-panel">
+          <h2>Preferences</h2>
+          <div id="prefs-content"></div>
+          <button class="gm-btn" id="prefs-close-btn" style="text-align:center;margin-top:16px;">Close</button>
         </div>
       </div>
     </div>

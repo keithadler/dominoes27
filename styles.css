@@ -883,3 +883,32 @@ body::after {
 /* Name edit */
 .name-edit { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 1rem; font-weight: 700; font-family: 'Inter', sans-serif; width: 140px; text-align: center; outline: none; }
 .name-edit:focus { border-color: rgba(232,167,53,0.5); box-shadow: 0 0 10px rgba(232,167,53,0.2); }
+
+/* Preferences */
+#prefs-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(10px); }
+#prefs-overlay.hidden { display: none; }
+.pref-group { margin-bottom: 18px; }
+.pref-label { font-size: 0.7rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.skin-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.skin-option {
+  width: 60px; height: 100px; border-radius: 8px; cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.1); transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 600; gap: 4px; padding: 4px;
+}
+.skin-option:hover { border-color: rgba(255,255,255,0.3); transform: scale(1.05); }
+.skin-option.active { border-color: #f0b840; box-shadow: 0 0 12px rgba(232,167,53,0.3); }
+.skin-preview { width: 36px; height: 18px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.2); }
+
+/* XP Bar */
+#xp-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.xp-level { font-size: 0.75rem; font-weight: 800; color: #f0b840; min-width: 50px; }
+.xp-bar { width: 80px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.xp-fill { height: 100%; background: linear-gradient(90deg, #f0b840, #e08020); border-radius: 3px; transition: width 0.5s ease; }
+
+/* Music indicator */
+.music-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 0; cursor: pointer; }
+.music-toggle input { accent-color: #f0b840; }
+
+/* AI personality badge */
+.personality-badge { font-size: 0.55rem; opacity: 0.5; font-style: italic; }
