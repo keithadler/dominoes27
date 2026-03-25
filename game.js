@@ -1737,11 +1737,27 @@ class Game {
       setTimeout(() => this._aiTurn(player), base + jitter);
     } else {
       this._hideThinking();
+
+      // Check if human has exactly 1 possible move — auto-play it
+      const allMoves = [];
+      for (const t of player.hand) {
+        const placements = this.board.getValidPlacements(t);
+        for (const p of placements) allMoves.push({ tile: t, placement: p });
+      }
+
+      if (allMoves.length === 1) {
+        // Auto-play the only move after a brief delay
+        setTimeout(() => {
+          if (this.currentPlayer === player.index && !this.roundOver) {
+            this._executePlay(player, allMoves[0].tile, allMoves[0].placement);
+          }
+        }, 600);
+        return;
+      }
+
       this._enableHumanPlay(player);
-      // Safety: if human can't play and must draw, make sure UI is interactive
-      const canPlay = player.hand.some(t => this.board.canPlay(t));
-      if (!canPlay && this.boneyard.length === 0) {
-        // Human must pass — auto-pass after a brief delay
+      // If human can't play and boneyard is empty, auto-pass
+      if (allMoves.length === 0 && this.boneyard.length === 0) {
         setTimeout(() => {
           if (this.currentPlayer === player.index && !this.roundOver) {
             this.pass();
