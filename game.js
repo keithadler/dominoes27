@@ -3718,30 +3718,20 @@ class MusicEngine {
     this.playing = false;
     this.enabled = localStorage.getItem('domino_music') === '1';
     this.intensity = 0;
-    this.volume = 0.3;
+    this.volume = 0.15; // lower default volume
     this._chillTrack = null;
     this._intenseTrack = null;
     this._victoryTrack = null;
-    this._currentTrack = null;
     this._hasFiles = false;
     this._synthCtx = null;
     this._synthNodes = [];
+    this._usingSynth = false;
   }
 
   init() {
-    // Try to load MP3 files
     this._chillTrack = this._loadTrack('music/chill.mp3');
     this._intenseTrack = this._loadTrack('music/intense.mp3');
     this._victoryTrack = this._loadTrack('music/victory.mp3', false);
-
-    // Check if files exist after a moment
-    setTimeout(() => {
-      if (this._chillTrack && this._chillTrack.readyState >= 2) {
-        this._hasFiles = true;
-      }
-    }, 1000);
-
-    // Synth fallback
     try { this._synthCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
 
@@ -3751,38 +3741,45 @@ class MusicEngine {
     audio.loop = loop;
     audio.volume = 0;
     audio.preload = 'auto';
-    audio.addEventListener('canplaythrough', () => { this._hasFiles = true; }, { once: true });
-    audio.addEventListener('error', () => {}); // silently fail
+    audio.addEventListener('canplaythrough', () => {
+      this._hasFiles = true;
+      // If we're playing synth but files are now ready, switch to files
+      if (this.playing && this._usingSynth) {
+        this._usingSynth = false;
+        this._startFileMusic();
+      }
+    }, { once: true });
+    audio.addEventListener('error', () => {});
     return audio;
   }
 
   start() {
-    if (!this.enabled) return;
-    if (this.playing) return;
+    if (!this.enabled || this.playing) return;
     this.playing = true;
 
+    // Try file music first, fall back to synth
     if (this._hasFiles) {
       this._startFileMusic();
     } else {
+      // Start synth immediately, will switch to files when they load
+      this._usingSynth = true;
       this._startSynthMusic();
     }
   }
 
   stop() {
     this.playing = false;
-    // Stop file tracks
+    this._usingSynth = false;
     [this._chillTrack, this._intenseTrack, this._victoryTrack].forEach(t => {
       if (t) { t.pause(); t.currentTime = 0; t.volume = 0; }
     });
-    this._currentTrack = null;
-    // Stop synth
     this._synthNodes.forEach(n => { try { n.stop(); } catch(e) {} });
     this._synthNodes = [];
   }
 
   setIntensity(val) {
     this.intensity = Math.max(0, Math.min(1, val));
-    if (this._hasFiles && this.playing) this._crossfade();
+    if (this._hasFiles && this.playing && !this._usingSynth) this._crossfade();
   }
 
   toggle() {
@@ -3792,19 +3789,16 @@ class MusicEngine {
   }
 
   playVictory() {
-    if (!this.enabled) return;
-    if (this._victoryTrack && this._hasFiles) {
-      this._victoryTrack.volume = this.volume;
-      this._victoryTrack.currentTime = 0;
-      this._victoryTrack.play().catch(() => {});
-    }
+    if (!this.enabled || !this._victoryTrack || !this._hasFiles) return;
+    this._victoryTrack.volume = this.volume;
+    this._victoryTrack.currentTime = 0;
+    this._victoryTrack.play().catch(() => {});
   }
 
   _startFileMusic() {
     if (!this._chillTrack) return;
     this._chillTrack.volume = this.volume;
     this._chillTrack.play().catch(() => {});
-    this._currentTrack = 'chill';
     if (this._intenseTrack) {
       this._intenseTrack.volume = 0;
       this._intenseTrack.play().catch(() => {});
@@ -3813,13 +3807,10 @@ class MusicEngine {
 
   _crossfade() {
     if (!this._chillTrack || !this._intenseTrack) return;
-    const t = this.intensity;
-    // Crossfade: chill fades out as intensity rises, intense fades in
-    this._chillTrack.volume = this.volume * (1 - t);
-    this._intenseTrack.volume = this.volume * t;
+    this._chillTrack.volume = this.volume * (1 - this.intensity);
+    this._intenseTrack.volume = this.volume * this.intensity;
   }
 
-  // Synth fallback — improved with actual musical patterns
   _startSynthMusic() {
     if (!this._synthCtx) return;
     if (this._synthCtx.state === 'suspended') this._synthCtx.resume();
@@ -3827,20 +3818,17 @@ class MusicEngine {
   }
 
   _synthLoop() {
-    if (!this.playing || !this._synthCtx) return;
+    if (!this.playing || !this._synthCtx || !this._usingSynth) return;
     const ctx = this._synthCtx;
     const now = ctx.currentTime;
-
-    // Jazz-like chord progression
     const chords = [
-      [130.81, 164.81, 196.00, 246.94], // C major 7
-      [146.83, 185.00, 220.00, 277.18], // D minor 7
-      [164.81, 207.65, 246.94, 311.13], // E minor 7
-      [174.61, 220.00, 261.63, 329.63], // F major 7
+      [130.81, 164.81, 196.00, 246.94],
+      [146.83, 185.00, 220.00, 277.18],
+      [164.81, 207.65, 246.94, 311.13],
+      [174.61, 220.00, 261.63, 329.63],
     ];
-    const chordIdx = Math.floor((now / 3) % chords.length);
-    const chord = chords[chordIdx];
-    const vol = 0.015 + this.intensity * 0.015;
+    const chord = chords[Math.floor((now / 3) % chords.length)];
+    const vol = 0.012 + this.intensity * 0.01;
 
     for (const freq of chord) {
       const osc = ctx.createOscillator();
@@ -3849,31 +3837,21 @@ class MusicEngine {
       osc.frequency.value = freq * (1 + this.intensity * 0.25);
       gain.gain.setValueAtTime(vol, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 2.8);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 3);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 3);
       this._synthNodes.push(osc);
     }
-
-    // Add a subtle bass note
     const bassOsc = ctx.createOscillator();
     const bassGain = ctx.createGain();
     bassOsc.type = 'sine';
     bassOsc.frequency.value = chord[0] / 2;
-    bassGain.gain.setValueAtTime(vol * 1.5, now);
+    bassGain.gain.setValueAtTime(vol * 1.2, now);
     bassGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-    bassOsc.connect(bassGain);
-    bassGain.connect(ctx.destination);
-    bassOsc.start(now);
-    bassOsc.stop(now + 2.8);
+    bassOsc.connect(bassGain); bassGain.connect(ctx.destination);
+    bassOsc.start(now); bassOsc.stop(now + 2.8);
     this._synthNodes.push(bassOsc);
-
-    // Cleanup old nodes
     this._synthNodes = this._synthNodes.slice(-20);
-
-    const tempo = 2800 - this.intensity * 600;
-    setTimeout(() => this._synthLoop(), tempo);
+    setTimeout(() => this._synthLoop(), 2800 - this.intensity * 600);
   }
 }
 
