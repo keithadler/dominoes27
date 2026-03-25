@@ -3718,7 +3718,7 @@ class MusicEngine {
     this.playing = false;
     this.enabled = localStorage.getItem('domino_music') === '1';
     this.intensity = 0;
-    this.volume = 0.15; // lower default volume
+    this.volume = 0.08; // lower default volume
     this._chillTrack = null;
     this._intenseTrack = null;
     this._victoryTrack = null;
