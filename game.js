@@ -1191,6 +1191,7 @@ class Game {
       const activePlacements = this._pendingPlacements || this._hoverPlacements;
       const activeTile = this.selectedTile || this._hoverTile;
       if (activePlacements && activePlacements.length > 0 && activeTile && 'lrns'.includes(key) && this.players[this.currentPlayer] && this.players[this.currentPlayer].isHuman) {
+        if (this._playLock) return;
         const dirMap = { l: 'left', r: 'right', n: 'north', s: 'south' };
         const dir = dirMap[key];
         if (dir) {
@@ -1456,7 +1457,7 @@ class Game {
       this.roundOver = false;
       this.selectedTile = null;
       this.selectedEl = null;
-      // Stop previous spinner loop
+      this._playLock = false;
       if (this._spinnerRAF) { cancelAnimationFrame(this._spinnerRAF); this._spinnerRAF = null; }
       this.gameLog = this.gameLog || [];
       this._logTurn = (this.gameLog.length > 0 ? this.gameLog[this.gameLog.length - 1].turn + 1 : 1);
@@ -1967,7 +1968,7 @@ class Game {
 
   _onTileClick(tile, el) {
     const player = this.players[this.currentPlayer];
-    if (!player.isHuman) return;
+    if (!player.isHuman || this._playLock) return;
     if (!this.board.canPlay(tile)) return;
 
     this._hoverTile = null; this._hoverPlacements = null;
@@ -1998,7 +1999,7 @@ class Game {
   }
 
   _onTileHover(tile) {
-    if (this.currentPlayer !== 0) return;
+    if (this.currentPlayer !== 0 || this._playLock) return;
     if (!this.board.canPlay(tile)) return;
     this._hoverTile = tile;
     this._hoverPlacements = this.board.getValidPlacements(tile);
@@ -2029,6 +2030,7 @@ class Game {
     const activePlacements = this._pendingPlacements || this._hoverPlacements;
     if (!activeTile || !activePlacements || activePlacements.length === 0) return;
     if (!this.players[this.currentPlayer] || !this.players[this.currentPlayer].isHuman) return;
+    if (this._playLock) return;
 
     const rect = this.renderer.canvas.getBoundingClientRect();
     const screenX = e.clientX - rect.left;
@@ -2098,17 +2100,19 @@ class Game {
 
   _executePlay(player, tile, placement) {
     this._hideThinking();
-    // Guard: only the current player can execute a play
+    // Guard: only the current player can execute, and prevent concurrent plays
     if (player.index !== this.currentPlayer) return;
+    if (this._playLock) return;
+    this._playLock = true;
+
     player.hand = player.hand.filter(t => !t.equals(tile));
     this.board.placeTile(tile, placement);
-    this._lastPlayedBy = player.index; // track who played for fly-in direction
+    this._lastPlayedBy = player.index;
     this._addVisualPlacement(tile, placement);
 
     const score = this.board.getScore();
     const scored = score > 0;
 
-    // Log the play
     const logScores = {};
     if (this.teamMode && this.teams) {
       this.teams.forEach(t => logScores[t.name] = t.score);
@@ -2142,10 +2146,10 @@ class Game {
     this._hoverTile = null; this._hoverPlacements = null;
 
     this._updateUI();
-    // Don't call _renderBoard here — _animateFlyIn handles it
 
     const delay = scored ? 2000 : 800;
     setTimeout(() => {
+      this._playLock = false;
       if (player.hand.length === 0) {
         this._endRound(player);
         return;
@@ -3743,9 +3747,11 @@ class MusicEngine {
     audio.preload = 'auto';
     audio.addEventListener('canplaythrough', () => {
       this._hasFiles = true;
-      // If we're playing synth but files are now ready, switch to files
       if (this.playing && this._usingSynth) {
         this._usingSynth = false;
+        // Stop synth nodes
+        this._synthNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+        this._synthNodes = [];
         this._startFileMusic();
       }
     }, { once: true });

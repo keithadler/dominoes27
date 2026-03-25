@@ -142,4 +142,4 @@ The game works without these files — a synthesized jazz chord progression play
 
 ## 📜 License
 
-Game code is provided as-is. Music files from Pixabay are royalty-free under the [Pixabay Content License](https://pixabay.com/service/license-summary/).
+Game code is provided as-is. Music files sourced from Pixabay (royalty-free, no attribution required).
