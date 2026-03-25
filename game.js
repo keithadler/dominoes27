@@ -558,10 +558,11 @@ class Renderer {
   _drawPlacedTile(p, isLast) {
     const ctx = this.ctx;
     const { tile, x, y, horizontal } = p;
-    const w = horizontal ? this.tileH : this.tileW;
-    const h = horizontal ? this.tileW : this.tileH;
-    const r = 7;
-    const depth = 4; // 3D depth
+    const spinnerScale = p.isSpinner ? 1.25 : 1;
+    const w = (horizontal ? this.tileH : this.tileW) * spinnerScale;
+    const h = (horizontal ? this.tileW : this.tileH) * spinnerScale;
+    const r = 7 * spinnerScale;
+    const depth = 4 * spinnerScale;
 
     ctx.save();
     ctx.translate(x, y);
@@ -683,7 +684,7 @@ class Renderer {
     }
 
     // Draw pips
-    const pipSize = 18;
+    const pipSize = 18 * spinnerScale;
     if (horizontal) {
       this._draw3DPips(ctx, -w/4, 0, p.leftVal, pipSize);
       this._draw3DPips(ctx, w/4, 0, p.rightVal, pipSize);
@@ -1735,6 +1736,16 @@ class Game {
     } else {
       this._hideThinking();
       this._enableHumanPlay(player);
+      // Safety: if human can't play and must draw, make sure UI is interactive
+      const canPlay = player.hand.some(t => this.board.canPlay(t));
+      if (!canPlay && this.boneyard.length === 0) {
+        // Human must pass — auto-pass after a brief delay
+        setTimeout(() => {
+          if (this.currentPlayer === player.index && !this.roundOver) {
+            this.pass();
+          }
+        }, 1500);
+      }
     }
   }
 
@@ -2003,13 +2014,15 @@ class Game {
   }
 
   _onBoardClick(e) {
-    if (!this.selectedTile || !this._pendingPlacements) return;
+    const activeTile = this.selectedTile || this._hoverTile;
+    const activePlacements = this._pendingPlacements || this._hoverPlacements;
+    if (!activeTile || !activePlacements || activePlacements.length === 0) return;
+    if (!this.players[this.currentPlayer] || !this.players[this.currentPlayer].isHuman) return;
 
     const rect = this.renderer.canvas.getBoundingClientRect();
     const screenX = e.clientX - rect.left;
     const screenY = e.clientY - rect.top;
 
-    // Convert screen coords to world coords using the view transform
     const scale = this.renderer._viewScale || 1;
     const offX = this.renderer._viewOffsetX || 0;
     const offY = this.renderer._viewOffsetY || 0;
@@ -2019,7 +2032,7 @@ class Game {
     let bestEnd = null;
     let bestDist = Infinity;
 
-    for (const p of this._pendingPlacements) {
+    for (const p of activePlacements) {
       const endPos = this._getEndPosition(p.end);
       if (endPos) {
         const dist = Math.hypot(mx - endPos.x, my - endPos.y);
@@ -2030,12 +2043,14 @@ class Game {
       }
     }
 
-    if (bestEnd) {
+    // Only place if click is reasonably close to a circle (within 60 world units)
+    if (bestEnd && bestDist < 60) {
       const player = this.players[this.currentPlayer];
-      this._executePlay(player, this.selectedTile, bestEnd);
+      this._executePlay(player, activeTile, bestEnd);
       this.selectedTile = null;
       this.selectedEl = null;
       this._pendingPlacements = null;
+      this._hoverTile = null; this._hoverPlacements = null;
     }
   }
 
@@ -2072,6 +2087,8 @@ class Game {
 
   _executePlay(player, tile, placement) {
     this._hideThinking();
+    // Guard: only the current player can execute a play
+    if (player.index !== this.currentPlayer) return;
     player.hand = player.hand.filter(t => !t.equals(tile));
     this.board.placeTile(tile, placement);
     this._lastPlayedBy = player.index; // track who played for fly-in direction
