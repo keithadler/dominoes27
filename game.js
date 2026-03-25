@@ -2915,6 +2915,21 @@ class Game {
       this.music.setIntensity(intensity);
     }
 
+    // Turn info in the end-sum panel
+    const turnLeft = document.getElementById('end-sum-left');
+    if (turnLeft && this.players && this.players.length > 0) {
+      const cp = this.players[this.currentPlayer];
+      if (cp) {
+        const turnName = cp.isHuman ? 'Your turn' : cp.name + "'s turn";
+        turnLeft.innerHTML = `
+          <img class="turn-avatar" src="${cp.avatar}" alt="${cp.name}">
+          <div>
+            <div class="turn-name">${turnName}</div>
+          </div>
+        `;
+      }
+    }
+
     // Turn toast notification — suppress during countdown/announcement
     if (this._suppressToast) return this._renderHand();
     const player = this.players[this.currentPlayer];

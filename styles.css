@@ -297,15 +297,20 @@ body::after {
 
 /* End sum */
 #end-sum-display {
-  position: fixed; top: 60px; right: 14px; padding: 12px 20px;
+  position: fixed; top: 10px; right: 14px; padding: 10px 16px;
   background: linear-gradient(145deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6));
   backdrop-filter: blur(12px);
-  border-radius: 16px; font-size: 0.8rem; z-index: 10; text-align: center;
+  border-radius: 14px; font-size: 0.8rem; z-index: 10; text-align: center;
   border: 1px solid rgba(255,255,255,0.06);
   box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  display: flex; gap: 14px; align-items: center;
 }
-#end-sum-display .sum-value { font-size: 1.8rem; font-weight: 900; background: linear-gradient(180deg, #ffe080, #f0b840); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-#end-sum-display .sum-label { opacity: 0.35; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+#end-sum-left { display: flex; align-items: center; gap: 8px; }
+#end-sum-left .turn-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(232,167,53,0.4); }
+#end-sum-left .turn-name { font-weight: 700; font-size: 0.85rem; color: #f0b840; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#end-sum-right { text-align: center; }
+#end-sum-display .sum-value { font-size: 1.6rem; font-weight: 900; background: linear-gradient(180deg, #ffe080, #f0b840); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+#end-sum-display .sum-label { opacity: 0.35; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
 
 /* Bottom bar */
 #bottom-bar {
