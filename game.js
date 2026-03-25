@@ -558,7 +558,7 @@ class Renderer {
   _drawPlacedTile(p, isLast) {
     const ctx = this.ctx;
     const { tile, x, y, horizontal } = p;
-    const spinnerScale = p.isSpinner ? 1.25 : 1;
+    const spinnerScale = p.isSpinner ? 1.4 : 1;
     const w = (horizontal ? this.tileH : this.tileW) * spinnerScale;
     const h = (horizontal ? this.tileW : this.tileH) * spinnerScale;
     const r = 7 * spinnerScale;
@@ -1123,19 +1123,9 @@ class Game {
       showTutorial();
     }
 
-    // Music engine — init immediately, start on first user interaction
+    // Music engine — init immediately but don't start until game begins
     this.music = new MusicEngine();
     this.music.init();
-
-    const startMusicOnClick = () => {
-      if (this.music.enabled && !this.music.playing) {
-        this.music.start();
-      }
-      document.removeEventListener('click', startMusicOnClick);
-      document.removeEventListener('keydown', startMusicOnClick);
-    };
-    document.addEventListener('click', startMusicOnClick);
-    document.addEventListener('keydown', startMusicOnClick);
 
     // Canvas click for choosing end
     const canvas = document.getElementById('board-canvas');
@@ -1627,27 +1617,27 @@ class Game {
         return m[n] || [];
       };
       const halfSVG = (val, cy) => {
-        return pipPos(val, 10).map(([x,y]) =>
-          `<circle cx="${40+x}" cy="${cy+y}" r="5" fill="#333"/>`
+        return pipPos(val, 14).map(([x,y]) =>
+          `<circle cx="${50+x}" cy="${cy+y}" r="6.5" fill="#333"/>`
         ).join('');
       };
       tileHTML = `
-        <svg width="80" height="140" viewBox="0 0 80 140" style="display:inline-block;vertical-align:middle;margin:0 8px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));">
-          <rect x="2" y="2" width="76" height="136" rx="10" fill="url(#tg)" stroke="rgba(180,170,140,0.6)" stroke-width="2"/>
+        <svg width="100" height="180" viewBox="0 0 100 180" style="display:inline-block;vertical-align:middle;filter:drop-shadow(0 6px 20px rgba(0,0,0,0.6)) drop-shadow(0 0 15px rgba(232,167,53,0.3));">
+          <rect x="2" y="2" width="96" height="176" rx="12" fill="url(#tg)" stroke="#e8a735" stroke-width="2.5"/>
           <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffef8"/><stop offset="0.3" stop-color="#f5f0dc"/><stop offset="1" stop-color="#e8e0c4"/></linearGradient></defs>
-          <line x1="16" y1="70" x2="64" y2="70" stroke="rgba(0,0,0,0.15)" stroke-width="2"/>
-          <line x1="16" y1="71" x2="64" y2="71" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-          ${halfSVG(spinnerTile.a, 35)}
-          ${halfSVG(spinnerTile.b, 105)}
+          <line x1="20" y1="90" x2="80" y2="90" stroke="rgba(0,0,0,0.15)" stroke-width="2"/>
+          <line x1="20" y1="91" x2="80" y2="91" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+          ${halfSVG(spinnerTile.a, 45)}
+          ${halfSVG(spinnerTile.b, 135)}
         </svg>
       `;
     }
 
     overlay.innerHTML = `
       <div style="text-align:center;animation:announceIn 0.5s ease-out forwards;">
-        <div style="font-size:1.1rem;font-weight:600;opacity:0.5;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Round ${this._roundNum}</div>
-        <div style="margin-bottom:16px;">${tileHTML}</div>
-        <div style="font-size:1.6rem;font-weight:800;color:#f0b840;">${whoLabel} the highest double</div>
+        <div style="font-size:4rem;font-weight:900;letter-spacing:6px;margin-bottom:16px;background:linear-gradient(180deg,#fff 20%,#f0b840 60%,#c07800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ROUND ${this._roundNum}</div>
+        <div style="margin-bottom:20px;">${tileHTML}</div>
+        <div style="font-size:1.4rem;font-weight:700;color:rgba(255,255,255,0.9);">${whoLabel} the highest double</div>
       </div>
     `;
     if (this.sfx) this.sfx._play(660, 0.2, 'sine', 0.1);
@@ -1774,6 +1764,7 @@ class Game {
         <img class="think-avatar" src="${player.avatar}" alt="${player.name}">
         <div class="think-info">
           <div class="think-name">${player.name} ${label ? '<span style="font-size:0.7rem;opacity:0.6;">' + label + '</span>' : ''}</div>
+          ${player.city ? '<div style="font-size:0.7rem;opacity:0.4;">' + player.city + '</div>' : ''}
           <div class="think-label">Thinking <span class="thinking-dots-lg"><span></span><span></span><span></span></span></div>
         </div>
       </div>
@@ -1924,7 +1915,8 @@ class Game {
 
   drawFromBoneyard() {
     const player = this.players[this.currentPlayer];
-    if (!player.isHuman || this.boneyard.length === 0) return;
+    if (!player.isHuman || this.boneyard.length === 0 || this._playLock) return;
+    this._playLock = true;
 
     const drawn = this.boneyard.pop();
     player.hand.push(drawn);
@@ -1946,11 +1938,13 @@ class Game {
     }
     if (playable.length === 1) {
       setTimeout(() => {
+        this._playLock = false;
         this._executePlay(player, playable[0].tile, playable[0].placement);
       }, 600);
       return;
     }
 
+    this._playLock = false;
     this._enableHumanPlay(player);
   }
 
@@ -3722,7 +3716,7 @@ class MusicEngine {
     this.playing = false;
     this.enabled = localStorage.getItem('domino_music') === '1';
     this.intensity = 0;
-    this.volume = 0.08; // lower default volume
+    this.volume = 0.04; // lower default volume
     this._chillTrack = null;
     this._intenseTrack = null;
     this._victoryTrack = null;
@@ -3747,9 +3741,8 @@ class MusicEngine {
     audio.preload = 'auto';
     audio.addEventListener('canplaythrough', () => {
       this._hasFiles = true;
-      if (this.playing && this._usingSynth) {
+      if (this.playing && this.enabled && this._usingSynth) {
         this._usingSynth = false;
-        // Stop synth nodes
         this._synthNodes.forEach(n => { try { n.stop(); } catch(e) {} });
         this._synthNodes = [];
         this._startFileMusic();
