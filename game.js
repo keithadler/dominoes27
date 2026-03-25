@@ -2668,6 +2668,7 @@ class Game {
       trackStat('winStreak', 1);
       addXP(50);
       spawnConfetti();
+      if (this.music) this.music.playVictory();
     } else {
       trackStat('loseStreak', 1);
       addXP(10);
@@ -3679,57 +3680,165 @@ function getXPProgress() {
 // --- Dynamic Music (Web Audio) ---
 class MusicEngine {
   constructor() {
-    this.ctx = null;
     this.playing = false;
     this.enabled = localStorage.getItem('domino_music') === '1';
     this.intensity = 0;
-    this._nodes = [];
+    this.volume = 0.3;
+    this._chillTrack = null;
+    this._intenseTrack = null;
+    this._victoryTrack = null;
+    this._currentTrack = null;
+    this._hasFiles = false;
+    this._synthCtx = null;
+    this._synthNodes = [];
   }
+
   init() {
-    if (this.ctx) return;
-    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    // Try to load MP3 files
+    this._chillTrack = this._loadTrack('music/chill.mp3');
+    this._intenseTrack = this._loadTrack('music/intense.mp3');
+    this._victoryTrack = this._loadTrack('music/victory.mp3', false);
+
+    // Check if files exist after a moment
+    setTimeout(() => {
+      if (this._chillTrack && this._chillTrack.readyState >= 2) {
+        this._hasFiles = true;
+      }
+    }, 1000);
+
+    // Synth fallback
+    try { this._synthCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
+
+  _loadTrack(src, loop = true) {
+    const audio = new Audio();
+    audio.src = src;
+    audio.loop = loop;
+    audio.volume = 0;
+    audio.preload = 'auto';
+    audio.addEventListener('canplaythrough', () => { this._hasFiles = true; }, { once: true });
+    audio.addEventListener('error', () => {}); // silently fail
+    return audio;
+  }
+
   start() {
-    if (!this.enabled || !this.ctx) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (!this.enabled) return;
     if (this.playing) return;
     this.playing = true;
-    this._playLoop();
+
+    if (this._hasFiles) {
+      this._startFileMusic();
+    } else {
+      this._startSynthMusic();
+    }
   }
+
   stop() {
     this.playing = false;
-    this._nodes.forEach(n => { try { n.stop(); } catch(e) {} });
-    this._nodes = [];
+    // Stop file tracks
+    [this._chillTrack, this._intenseTrack, this._victoryTrack].forEach(t => {
+      if (t) { t.pause(); t.currentTime = 0; t.volume = 0; }
+    });
+    this._currentTrack = null;
+    // Stop synth
+    this._synthNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+    this._synthNodes = [];
   }
-  setIntensity(val) { this.intensity = Math.max(0, Math.min(1, val)); }
+
+  setIntensity(val) {
+    this.intensity = Math.max(0, Math.min(1, val));
+    if (this._hasFiles && this.playing) this._crossfade();
+  }
+
   toggle() {
     this.enabled = !this.enabled;
     localStorage.setItem('domino_music', this.enabled ? '1' : '0');
     if (this.enabled) this.start(); else this.stop();
   }
-  _playLoop() {
-    if (!this.playing || !this.ctx) return;
-    const now = this.ctx.currentTime;
-    // Ambient chord — changes with intensity
-    const baseFreq = 110;
-    const chordNotes = [1, 1.5, 2, 2.5];
-    const vol = 0.02 + this.intensity * 0.02;
-    for (const mult of chordNotes) {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = baseFreq * mult * (1 + this.intensity * 0.5);
+
+  playVictory() {
+    if (!this.enabled) return;
+    if (this._victoryTrack && this._hasFiles) {
+      this._victoryTrack.volume = this.volume;
+      this._victoryTrack.currentTime = 0;
+      this._victoryTrack.play().catch(() => {});
+    }
+  }
+
+  _startFileMusic() {
+    if (!this._chillTrack) return;
+    this._chillTrack.volume = this.volume;
+    this._chillTrack.play().catch(() => {});
+    this._currentTrack = 'chill';
+    if (this._intenseTrack) {
+      this._intenseTrack.volume = 0;
+      this._intenseTrack.play().catch(() => {});
+    }
+  }
+
+  _crossfade() {
+    if (!this._chillTrack || !this._intenseTrack) return;
+    const t = this.intensity;
+    // Crossfade: chill fades out as intensity rises, intense fades in
+    this._chillTrack.volume = this.volume * (1 - t);
+    this._intenseTrack.volume = this.volume * t;
+  }
+
+  // Synth fallback — improved with actual musical patterns
+  _startSynthMusic() {
+    if (!this._synthCtx) return;
+    if (this._synthCtx.state === 'suspended') this._synthCtx.resume();
+    this._synthLoop();
+  }
+
+  _synthLoop() {
+    if (!this.playing || !this._synthCtx) return;
+    const ctx = this._synthCtx;
+    const now = ctx.currentTime;
+
+    // Jazz-like chord progression
+    const chords = [
+      [130.81, 164.81, 196.00, 246.94], // C major 7
+      [146.83, 185.00, 220.00, 277.18], // D minor 7
+      [164.81, 207.65, 246.94, 311.13], // E minor 7
+      [174.61, 220.00, 261.63, 329.63], // F major 7
+    ];
+    const chordIdx = Math.floor((now / 3) % chords.length);
+    const chord = chords[chordIdx];
+    const vol = 0.015 + this.intensity * 0.015;
+
+    for (const freq of chord) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = this.intensity > 0.5 ? 'triangle' : 'sine';
+      osc.frequency.value = freq * (1 + this.intensity * 0.25);
       gain.gain.setValueAtTime(vol, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 3);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 2.8);
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 3);
-      this._nodes.push(osc);
+      this._synthNodes.push(osc);
     }
-    // Clean up old nodes
-    this._nodes = this._nodes.filter(n => { try { return n.context.currentTime < n.stop; } catch(e) { return false; } });
-    setTimeout(() => this._playLoop(), 2800 - this.intensity * 800);
+
+    // Add a subtle bass note
+    const bassOsc = ctx.createOscillator();
+    const bassGain = ctx.createGain();
+    bassOsc.type = 'sine';
+    bassOsc.frequency.value = chord[0] / 2;
+    bassGain.gain.setValueAtTime(vol * 1.5, now);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+    bassOsc.connect(bassGain);
+    bassGain.connect(ctx.destination);
+    bassOsc.start(now);
+    bassOsc.stop(now + 2.8);
+    this._synthNodes.push(bassOsc);
+
+    // Cleanup old nodes
+    this._synthNodes = this._synthNodes.slice(-20);
+
+    const tempo = 2800 - this.intensity * 600;
+    setTimeout(() => this._synthLoop(), tempo);
   }
 }
 
