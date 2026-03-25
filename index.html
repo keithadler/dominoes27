@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Fives Dominoes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Menu Screen -->
+    <div id="menu-screen" class="screen active">
+      <div class="menu-container">
+        <h1 class="game-title">🁣 ALL FIVES 🁣</h1>
+        <p class="subtitle">Dominoes</p>
+        <div class="menu-options">
+          <div class="option-group">
+            <label>Game Mode</label>
+            <div class="btn-group" id="game-mode">
+              <button class="btn-option active" data-value="ffa">Free For All</button>
+              <button class="btn-option" data-value="teams">2v2 Teams</button>
+            </div>
+          </div>
+          <div class="option-group" id="opponents-group">
+            <label>Opponents</label>
+            <div class="btn-group" id="opponent-count">
+              <button class="btn-option" data-value="1">1</button>
+              <button class="btn-option" data-value="2">2</button>
+              <button class="btn-option active" data-value="3">3</button>
+            </div>
+          </div>
+          <div class="option-group">
+            <label>Play To</label>
+            <div class="btn-group" id="target-score">
+              <button class="btn-option" data-value="100">100</button>
+              <button class="btn-option active" data-value="200">200</button>
+              <button class="btn-option" data-value="250">250</button>
+              <button class="btn-option" data-value="500">500</button>
+            </div>
+          </div>
+          <button id="start-game" class="btn-start">Start Game</button>
+          <div id="player-roster">
+            <div style="text-align:center;margin-bottom:10px;">
+              <input type="text" id="player-name-input" class="name-edit" maxlength="12" placeholder="Your Name">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+      <div id="scoreboard" style="display:none"></div>
+      <div id="score-bar">
+        <div id="score-bar-content"></div>
+        <button id="sound-btn" class="btn-sound" title="Toggle Sound">🔊</button>
+      </div>
+      <div id="game-layout">
+        <!-- Top opponent -->
+        <div id="opponent-top" class="opponent-hand top"></div>
+        <div id="game-middle">
+          <!-- Left opponent -->
+          <div id="opponent-left" class="opponent-hand left"></div>
+          <!-- Center: board + boneyard -->
+          <div id="center-area">
+            <div id="board-area">
+              <canvas id="board-canvas"></canvas>
+            </div>
+            <div id="boneyard-area">
+              <div id="boneyard-tiles"></div>
+              <div id="boneyard-label"><span id="boneyard-count">0</span> in boneyard</div>
+            </div>
+          </div>
+          <!-- Right opponent -->
+          <div id="opponent-right" class="opponent-hand right"></div>
+        </div>
+      </div>
+      <div id="end-sum-display">
+        <div class="sum-label">Open Ends</div>
+        <div id="end-sum-breakdown" style="font-size:0.8rem;opacity:0.7;margin-bottom:2px;"></div>
+        <div class="sum-value" id="end-sum-value">0</div>
+        <div id="end-sum-score" style="font-size:0.75rem;margin-top:2px;"></div>
+        <div id="last-played-tile" style="margin-top:6px;"></div>
+      </div>
+      <div id="bottom-bar">
+        <div id="human-info">
+          <div id="player-controls">
+            <button id="draw-btn" class="btn-draw" disabled>Draw</button>
+            <button id="pass-btn" class="btn-pass" style="display:none">Pass</button>
+            <button id="hint-btn" class="btn-hint" disabled>💡 Hint (-5 pts)</button>
+          </div>
+        </div>
+        <div id="player-hand"></div>
+      </div>
+      <div id="turn-indicator"></div>
+      <button id="menu-btn" class="btn-menu" title="Menu (M)">☰</button>
+      <div id="game-dropdown" class="hidden">
+        <button class="dd-item" id="rules-btn">📖 Rules</button>
+        <button class="dd-item" id="log-btn">📋 Game Log</button>
+        <button class="dd-item" id="stats-btn">📊 Stats & Achievements</button>
+        <button class="dd-item" id="shortcuts-btn">❓ Shortcuts</button>
+        <button class="dd-item dd-danger" id="ragequit-btn">💀 Rage Quit (counts as loss)</button>
+      </div>
+      <div id="shortcuts-overlay" class="hidden">
+        <div class="shortcuts-panel">
+          <h2>Keyboard Shortcuts</h2>
+          <div class="shortcut-grid">
+            <div class="sc-row"><kbd>1</kbd>–<kbd>9</kbd><span>Select playable tile by position</span></div>
+            <div class="sc-row"><kbd>L</kbd><span>Place on Left end</span></div>
+            <div class="sc-row"><kbd>R</kbd><span>Place on Right end</span></div>
+            <div class="sc-row"><kbd>N</kbd><span>Place on North end</span></div>
+            <div class="sc-row"><kbd>S</kbd><span>Place on South end</span></div>
+            <div class="sc-row"><kbd>D</kbd><span>Draw from boneyard</span></div>
+            <div class="sc-row"><kbd>H</kbd><span>Use Hint (−5 pts)</span></div>
+            <div class="sc-row"><kbd>P</kbd><span>Pass turn</span></div>
+            <div class="sc-row"><kbd>G</kbd><span>Open game log</span></div>
+            <div class="sc-row"><kbd>M</kbd><span>Open menu</span></div>
+            <div class="sc-row"><kbd>?</kbd><span>Toggle this panel</span></div>
+            <div class="sc-row"><kbd>Esc</kbd><span>Close any overlay</span></div>
+          </div>
+          <button id="shortcuts-close-btn" class="gm-btn" style="text-align:center;margin-top:16px;">Close</button>
+        </div>
+      </div>
+      <div id="log-overlay" class="hidden">
+        <div class="log-panel">
+          <h2>Game Log</h2>
+          <div id="log-entries"></div>
+          <button id="log-close-btn" class="gm-btn" style="text-align:center;">Close</button>
+        </div>
+      </div>
+      <div id="floating-arrow"></div>
+      <!-- Rules overlay kept -->
+      <!-- Rules panel -->
+      <div id="rules-overlay" class="hidden">
+        <div class="rules-panel">
+          <h2>All Fives Rules</h2>
+          <div class="rules-content">
+            <h3>Objective</h3>
+            <p>Be the first player (or team) to reach the target score. Points are earned during play by making the open ends of the layout add up to a <strong>multiple of 5</strong>.</p>
+
+            <h3>Setup</h3>
+            <p>Uses a standard double-6 domino set (28 tiles). With 2 players, each draws 7 tiles. With 3-5 players, each draws 5. Remaining tiles form the boneyard.</p>
+
+            <h3>Starting Play</h3>
+            <p>The player holding the <strong>highest double</strong> (6-6, then 5-5, etc.) plays it first. This is automatic. If no one has a double, tiles are reshuffled and redealt.</p>
+
+            <h3>The Spinner</h3>
+            <p>The first double played becomes the <strong>spinner</strong>. It can be played on all four sides. The north and south arms open once both left and right sides have tiles.</p>
+
+            <h3>Scoring During Play</h3>
+            <p>After placing a tile, add up all <strong>open ends</strong> of the layout. If the sum is a multiple of 5 (5, 10, 15, 20...), you score that many points.</p>
+            <p><strong>Doubles at an open end count both sides.</strong> A 4-4 at the end counts as 8, not 4.</p>
+
+            <h3>Drawing &amp; Passing</h3>
+            <p>If you can't play, you must draw from the boneyard until you get a playable tile. If the boneyard is empty, you pass.</p>
+
+            <h3>End of Round</h3>
+            <p>A round ends when someone plays their last tile ("dominoes") or the game is blocked (nobody can play). The winner gets bonus points from opponents' remaining tiles, rounded to the nearest 5.</p>
+
+            <h3>Winning</h3>
+            <p>First player or team to reach the target score wins the game.</p>
+
+            <h3>Hint System</h3>
+            <p>Press the <strong>💡 Hint</strong> button during your turn to see the AI-recommended best move. Costs 5 points. Uses minimax with alpha-beta pruning to find the optimal play.</p>
+
+            <h3>Teams (2v2)</h3>
+            <p>In team mode, you and an AI partner sit across from each other against two AI opponents. Team scores are shared. When a teammate dominoes, the partner's remaining pips are subtracted from the bonus.</p>
+          </div>
+          <button id="rules-close-btn" class="gm-btn">← Back</button>
+        </div>
+      </div>
+      <div id="message-overlay" class="hidden">
+        <div class="message-box">
+          <p id="message-text"></p>
+          <button id="message-ok" class="btn-start">OK</button>
+        </div>
+      </div>
+      <div id="count-overlay" class="hidden"></div>
+      <div id="countdown-overlay" class="hidden"></div>
+      <div id="thinking-overlay" class="hidden"></div>
+      <div id="stats-overlay" class="hidden">
+        <div class="stats-panel">
+          <h2>Stats & Achievements</h2>
+          <div id="stats-content"></div>
+          <button class="gm-btn" id="stats-close-btn" style="text-align:center;margin-top:16px;">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="screen">
+      <div class="menu-container">
+        <h1 class="game-title">Game Over</h1>
+        <div id="final-scores"></div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <button id="rematch-btn" class="btn-start">Rematch</button>
+          <button id="play-again" class="btn-start" style="background:linear-gradient(145deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05));color:#fff;box-shadow:none;">New Game</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
