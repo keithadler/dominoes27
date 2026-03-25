@@ -943,9 +943,22 @@ const REAL_NAMES = [
   'Felix','Nadia','Hugo','Cleo','Ravi','Mila','Axel','Dina','Leo','Vera'
 ];
 
+const US_CITIES = [
+  'Miami, FL', 'Brooklyn, NY', 'Houston, TX', 'Chicago, IL', 'Atlanta, GA',
+  'Phoenix, AZ', 'Denver, CO', 'Seattle, WA', 'Boston, MA', 'Nashville, TN',
+  'Portland, OR', 'Austin, TX', 'Detroit, MI', 'Memphis, TN', 'Oakland, CA',
+  'Philly, PA', 'New Orleans, LA', 'San Diego, CA', 'Dallas, TX', 'Baltimore, MD',
+  'St. Louis, MO', 'Charlotte, NC', 'Tampa, FL', 'Las Vegas, NV', 'Honolulu, HI',
+  'Savannah, GA', 'Raleigh, NC', 'Tucson, AZ', 'Boise, ID', 'Richmond, VA'
+];
+
 function pickRandomNames(count) {
   const shuffled = [...REAL_NAMES].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  const cities = [...US_CITIES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count).map((name, i) => ({
+    name,
+    city: cities[i % cities.length]
+  }));
 }
 
 // --- Win/Loss tracking ---
@@ -1075,17 +1088,8 @@ class Game {
     document.getElementById('stats-close-btn').addEventListener('click', () => {
       document.getElementById('stats-overlay').classList.add('hidden');
     });
-    document.getElementById('sound-btn').addEventListener('click', () => {
-      this._soundMuted = !this._soundMuted;
-      const btn = document.getElementById('sound-btn');
-      btn.textContent = this._soundMuted ? '🔇' : '🔊';
-      btn.classList.toggle('muted', this._soundMuted);
-      localStorage.setItem('domino_muted', this._soundMuted ? '1' : '0');
-    });
-    // Restore mute state
+    // Sound mute state from localStorage
     this._soundMuted = localStorage.getItem('domino_muted') === '1';
-    const soundBtn = document.getElementById('sound-btn');
-    if (this._soundMuted && soundBtn) { soundBtn.textContent = '🔇'; soundBtn.classList.add('muted'); }
 
     // Player name input
     const nameInput = document.getElementById('player-name-input');
@@ -1119,13 +1123,30 @@ class Game {
       showTutorial();
     }
 
-    // Music engine
+    // Music engine — init immediately, start on first user interaction
     this.music = new MusicEngine();
+    this.music.init();
 
-    // Init music on first interaction
-    document.addEventListener('click', () => {
-      if (!this.music.ctx) this.music.init();
-    }, { once: true });
+    // Menu music toggle
+    const menuMusicToggle = document.getElementById('menu-music-toggle');
+    if (menuMusicToggle) {
+      menuMusicToggle.checked = this.music.enabled;
+      menuMusicToggle.addEventListener('change', () => {
+        if (!this.music._chillTrack) this.music.init();
+        this.music.toggle();
+        menuMusicToggle.checked = this.music.enabled;
+      });
+    }
+
+    const startMusicOnClick = () => {
+      if (this.music.enabled && !this.music.playing) {
+        this.music.start();
+      }
+      document.removeEventListener('click', startMusicOnClick);
+      document.removeEventListener('keydown', startMusicOnClick);
+    };
+    document.addEventListener('click', startMusicOnClick);
+    document.addEventListener('keydown', startMusicOnClick);
 
     // Canvas click for choosing end
     const canvas = document.getElementById('board-canvas');
@@ -1260,7 +1281,7 @@ class Game {
 
     // Generate preview players with assigned difficulties
     if (!this._previewNames) {
-      this._previewNames = pickRandomNames(4);
+      const _picked = pickRandomNames(4); this._previewNames = _picked.map(p => p.name); this._previewCities = _picked.map(p => p.city);
       this._previewSeeds = this._previewNames.map((n, i) => n + '-preview-' + i);
       this._previewDiffs = this._previewNames.map(() => difficulties[Math.floor(Math.random() * 3)]);
       // Seed fake records
@@ -1280,7 +1301,7 @@ class Game {
         const rec = getRecord(name);
         players.push({
           name, avatar: avatarURL(this._previewSeeds[i]),
-          isHuman: false, record: rec, rank: getRank(name),
+          isHuman: false, record: rec, rank: getRank(name), city: this._previewCities && this._previewCities[i],
           team: i === 0 ? 'teammate' : 'opponent'
         });
       }
@@ -1291,7 +1312,7 @@ class Game {
         const rec = getRecord(name);
         players.push({
           name, avatar: avatarURL(this._previewSeeds[i]),
-          isHuman: false, record: rec, rank: getRank(name)
+          isHuman: false, record: rec, rank: getRank(name), city: this._previewCities && this._previewCities[i]
         });
       }
     }
@@ -1305,7 +1326,7 @@ class Game {
         <img class="roster-avatar" src="${p.avatar}" alt="${p.name}">
         <div class="roster-info">
           <div class="roster-name">${p.name}${teamBadge}</div>
-          <div class="roster-rank">${p.rank}</div>
+          <div class="roster-rank">${p.rank}${p.city ? ' · ' + p.city : ''}</div>
           <div class="roster-record">${p.record.wins}W - ${p.record.losses}L</div>
         </div>
       `;
@@ -1394,12 +1415,13 @@ class Game {
         p.ai = new AI(diffs[i]);
         p.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
         p.avatar = avatarURL(seeds[i]);
+        p.city = (this._previewCities && this._previewCities[i]) || '';
         this.players.push(p);
       }
     }
 
     // Regenerate preview names for next game
-    this._previewNames = pickRandomNames(4);
+    const _rePicked = pickRandomNames(4); this._previewNames = _rePicked.map(p => p.name); this._previewCities = _rePicked.map(p => p.city);
     this._previewSeeds = this._previewNames.map((n, i) => n + '-preview-' + i + '-' + Date.now());
     this._previewDiffs = this._previewNames.map(() => difficulties[Math.floor(Math.random() * 3)]);
     this._previewNames.forEach((n, i) => seedAIRecord(n, this._previewDiffs[i]));
@@ -3248,64 +3270,88 @@ class Game {
     `;
   }
   _renderPrefs() {
-    const container = document.getElementById('prefs-content');
-    if (!container) return;
-    const currentSkin = getTileSkin();
-    const currentName = getPlayerName();
+      const container = document.getElementById('prefs-content');
+      if (!container) return;
+      const currentSkin = getTileSkin();
+      const currentName = getPlayerName();
+      const musicOn = this.music && this.music.enabled;
+      const sfxOn = !this._soundMuted;
 
-    container.innerHTML = `
-      <div class="pref-group">
-        <div class="pref-label">Player Name</div>
-        <input type="text" id="pref-name-input" class="name-edit" maxlength="12" value="${currentName}" style="width:100%;">
-      </div>
-      <div class="pref-group">
-        <div class="pref-label">Tile Skin</div>
-        <div class="skin-options">
-          ${TILE_SKINS.map(s => `
-            <div class="skin-option ${s.id === currentSkin ? 'active' : ''}" data-skin="${s.id}">
-              <div class="skin-preview" style="background:linear-gradient(135deg,${s.face},${s.faceDark});border-color:${s.border};"></div>
-              <span>${s.name}</span>
-            </div>
-          `).join('')}
+      container.innerHTML = `
+        <div class="pref-group">
+          <div class="pref-label">Player Name</div>
+          <input type="text" id="pref-name-input" class="name-edit" maxlength="12" value="${currentName}" style="width:100%;">
         </div>
-      </div>
-      <div class="pref-group">
-        <div class="pref-label">Audio</div>
-        <label class="music-toggle">
-          <input type="checkbox" id="music-toggle-cb" ${this.music && this.music.enabled ? 'checked' : ''}>
-          <span>Background Music</span>
-        </label>
-      </div>
-    `;
+        <div class="pref-group">
+          <div class="pref-label">Tile Skin</div>
+          <div class="skin-options">
+            ${TILE_SKINS.map(s => `
+              <div class="skin-option ${s.id === currentSkin ? 'active' : ''}" data-skin="${s.id}">
+                <div class="skin-preview" style="background:linear-gradient(135deg,${s.face},${s.faceDark});border-color:${s.border};"></div>
+                <span>${s.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="pref-group">
+          <div class="pref-label">Audio</div>
+          <div class="toggle-row">
+            <span>🎵 Background Music</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="music-toggle-cb" ${musicOn ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span>🔊 Sound Effects</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="sfx-toggle-cb" ${sfxOn ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      `;
 
-    // Name change
-    const nameInput = document.getElementById('pref-name-input');
-    if (nameInput) {
-      nameInput.addEventListener('change', () => {
-        const name = nameInput.value.trim() || 'Human';
-        setPlayerName(name);
-        if (this.players && this.players[0]) this.players[0].name = name;
-        this._updateUI();
+      // Name change
+      const nameInput = document.getElementById('pref-name-input');
+      if (nameInput) {
+        nameInput.addEventListener('change', () => {
+          const name = nameInput.value.trim() || 'Human';
+          setPlayerName(name);
+          if (this.players && this.players[0]) this.players[0].name = name;
+          this._updateUI();
+        });
+      }
+
+      // Skin click handlers
+      container.querySelectorAll('.skin-option').forEach(el => {
+        el.addEventListener('click', () => {
+          setTileSkin(el.dataset.skin);
+          this._renderPrefs();
+          this._renderBoard();
+        });
       });
+
+      // Music toggle
+      const musicCb = document.getElementById('music-toggle-cb');
+      if (musicCb) {
+        musicCb.addEventListener('change', () => {
+          if (this.music) {
+            if (!this.music._chillTrack) this.music.init();
+            this.music.toggle();
+          }
+        });
+      }
+
+      // SFX toggle
+      const sfxCb = document.getElementById('sfx-toggle-cb');
+      if (sfxCb) {
+        sfxCb.addEventListener('change', () => {
+          this._soundMuted = !sfxCb.checked;
+          localStorage.setItem('domino_muted', this._soundMuted ? '1' : '0');
+        });
+      }
     }
-
-    // Skin click handlers
-    container.querySelectorAll('.skin-option').forEach(el => {
-      el.addEventListener('click', () => {
-        setTileSkin(el.dataset.skin);
-        this._renderPrefs();
-        this._renderBoard();
-      });
-    });
-
-    // Music toggle
-    const musicCb = document.getElementById('music-toggle-cb');
-    if (musicCb) {
-      musicCb.addEventListener('change', () => {
-        if (this.music) this.music.toggle();
-      });
-    }
-  }
 
   _updateXPBar() {
     const wrap = document.getElementById('xp-bar-wrap');

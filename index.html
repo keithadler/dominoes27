@@ -39,6 +39,13 @@
             </div>
           </div>
           <button id="start-game" class="btn-start">Start Game</button>
+          <div style="display:flex;justify-content:center;gap:16px;margin-top:16px;">
+            <label class="toggle-switch" style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:0.8rem;opacity:0.6;">🎵 Music</span>
+              <input type="checkbox" id="menu-music-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
           <div id="player-roster">
             <div style="text-align:center;margin-bottom:10px;">
               <input type="text" id="player-name-input" class="name-edit" maxlength="12" placeholder="Your Name">
@@ -53,7 +60,6 @@
       <div id="scoreboard" style="display:none"></div>
       <div id="score-bar">
         <div id="score-bar-content"></div>
-        <button id="sound-btn" class="btn-sound" title="Toggle Sound">🔊</button>
       </div>
       <div id="game-layout">
         <!-- Top opponent -->
