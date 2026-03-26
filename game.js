@@ -1944,7 +1944,7 @@ class Game {
             if (this.currentPlayer === player.index && !this.roundOver) {
               this._executePlay(player, playableTiles[0], placements[0]);
             }
-          }, 600);
+          }, this._speedMs(600));
           return;
         }
       }
@@ -1956,7 +1956,7 @@ class Game {
           if (this.currentPlayer === player.index && !this.roundOver) {
             this.pass();
           }
-        }, 1500);
+        }, this._speedMs(1500));
       }
     }
   }
@@ -2168,7 +2168,7 @@ class Game {
       setTimeout(() => {
         this._playLock = false;
         this._executePlay(player, playable[0].tile, playable[0].placement);
-      }, 600);
+      }, this._speedMs(600));
       return;
     }
 
@@ -2289,35 +2289,39 @@ class Game {
     this._dragStartY = startY;
     this._dragActive = false;
     this._dragSourceEl = el;
+    this._dragGhost = null;
 
-    // Create ghost element
-    const ghost = el.cloneNode(true);
-    ghost.className = 'hand-tile drag-ghost';
-    ghost.style.position = 'fixed';
-    ghost.style.zIndex = '100';
-    ghost.style.pointerEvents = 'none';
-    ghost.style.width = el.offsetWidth + 'px';
-    ghost.style.height = el.offsetHeight + 'px';
-    ghost.style.left = (startX - el.offsetWidth / 2) + 'px';
-    ghost.style.top = (startY - el.offsetHeight / 2) + 'px';
-    ghost.style.opacity = '0.85';
-    ghost.style.transform = 'scale(1.1) rotate(-3deg)';
-    ghost.style.transition = 'none';
-    ghost.style.animation = 'none';
-    document.body.appendChild(ghost);
-    this._dragGhost = ghost;
-
-    // Show valid placements on board
-    this._renderBoard(placements);
+    const createGhost = () => {
+      const ghost = el.cloneNode(true);
+      ghost.className = 'hand-tile drag-ghost';
+      ghost.style.position = 'fixed';
+      ghost.style.zIndex = '100';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.width = el.offsetWidth + 'px';
+      ghost.style.height = el.offsetHeight + 'px';
+      ghost.style.opacity = '0.85';
+      ghost.style.transform = 'scale(1.1) rotate(-3deg)';
+      ghost.style.transition = 'none';
+      ghost.style.animation = 'none';
+      document.body.appendChild(ghost);
+      this._dragGhost = ghost;
+      return ghost;
+    };
 
     const onMove = (cx, cy) => {
       const dx = cx - this._dragStartX;
       const dy = cy - this._dragStartY;
-      if (!this._dragActive && Math.hypot(dx, dy) < 8) return;
-      this._dragActive = true;
-      ghost.style.left = (cx - el.offsetWidth / 2) + 'px';
-      ghost.style.top = (cy - el.offsetHeight / 2) + 'px';
-      el.style.opacity = '0.3';
+      if (!this._dragActive && Math.hypot(dx, dy) < 10) return;
+      if (!this._dragActive) {
+        this._dragActive = true;
+        createGhost();
+        this._renderBoard(placements);
+        el.style.opacity = '0.3';
+      }
+      if (this._dragGhost) {
+        this._dragGhost.style.left = (cx - el.offsetWidth / 2) + 'px';
+        this._dragGhost.style.top = (cy - el.offsetHeight / 2) + 'px';
+      }
     };
 
     const onEnd = (cx, cy) => {
@@ -2735,7 +2739,10 @@ class Game {
 
     // Track round history for recap
     if (!this._roundHistory) this._roundHistory = [];
-    const roundPlays = this.gameLog.filter(e => e.action === 'play');
+    // Find plays from this round only (after the last round-end entry)
+    const lastRoundEndIdx = this.gameLog.reduce((acc, e, i) => e.action === 'round-end' ? i : acc, -1);
+    const roundLog = lastRoundEndIdx >= 0 ? this.gameLog.slice(lastRoundEndIdx + 1) : this.gameLog;
+    const roundPlays = roundLog.filter(e => e.action === 'play');
     const roundScoring = roundPlays.filter(e => e.score > 0);
     const bestPlay = roundScoring.length > 0 ? roundScoring.reduce((a, b) => a.score > b.score ? a : b) : null;
     this._roundHistory.push({
@@ -2899,8 +2906,9 @@ class Game {
       // Animate tiles flipping in one by one
       const playerTiles = [...p.hand];
       let runningPips = 0;
+      const tileInterval = this._speedMs(300);
       playerTiles.forEach((tile, i) => {
-        const delay = tileDelay + i * 300;
+        const delay = tileDelay + i * tileInterval;
         setTimeout(() => {
           const container = document.getElementById(`count-tiles-${p.index}`);
           if (!container) return;
@@ -2918,7 +2926,7 @@ class Game {
         }, delay);
       });
 
-      tileDelay += playerTiles.length * 300 + 200;
+      tileDelay += playerTiles.length * tileInterval + this._speedMs(200);
     }
 
     // Show total and bonus after all tiles counted
@@ -2970,8 +2978,8 @@ class Game {
           callback();
         });
         overlay.appendChild(btn);
-      }, 600);
-    }, tileDelay + 400);
+      }, this._speedMs(600));
+    }, tileDelay + this._speedMs(400));
   }
   _countPipSVG(n) {
     const size = 24;
