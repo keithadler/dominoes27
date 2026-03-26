@@ -2279,6 +2279,7 @@ class Game {
       if (playableTiles.length === 1) {
         const placements = this.board.getValidPlacements(playableTiles[0]);
         if (placements.length === 1) {
+          this._showAutoPlayBanner('Auto-playing your only move');
           setTimeout(() => {
             if (this.currentPlayer === player.index && !this.roundOver) {
               this._executePlay(player, playableTiles[0], placements[0]);
@@ -2291,6 +2292,7 @@ class Game {
       this._enableHumanPlay(player);
       // If human can't play and boneyard is empty, auto-pass
       if (playableTiles.length === 0 && this.boneyard.length === 0) {
+        this._showAutoPlayBanner('No moves available — auto-passing');
         setTimeout(() => {
           if (this.currentPlayer === player.index && !this.roundOver) {
             this.pass();
@@ -2510,6 +2512,7 @@ class Game {
       for (const p of placements) playable.push({ tile, placement: p });
     }
     if (playable.length === 1) {
+      this._showAutoPlayBanner('Auto-playing your only move');
       setTimeout(() => {
         this._playLock = false;
         this._executePlay(player, playable[0].tile, playable[0].placement);
@@ -3607,6 +3610,17 @@ class Game {
     document.getElementById('message-text').innerHTML = text.replace(/\n/g, '<br>');
     document.getElementById('message-overlay').classList.remove('hidden');
     this._messageCallback = callback;
+  }
+
+  _showAutoPlayBanner(text) {
+    const existing = document.querySelector('.auto-play-banner');
+    if (existing) existing.remove();
+    const banner = document.createElement('div');
+    banner.className = 'auto-play-banner';
+    banner.innerHTML = `⚡ ${text}`;
+    document.body.appendChild(banner);
+    setTimeout(() => { banner.classList.add('fade-out'); }, 1500);
+    setTimeout(() => banner.remove(), 2000);
   }
 
   hideMessage() {

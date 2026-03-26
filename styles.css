@@ -1478,3 +1478,20 @@ body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
   .message-box { padding: 16px 12px; max-width: 95%; }
   .message-box p { font-size: 0.9rem; }
 }
+
+/* ===== Auto-play banner ===== */
+.auto-play-banner {
+  position: fixed; bottom: 180px; left: 50%; transform: translateX(-50%);
+  padding: 10px 24px; border-radius: 12px; z-index: 20; pointer-events: none;
+  background: linear-gradient(145deg, rgba(232,167,53,0.9), rgba(200,140,30,0.9));
+  color: #1a1a1a; font-weight: 800; font-size: 0.9rem; letter-spacing: 0.5px;
+  box-shadow: 0 4px 20px rgba(232,167,53,0.4), 0 0 30px rgba(232,167,53,0.15);
+  animation: autoPlayIn 0.3s ease-out;
+  white-space: nowrap;
+  transition: opacity 0.4s ease;
+}
+.auto-play-banner.fade-out { opacity: 0; }
+@keyframes autoPlayIn { from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.9); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } }
+@media (max-width: 480px) {
+  .auto-play-banner { font-size: 0.75rem; padding: 8px 16px; bottom: 140px; }
+}
