@@ -1923,12 +1923,12 @@ class Game {
       // Show avatar intro overlay
       const introEl = document.createElement('div');
       introEl.id = 'round-intro';
-      introEl.style.cssText = 'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:24px;pointer-events:none;';
+      introEl.style.cssText = 'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:40px;pointer-events:none;';
       for (const p of this.players) {
         const av = document.createElement('div');
-        av.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;transform:scale(0.7) translateY(20px);transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);';
-        av.innerHTML = `<img src="${p.avatar}" style="width:64px;height:64px;border-radius:50%;border:3px solid rgba(232,167,53,0.5);box-shadow:0 4px 20px rgba(0,0,0,0.5);">
-          <span style="font-weight:800;font-size:0.85rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.6);">${p.name}</span>`;
+        av.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;transform:scale(0.5) translateY(30px);transition:all 0.6s cubic-bezier(0.34,1.56,0.64,1);';
+        av.innerHTML = `<img src="${p.avatar}" style="width:120px;height:120px;border-radius:50%;border:4px solid rgba(232,167,53,0.6);box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 30px rgba(232,167,53,0.2);">
+          <span style="font-weight:900;font-size:1.2rem;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.7);letter-spacing:1px;">${p.name}</span>`;
         introEl.appendChild(av);
       }
       document.body.appendChild(introEl);

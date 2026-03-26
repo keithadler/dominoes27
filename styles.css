@@ -1433,9 +1433,15 @@ body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
 
 /* Round intro avatars responsive */
 #round-intro { flex-wrap: wrap; padding: 20px; }
-@media (max-width: 480px) {
-  #round-intro img { width: 48px; height: 48px; }
-  #round-intro span { font-size: 0.7rem; }
+@media (max-width: 600px) {
+  #round-intro { gap: 20px; }
+  #round-intro img { width: 80px !important; height: 80px !important; }
+  #round-intro span { font-size: 0.9rem !important; }
+}
+@media (max-width: 400px) {
+  #round-intro { gap: 14px; }
+  #round-intro img { width: 64px !important; height: 64px !important; }
+  #round-intro span { font-size: 0.75rem !important; }
 }
 
 /* Dropdown key badges hide on small screens */
