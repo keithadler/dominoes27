@@ -1059,8 +1059,20 @@ class Game {
     });
     document.getElementById('ragequit-btn').addEventListener('click', () => {
       document.getElementById('game-dropdown').classList.add('hidden');
-      recordLoss('Human');
+      recordLoss(getPlayerName());
+      // Full reset
+      this.gameOver = true;
+      this.roundOver = true;
+      this._playLock = false;
+      this._suppressToast = false;
+      if (this._spinnerRAF) { cancelAnimationFrame(this._spinnerRAF); this._spinnerRAF = null; }
+      if (this.music) this.music.stop();
+      this.players = [];
+      this.board = null;
+      this.placements = [];
+      this.boneyard = [];
       this.showScreen('menu-screen');
+      this._updateRoster();
     });
     document.getElementById('rules-close-btn').addEventListener('click', () => {
       document.getElementById('rules-overlay').classList.add('hidden');
@@ -2567,7 +2579,7 @@ class Game {
         const isTeammate = p.team === this.players[0].team;
         teamTag = isTeammate
           ? ' <span style="color:#4aaf6c;font-size:0.75rem;font-weight:700;">🤝 TEAMMATE</span>'
-          : ' <span style="color:#e04a3a;font-size:0.75rem;font-weight:700;">⚔️ OPPONENT</span>';
+          : ' <span style="color:#e04a3a;font-size:0.75rem;font-weight:700;">⚔️ Opps</span>';
       }
 
       row.innerHTML = `
@@ -3105,7 +3117,7 @@ class Game {
 
       const isMyTurn = this.currentPlayer === 0 && human.isHuman;
       for (const tile of human.hand) {
-        const playable = isMyTurn && !this._suppressToast && !this.board.isEmpty && this.board.canPlay(tile);
+        const playable = isMyTurn && !this._suppressToast && this.board.canPlay(tile) && !this.board.isEmpty;
         const matchCount = playable ? this.board.getValidPlacements(tile).length : 0;
         this.renderer.drawHandTile(
           container, tile, playable,
@@ -3221,7 +3233,7 @@ class Game {
       const teamIcon = isTeammate ? '🤝 ' : '';
       const teamLabel = this.teamMode ? (isTeammate
         ? '<span style="font-size:0.6rem;color:#4aaf6c;font-weight:700;">TEAMMATE</span>'
-        : '<span style="font-size:0.6rem;color:#e04a3a;font-weight:700;">OPPONENT</span>') : '';
+        : '<span style="font-size:0.6rem;color:#e04a3a;font-weight:700;">Opps</span>') : '';
 
       // Apply player color gradient — from their color to a darker shade of same hue
       const c = player.color || { h: 0, s: 0, l: 50 };
@@ -3927,40 +3939,79 @@ class MusicEngine {
     if (this.enabled) this.start(); else this.stop();
   }
   _loop() {
-    if (!this.playing || !this.ctx) return;
-    const ctx = this.ctx;
-    const now = ctx.currentTime;
-    const chords = [
-      [130.81, 164.81, 196.00, 246.94],
-      [146.83, 185.00, 220.00, 277.18],
-      [164.81, 207.65, 246.94, 311.13],
-      [174.61, 220.00, 261.63, 329.63],
-    ];
-    const chord = chords[Math.floor((now / 3) % chords.length)];
-    const vol = 0.012 + this.intensity * 0.01;
-    for (const freq of chord) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = this.intensity > 0.5 ? 'triangle' : 'sine';
-      osc.frequency.value = freq * (1 + this.intensity * 0.25);
-      gain.gain.setValueAtTime(vol, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 2.8);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 3);
-      this._nodes.push(osc);
+      if (!this.playing || !this.ctx) return;
+      const ctx = this.ctx;
+      const now = ctx.currentTime;
+
+      // Extended jazz progression with more variety
+      const progressions = [
+        // Cmaj7 → Dm7 → Em7 → Fmaj7 (classic)
+        [[130.81,164.81,196.00,246.94],[146.83,185.00,220.00,277.18],[164.81,207.65,246.94,311.13],[174.61,220.00,261.63,329.63]],
+        // Am7 → D7 → Gmaj7 → Cmaj7 (jazz ii-V-I)
+        [[110.00,130.81,164.81,196.00],[146.83,185.00,220.00,261.63],[98.00,123.47,146.83,185.00],[130.81,164.81,196.00,246.94]],
+        // Fm7 → Bb7 → Ebmaj7 → Abmaj7 (smooth)
+        [[174.61,207.65,261.63,311.13],[116.54,146.83,174.61,220.00],[155.56,196.00,233.08,293.66],[103.83,130.81,155.56,196.00]],
+        // Dm7 → G7 → Cmaj7 → Am7 (standard)
+        [[146.83,174.61,220.00,261.63],[98.00,123.47,146.83,185.00],[130.81,164.81,196.00,246.94],[110.00,130.81,164.81,196.00]],
+      ];
+
+      // Pick progression based on time, change every ~24 seconds
+      const progIdx = Math.floor(now / 24) % progressions.length;
+      const chords = progressions[progIdx];
+      const chordIdx = Math.floor((now / 3) % chords.length);
+      const chord = chords[chordIdx];
+
+      const vol = 0.012 + this.intensity * 0.01;
+      const types = ['sine', 'triangle', 'sine'];
+      const oscType = this.intensity > 0.6 ? 'triangle' : 'sine';
+
+      // Main chord
+      for (let i = 0; i < chord.length; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = oscType;
+        osc.frequency.value = chord[i] * (1 + this.intensity * 0.2);
+        // Stagger note attacks slightly for a more natural feel
+        const attackTime = now + i * 0.05;
+        gain.gain.setValueAtTime(0, attackTime);
+        gain.gain.linearRampToValueAtTime(vol, attackTime + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, attackTime + 2.8);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(attackTime); osc.stop(attackTime + 3);
+        this._nodes.push(osc);
+      }
+
+      // Bass note
+      const bassOsc = ctx.createOscillator();
+      const bassGain = ctx.createGain();
+      bassOsc.type = 'sine';
+      bassOsc.frequency.value = chord[0] / 2;
+      bassGain.gain.setValueAtTime(0, now);
+      bassGain.gain.linearRampToValueAtTime(vol * 1.5, now + 0.08);
+      bassGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+      bassOsc.connect(bassGain); bassGain.connect(ctx.destination);
+      bassOsc.start(now); bassOsc.stop(now + 2.8);
+      this._nodes.push(bassOsc);
+
+      // Occasional high melodic note (every other chord)
+      if (chordIdx % 2 === 0 && Math.random() > 0.3) {
+        const melOsc = ctx.createOscillator();
+        const melGain = ctx.createGain();
+        melOsc.type = 'sine';
+        melOsc.frequency.value = chord[Math.floor(Math.random() * chord.length)] * 2;
+        const melVol = vol * 0.4;
+        melGain.gain.setValueAtTime(0, now + 0.5);
+        melGain.gain.linearRampToValueAtTime(melVol, now + 0.6);
+        melGain.gain.exponentialRampToValueAtTime(0.001, now + 2);
+        melOsc.connect(melGain); melGain.connect(ctx.destination);
+        melOsc.start(now + 0.5); melOsc.stop(now + 2.2);
+        this._nodes.push(melOsc);
+      }
+
+      this._nodes = this._nodes.slice(-30);
+      const tempo = 2800 - this.intensity * 600;
+      setTimeout(() => this._loop(), tempo);
     }
-    const bassOsc = ctx.createOscillator();
-    const bassGain = ctx.createGain();
-    bassOsc.type = 'sine';
-    bassOsc.frequency.value = chord[0] / 2;
-    bassGain.gain.setValueAtTime(vol * 1.2, now);
-    bassGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-    bassOsc.connect(bassGain); bassGain.connect(ctx.destination);
-    bassOsc.start(now); bassOsc.stop(now + 2.8);
-    this._nodes.push(bassOsc);
-    this._nodes = this._nodes.slice(-20);
-    setTimeout(() => this._loop(), 2800 - this.intensity * 600);
-  }
 }
 
 function setPlayerName(name) {
