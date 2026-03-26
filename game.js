@@ -1743,6 +1743,8 @@ class Game {
     if (!player.isHuman) {
       // Show centered thinking overlay
       this._showThinking(player);
+      // Particles on active player avatar
+      this._spawnAvatarParticles(player);
       const base = 1500;
       const jitter = 500 + Math.random() * 1500;
       setTimeout(() => this._aiTurn(player), base + jitter);
@@ -1820,6 +1822,16 @@ class Game {
         }
       }
     }
+  }
+  _spawnAvatarParticles(player) {
+    const pos = this._getPlayerPosition(player.index);
+    const panelId = pos === 'bottom' ? null : 'opponent-' + pos;
+    const panel = panelId ? document.getElementById(panelId) : document.getElementById('human-info');
+    if (!panel) return;
+    const avatar = panel.querySelector('.opp-avatar') || panel.querySelector('.human-avatar');
+    if (!avatar) return;
+    const r = avatar.getBoundingClientRect();
+    spawnParticles(r.left + r.width / 2, r.top + r.height / 2, 8, 'particle-gold');
   }
 
   _hideThinking() {
