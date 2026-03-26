@@ -68,9 +68,8 @@ All Fives is a classic domino scoring game using a standard double-6 set (28 til
 - Responsive design with mobile breakpoints
 
 ### Audio
-- Background music with MP3 support (chill + intense tracks with crossfade based on game intensity)
-- Synthesized jazz chord fallback when no MP3 files present
-- Victory track on game win
+- Synthesized jazz chord progression background music (toggleable in preferences)
+- Music intensity increases as scores approach the target
 - Sound effects: tile placement, scoring arpeggio, sad boneyard draw, win fanfare, deal shuffle
 - Separate toggles for music and sound effects in preferences
 
@@ -87,20 +86,6 @@ All Fives is a classic domino scoring game using a standard double-6 set (28 til
 - Achievement unlock popups
 - Stats dashboard: games played, win rate, best streak, highest scores
 - All stats persist in localStorage
-
-## 🎵 Music Setup
-
-Place MP3 files in the `music/` folder:
-
-| File | Purpose | Suggested Search |
-|------|---------|-----------------|
-| `chill.mp3` | Normal gameplay loop | "jazz lounge", "smooth background" |
-| `intense.mp3` | Close game loop | "upbeat jazz", "tension building" |
-| `victory.mp3` | Win celebration | "victory fanfare short" |
-
-Free sources: [Pixabay Music](https://pixabay.com/music/), [Mixkit](https://mixkit.co/free-stock-music/)
-
-The game works without these files — a synthesized jazz chord progression plays as fallback.
 
 ## ⌨️ Keyboard Shortcuts
 
@@ -131,15 +116,10 @@ The game works without these files — a synthesized jazz chord progression play
 ```
 ├── index.html          # Main HTML with all screens
 ├── styles.css          # Complete stylesheet with animations
-├── game.js             # Game engine, AI, renderer, UI (~3500 lines)
-├── music/
-│   ├── chill.mp3       # Background music (normal)
-│   ├── intense.mp3     # Background music (intense)
-│   ├── victory.mp3     # Victory jingle
-│   └── README.md       # Music setup guide
+├── game.js             # Game engine, AI, renderer, UI
 └── README.md           # This file
 ```
 
 ## 📜 License
 
-Game code is provided as-is. Music files sourced from Pixabay (royalty-free, no attribution required).
+Game code is provided as-is.

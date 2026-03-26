@@ -1179,7 +1179,13 @@ class Game {
       }
 
       // Don't process shortcuts if an overlay is open
-      const anyOverlay = ['rules-overlay', 'log-overlay', 'count-overlay', 'message-overlay', 'shortcuts-overlay']
+      // But always allow ? to toggle shortcuts
+      if (key === '?' || key === '/') {
+        const el = document.getElementById('shortcuts-overlay');
+        if (el) el.classList.toggle('hidden');
+        return;
+      }
+      const anyOverlay = ['rules-overlay', 'log-overlay', 'count-overlay', 'message-overlay', 'shortcuts-overlay', 'tracker-overlay']
         .some(id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); });
       if (anyOverlay) return;
 
@@ -1239,12 +1245,6 @@ class Game {
         this._renderLog();
         document.getElementById('log-overlay').classList.remove('hidden');
       }
-      // ? or / = Shortcuts help
-      if (key === '?' || key === '/') {
-        const el = document.getElementById('shortcuts-overlay');
-        if (el) el.classList.toggle('hidden');
-      }
-      // 1-7 = Select tile by position in hand
       if (key >= '1' && key <= '9') {
         const idx = parseInt(key) - 1;
         const tiles = document.querySelectorAll('.hand-tile.playable');
@@ -2710,7 +2710,6 @@ class Game {
       trackStat('winStreak', 1);
       addXP(50);
       spawnConfetti();
-      if (this.music) this.music.playVictory();
     } else {
       trackStat('loseStreak', 1);
       addXP(10);
@@ -3902,109 +3901,35 @@ class MusicEngine {
     this.playing = false;
     this.enabled = localStorage.getItem('domino_music') === '1';
     this.intensity = 0;
-    this.volume = 0.04; // lower default volume
-    this._chillTrack = null;
-    this._intenseTrack = null;
-    this._victoryTrack = null;
-    this._hasFiles = false;
-    this._synthCtx = null;
-    this._synthNodes = [];
-    this._usingSynth = false;
+    this.ctx = null;
+    this._nodes = [];
   }
-
   init() {
-    this._chillTrack = this._loadTrack('music/chill.mp3');
-    this._intenseTrack = this._loadTrack('music/intense.mp3');
-    this._victoryTrack = this._loadTrack('music/victory.mp3', false);
-    try { this._synthCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    if (this.ctx) return;
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
-
-  _loadTrack(src, loop = true) {
-    const audio = new Audio();
-    audio.src = src;
-    audio.loop = loop;
-    audio.volume = 0;
-    audio.preload = 'auto';
-    audio.addEventListener('canplaythrough', () => {
-      this._hasFiles = true;
-      if (this.playing && this.enabled && this._usingSynth) {
-        this._usingSynth = false;
-        this._synthNodes.forEach(n => { try { n.stop(); } catch(e) {} });
-        this._synthNodes = [];
-        this._startFileMusic();
-      }
-    }, { once: true });
-    audio.addEventListener('error', () => {});
-    return audio;
-  }
-
   start() {
     if (!this.enabled || this.playing) return;
+    this.init();
+    if (!this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
     this.playing = true;
-
-    // Try file music first, fall back to synth
-    if (this._hasFiles) {
-      this._startFileMusic();
-    } else {
-      // Start synth immediately, will switch to files when they load
-      this._usingSynth = true;
-      this._startSynthMusic();
-    }
+    this._loop();
   }
-
   stop() {
     this.playing = false;
-    this._usingSynth = false;
-    [this._chillTrack, this._intenseTrack, this._victoryTrack].forEach(t => {
-      if (t) { t.pause(); t.currentTime = 0; t.volume = 0; }
-    });
-    this._synthNodes.forEach(n => { try { n.stop(); } catch(e) {} });
-    this._synthNodes = [];
+    this._nodes.forEach(n => { try { n.stop(); } catch(e) {} });
+    this._nodes = [];
   }
-
-  setIntensity(val) {
-    this.intensity = Math.max(0, Math.min(1, val));
-    if (this._hasFiles && this.playing && !this._usingSynth) this._crossfade();
-  }
-
+  setIntensity(val) { this.intensity = Math.max(0, Math.min(1, val)); }
   toggle() {
     this.enabled = !this.enabled;
     localStorage.setItem('domino_music', this.enabled ? '1' : '0');
     if (this.enabled) this.start(); else this.stop();
   }
-
-  playVictory() {
-    if (!this.enabled || !this._victoryTrack || !this._hasFiles) return;
-    this._victoryTrack.volume = this.volume;
-    this._victoryTrack.currentTime = 0;
-    this._victoryTrack.play().catch(() => {});
-  }
-
-  _startFileMusic() {
-    if (!this._chillTrack) return;
-    this._chillTrack.volume = this.volume;
-    this._chillTrack.play().catch(() => {});
-    if (this._intenseTrack) {
-      this._intenseTrack.volume = 0;
-      this._intenseTrack.play().catch(() => {});
-    }
-  }
-
-  _crossfade() {
-    if (!this._chillTrack || !this._intenseTrack) return;
-    this._chillTrack.volume = this.volume * (1 - this.intensity);
-    this._intenseTrack.volume = this.volume * this.intensity;
-  }
-
-  _startSynthMusic() {
-    if (!this._synthCtx) return;
-    if (this._synthCtx.state === 'suspended') this._synthCtx.resume();
-    this._synthLoop();
-  }
-
-  _synthLoop() {
-    if (!this.playing || !this._synthCtx || !this._usingSynth) return;
-    const ctx = this._synthCtx;
+  _loop() {
+    if (!this.playing || !this.ctx) return;
+    const ctx = this.ctx;
     const now = ctx.currentTime;
     const chords = [
       [130.81, 164.81, 196.00, 246.94],
@@ -4014,7 +3939,6 @@ class MusicEngine {
     ];
     const chord = chords[Math.floor((now / 3) % chords.length)];
     const vol = 0.012 + this.intensity * 0.01;
-
     for (const freq of chord) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -4024,7 +3948,7 @@ class MusicEngine {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 2.8);
       osc.connect(gain); gain.connect(ctx.destination);
       osc.start(now); osc.stop(now + 3);
-      this._synthNodes.push(osc);
+      this._nodes.push(osc);
     }
     const bassOsc = ctx.createOscillator();
     const bassGain = ctx.createGain();
@@ -4034,9 +3958,9 @@ class MusicEngine {
     bassGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
     bassOsc.connect(bassGain); bassGain.connect(ctx.destination);
     bassOsc.start(now); bassOsc.stop(now + 2.8);
-    this._synthNodes.push(bassOsc);
-    this._synthNodes = this._synthNodes.slice(-20);
-    setTimeout(() => this._synthLoop(), 2800 - this.intensity * 600);
+    this._nodes.push(bassOsc);
+    this._nodes = this._nodes.slice(-20);
+    setTimeout(() => this._loop(), 2800 - this.intensity * 600);
   }
 }
 
