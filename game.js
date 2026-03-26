@@ -2443,17 +2443,28 @@ class Game {
 
     this._updateUI();
 
-    if (countPlayers.length > 0) {
-      this._showBoneCounting(winnerLabel, countPlayers, bonusCalc, () => {
-        if (this._isGameWon()) this._endGame();
-        else this.startRound();
-      });
-    } else {
-      if (this._isGameWon()) this._endGame();
-      else {
-        this.showMessage(`${winnerLabel} dominoes! No bones left to count.`, () => this.startRound());
-      }
+    // Show "Dominoes!" speech bubble for AI winner, then delay before bone counting
+    if (!winner.isHuman) {
+      const phrase = getPhrase(winner, 'domino');
+      this._showSpeechBubble(winner, phrase);
     }
+
+    const showCounting = () => {
+      if (countPlayers.length > 0) {
+        this._showBoneCounting(winnerLabel, countPlayers, bonusCalc, () => {
+          if (this._isGameWon()) this._endGame();
+          else this.startRound();
+        });
+      } else {
+        if (this._isGameWon()) this._endGame();
+        else {
+          this.showMessage(`${winnerLabel} dominoes! No bones left to count.`, () => this.startRound());
+        }
+      }
+    };
+
+    // Delay so the board state is visible before counting
+    setTimeout(showCounting, 2500);
   }
 
   _endRoundBlocked() {
