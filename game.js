@@ -1088,6 +1088,11 @@ class Game {
       this._suppressToast = false;
       if (this._spinnerRAF) { cancelAnimationFrame(this._spinnerRAF); this._spinnerRAF = null; }
       if (this.music) this.music.stop();
+      // Clear all overlays
+      ['countdown-overlay', 'count-overlay', 'message-overlay', 'thinking-overlay', 'ragequit-overlay'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.classList.add('hidden'); el.innerHTML = ''; }
+      });
       this.players = [];
       this.board = null;
       this.placements = [];
@@ -1131,6 +1136,10 @@ class Game {
     // Tile tracker
     document.getElementById('tracker-btn').addEventListener('click', () => {
       document.getElementById('game-dropdown').classList.add('hidden');
+      this._renderTracker();
+      document.getElementById('tracker-overlay').classList.remove('hidden');
+    });
+    document.getElementById('tracker-quick-btn').addEventListener('click', () => {
       this._renderTracker();
       document.getElementById('tracker-overlay').classList.remove('hidden');
     });
@@ -1530,21 +1539,30 @@ class Game {
       const arrow = document.getElementById('floating-arrow');
       if (arrow) arrow.style.display = 'none';
 
-      // Hide bottom bar, opponent panels, score bar, and end-sum during deal
+      // Hide bottom bar, opponent panels, score bar, end-sum, and boneyard during deal
       const bottomBar = document.getElementById('bottom-bar');
       const scoreBar = document.getElementById('score-bar');
       const endSum = document.getElementById('end-sum-display');
+      const boneyardArea = document.getElementById('boneyard-area');
       const oppPanels = ['opponent-top', 'opponent-left', 'opponent-right'];
       if (bottomBar) bottomBar.style.visibility = 'hidden';
       if (scoreBar) scoreBar.style.visibility = 'hidden';
       if (endSum) endSum.style.visibility = 'hidden';
+      if (boneyardArea) boneyardArea.style.visibility = 'hidden';
       oppPanels.forEach(id => { const el = document.getElementById(id); if (el) el.style.visibility = 'hidden'; });
+
+      // Clear any stale overlays
+      ['countdown-overlay', 'count-overlay', 'message-overlay', 'thinking-overlay'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.classList.add('hidden'); el.innerHTML = ''; }
+      });
 
       // Animate dealing then proceed
       this._animateDeal(() => {
         // Show everything back except end-sum (shown after first move)
         if (bottomBar) bottomBar.style.visibility = '';
         if (scoreBar) scoreBar.style.visibility = '';
+        if (boneyardArea) boneyardArea.style.visibility = '';
         oppPanels.forEach(id => { const el = document.getElementById(id); if (el) el.style.visibility = ''; });
 
         this._updateUI();
@@ -2509,7 +2527,7 @@ class Game {
     }
     this.gameLog.push({
       turn: this._logTurn++,
-      action: 'round-end',
+      action: 'round-end', round: this._roundNum,
       player: winner.name,
       avatar: winner.avatar,
       detail: `${winner.name} dominoes! +${bonusCalc.bonus} for ${bonusCalc.recipient}`,
@@ -2581,7 +2599,7 @@ class Game {
     }
     this.gameLog.push({
       turn: this._logTurn++,
-      action: 'round-end',
+      action: 'round-end', round: this._roundNum,
       player: winnerLabel,
       avatar: '',
       detail: `Blocked! ${winnerLabel} wins round. +${bonusCalc.bonus} for ${bonusCalc.recipient}`,
@@ -2934,8 +2952,10 @@ class Game {
     // Score bar at top
     const scoreBar = document.getElementById('score-bar-content');
     if (scoreBar) {
+      const roundLabel = this._roundNum ? `<span style="font-weight:900;font-size:1.3rem;background:linear-gradient(180deg,#ffe080,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;">Round ${this._roundNum}</span>` : '';
       if (this.teamMode && this.teams) {
         scoreBar.innerHTML = `
+          ${roundLabel}
           <div class="sb-team" style="border-color:rgba(100,200,130,0.3);">
             <span class="sb-team-name">🟢 ${this.teams[0].name}</span>
             <span class="sb-team-score">${this.teams[0].score}</span>
@@ -2948,8 +2968,7 @@ class Game {
           <span class="sb-target">Playing to ${this.targetScore}</span>
         `;
       } else {
-        // FFA — show all player scores compactly
-        let html = '';
+        let html = roundLabel;
         for (const p of this.players) {
           const isCurrent = p.index === this.currentPlayer;
           html += `<div class="sb-player-score" style="${isCurrent ? 'border-color:rgba(232,167,53,0.4);background:rgba(232,167,53,0.1);' : ''}">
@@ -2986,19 +3005,20 @@ class Game {
       const last = this.placements[this.placements.length - 1];
       const t = last.tile;
       if (t) {
+        const lpSkin = getSkinColors();
         const pipPos = (n, s) => {
           const m = {0:[],1:[[0,0]],2:[[-s,-s],[s,s]],3:[[-s,-s],[0,0],[s,s]],4:[[-s,-s],[s,-s],[-s,s],[s,s]],5:[[-s,-s],[s,-s],[0,0],[-s,s],[s,s]],6:[[-s,-s],[s,-s],[-s,0],[s,0],[-s,s],[s,s]]};
           return m[n]||[];
         };
         const dots = (val, cy) => pipPos(val, 7).map(([x,y]) =>
-          `<circle cx="${22+x}" cy="${cy+y}" r="3.5" fill="#333"/>`
+          `<circle cx="${22+x}" cy="${cy+y}" r="3.5" fill="${lpSkin.pip}"/>`
         ).join('');
         lastTileEl.innerHTML = `
           <div style="text-align:center;">
             <div style="font-size:0.55rem;opacity:0.4;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px;">Last Played</div>
             <svg width="44" height="80" viewBox="0 0 44 80" style="filter:drop-shadow(0 0 8px rgba(232,167,53,0.5));">
               <rect x="1" y="1" width="42" height="78" rx="6" fill="url(#ltg)" stroke="#e8a735" stroke-width="2"/>
-              <defs><linearGradient id="ltg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffef8"/><stop offset="0.3" stop-color="#f5f0dc"/><stop offset="1" stop-color="#e8e0c4"/></linearGradient></defs>
+              <defs><linearGradient id="ltg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lpSkin.face}"/><stop offset="1" stop-color="${lpSkin.faceDark}"/></linearGradient></defs>
               <line x1="8" y1="40" x2="36" y2="40" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>
               ${dots(t.a, 20)}
               ${dots(t.b, 60)}
@@ -3524,17 +3544,30 @@ class Game {
     const grid = document.getElementById('tracker-grid');
     if (!grid) return;
     grid.innerHTML = '';
+    const skin = getSkinColors();
     const played = new Set();
     for (const p of this.placements) {
       if (p.tile) played.add(`${Math.min(p.tile.a,p.tile.b)}-${Math.max(p.tile.a,p.tile.b)}`);
     }
+    const pipPos = (n, s) => ({0:[],1:[[0,0]],2:[[-s,-s],[s,s]],3:[[-s,-s],[0,0],[s,s]],4:[[-s,-s],[s,-s],[-s,s],[s,s]],5:[[-s,-s],[s,-s],[0,0],[-s,s],[s,s]],6:[[-s,-s],[s,-s],[-s,0],[s,0],[-s,s],[s,s]]}[n]||[]);
+    const halfSVG = (val, cy, w) => pipPos(val, w*0.18).map(([x,y]) =>
+      `<circle cx="${w/2+x}" cy="${cy+y}" r="${w*0.08}" fill="${skin.pip}"/>`
+    ).join('');
+
     for (let a = 0; a <= 6; a++) {
       for (let b = a; b <= 6; b++) {
         const key = `${a}-${b}`;
         const isPlayed = played.has(key);
         const el = document.createElement('div');
         el.className = 'tracker-tile ' + (isPlayed ? 'played' : 'unplayed');
-        el.innerHTML = `<span>${a}</span><hr style="width:60%;margin:1px 0;border-color:rgba(255,255,255,0.15);"><span>${b}</span>`;
+        const tw = 40, th = 72;
+        el.style.background = isPlayed ? 'rgba(232,167,53,0.15)' : `linear-gradient(160deg, ${skin.face}, ${skin.faceDark})`;
+        el.style.border = isPlayed ? '1.5px solid rgba(232,167,53,0.3)' : `1.5px solid ${skin.border}`;
+        el.innerHTML = `<svg width="${tw}" height="${th}" viewBox="0 0 ${tw} ${th}" style="opacity:${isPlayed ? '0.3' : '1'}">
+          <line x1="${tw*0.2}" y1="${th/2}" x2="${tw*0.8}" y2="${th/2}" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+          ${halfSVG(a, th*0.25, tw)}
+          ${halfSVG(b, th*0.75, tw)}
+        </svg>`;
         grid.appendChild(el);
       }
     }
@@ -3607,7 +3640,7 @@ class Game {
         div.innerHTML = `
           <span class="log-num">—</span>
           <div style="flex:1;">
-            <div style="font-weight:700;color:#f0b840;margin-bottom:4px;">🏁 ${entry.detail}</div>
+            <div style="font-weight:700;color:#f0b840;margin-bottom:4px;">🏁 Round ${entry.round || '?'} — ${entry.detail}</div>
             <div style="font-size:0.75rem;opacity:0.6;">${scoresHtml}</div>
           </div>
         `;
@@ -3738,19 +3771,27 @@ class SFX {
 
 // --- Table Themes ---
 const TABLE_THEMES = [
+  { id: 'random', name: 'Random', felt: '', dark: '' },
   { id: 'green', name: 'Classic Green', felt: '#1e7a35', dark: '#0d3a18' },
   { id: 'blue', name: 'Ocean Blue', felt: '#1a4a7a', dark: '#0a2a4a' },
   { id: 'red', name: 'Casino Red', felt: '#7a1a2a', dark: '#3a0a14' },
   { id: 'purple', name: 'Royal Purple', felt: '#4a1a6a', dark: '#2a0a3a' },
   { id: 'wood', name: 'Wooden', felt: '#6a4a2a', dark: '#3a2a14' },
 ];
-function getTableTheme() { return localStorage.getItem('domino_table_theme') || 'green'; }
+function getTableTheme() { return localStorage.getItem('domino_table_theme') || 'random'; }
 function setTableTheme(id) {
   localStorage.setItem('domino_table_theme', id);
   applyTableTheme();
 }
 function applyTableTheme() {
-  const t = TABLE_THEMES.find(t => t.id === getTableTheme()) || TABLE_THEMES[0];
+  const id = getTableTheme();
+  let t;
+  if (id === 'random') {
+    const real = TABLE_THEMES.filter(t => t.id !== 'random');
+    t = real[Math.floor(Math.random() * real.length)];
+  } else {
+    t = TABLE_THEMES.find(t => t.id === id) || TABLE_THEMES[1];
+  }
   document.body.style.setProperty('--felt', t.felt);
   document.body.style.setProperty('--dark', t.dark);
   const before = document.querySelector('body');
