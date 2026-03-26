@@ -2032,23 +2032,12 @@ class Game {
     if (placements.length === 1) {
       this._executePlay(player, tile, placements[0]);
     } else {
-      // Check if all placements result in the same score — if so, auto-pick
-      const scores = placements.map(p => {
-        const sim = new AI('easy')._cloneBoard(this.board);
-        sim.placeTile(tile, p);
-        return sim.getScore();
-      });
-      const allSame = scores.every(s => s === scores[0]);
-      if (allSame) {
-        // Pick the first one automatically
-        this._executePlay(player, tile, placements[0]);
-      } else {
-        if (this.selectedEl) this.selectedEl.classList.remove('selected');
-        this.selectedTile = tile;
-        this.selectedEl = el;
-        el.classList.add('selected');
-        this._showEndChoices(tile, placements);
-      }
+      // Multiple placements — always require user to pick direction
+      if (this.selectedEl) this.selectedEl.classList.remove('selected');
+      this.selectedTile = tile;
+      this.selectedEl = el;
+      el.classList.add('selected');
+      this._showEndChoices(tile, placements);
     }
   }
 
