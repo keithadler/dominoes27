@@ -1526,21 +1526,25 @@ class Game {
         const cx = window.innerWidth / 2;
         const cy = window.innerHeight / 2;
         const tileCount = 28;
-        const tileW = 70;
-        const tileH = 35;
+        const tileW = 100;
+        const tileH = 50;
         const pileEls = [];
 
         // Phase 1: Show all tiles in a pile at center
+        const skin = getSkinColors();
         for (let i = 0; i < tileCount; i++) {
           const tile = document.createElement('div');
           tile.className = 'deal-tile';
           tile.style.width = tileW + 'px';
           tile.style.height = tileH + 'px';
-          tile.style.borderRadius = '5px';
+          tile.style.borderRadius = '8px';
           tile.style.position = 'fixed';
           tile.style.zIndex = 55 + i;
-          const ox = (Math.random() - 0.5) * 100;
-          const oy = (Math.random() - 0.5) * 70;
+          tile.style.background = `linear-gradient(160deg, ${skin.face}, ${skin.faceDark})`;
+          tile.style.border = `2px solid ${skin.border}`;
+          tile.style.boxShadow = `0 2px 0 ${skin.depth}, 0 4px 8px rgba(0,0,0,0.4)`;
+          const ox = (Math.random() - 0.5) * 140;
+          const oy = (Math.random() - 0.5) * 90;
           const rot = (Math.random() - 0.5) * 100;
           tile.style.left = (cx - tileW / 2 + ox) + 'px';
           tile.style.top = (cy - tileH / 2 + oy) + 'px';
@@ -1750,6 +1754,8 @@ class Game {
       setTimeout(() => this._aiTurn(player), base + jitter);
     } else {
       this._hideThinking();
+      // Particles on human avatar
+      this._spawnAvatarParticles(player);
 
       // Check if human has exactly 1 possible move — auto-play it
       const allMoves = [];

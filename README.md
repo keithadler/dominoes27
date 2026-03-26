@@ -1,4 +1,5 @@
 # 🁣 All Fives Dominoes
+### by Keith Adler
 
 A feature-rich, browser-based All Fives dominoes game with AI opponents, team play, and polished arcade-style visuals. No server required — runs entirely in the browser.
 
