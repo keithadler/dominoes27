@@ -37,6 +37,16 @@
               <button class="btn-option active" data-value="200">200</button>
               <button class="btn-option" data-value="250">250</button>
               <button class="btn-option" data-value="500">500</button>
+              <button class="btn-option" data-value="custom">Custom</button>
+            </div>
+            <input type="number" id="custom-score-input" class="name-edit" min="50" max="1000" step="25" value="150" style="display:none;width:100%;margin-top:8px;" placeholder="Enter target score">
+          </div>
+          <div class="option-group">
+            <label>AI Difficulty</label>
+            <div class="btn-group" id="ai-difficulty">
+              <button class="btn-option" data-value="easy">😊 Easy</button>
+              <button class="btn-option active" data-value="mixed">🎲 Mixed</button>
+              <button class="btn-option" data-value="hard">🧠 Hard</button>
             </div>
           </div>
           <div class="option-group">
@@ -48,6 +58,7 @@
             </div>
           </div>
           <button id="start-game" class="btn-start">Start Game</button>
+          <button id="resume-game" class="btn-start" style="display:none;background:linear-gradient(145deg,#4aaf6c,#2d8a4e);margin-top:8px;">▶ Resume Saved Game</button>
           <div id="player-roster">
             <div style="text-align:center;margin-bottom:10px;">
               <input type="text" id="player-name-input" class="name-edit" maxlength="12" placeholder="Your Name">
@@ -247,6 +258,7 @@
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
           <button id="rematch-btn" class="btn-start">Rematch</button>
           <button id="play-again" class="btn-start" style="background:linear-gradient(145deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05));color:#fff;box-shadow:none;">New Game</button>
+          <button id="share-log-btn" class="btn-start" style="background:linear-gradient(145deg,#3a6a8a,#2a4a6a);font-size:0.9rem;padding:14px 24px;">📋 Copy Game Log</button>
         </div>
       </div>
     </div>
