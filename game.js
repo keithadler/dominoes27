@@ -2373,24 +2373,27 @@ class Game {
   }
 
   _getPlayerPosition(playerIndex) {
-    if (playerIndex === 0) return 'bottom';
-    const opponents = this.players.filter(p => p.index !== 0);
-    // Clockwise from bottom: left → top → right
-    const cwPositions = ['left', 'top', 'right'];
-    if (this.teamMode && opponents.length === 3) {
-      const partner = opponents.find(p => p.team === 0);
-      const opps = opponents.filter(p => p.team !== 0);
-      const map = [
-        { player: opps[0], pos: 'left' },
-        { player: partner, pos: 'top' },
-        { player: opps[1], pos: 'right' }
-      ];
-      const found = map.find(m => m.player && m.player.index === playerIndex);
-      return found ? found.pos : 'left';
+      if (playerIndex === 0) return 'bottom';
+      const opponents = this.players.filter(p => p.index !== 0);
+      if (this.teamMode && opponents.length === 3) {
+        const partner = opponents.find(p => p.team === 0);
+        const opps = opponents.filter(p => p.team !== 0);
+        const map = [
+          { player: opps[0], pos: 'left' },
+          { player: partner, pos: 'top' },
+          { player: opps[1], pos: 'right' }
+        ];
+        const found = map.find(m => m.player && m.player.index === playerIndex);
+        return found ? found.pos : 'top';
+      }
+      // 1 opp: across (top). 2 opps: left, right. 3 opps: left, top, right.
+      let posMap;
+      if (opponents.length === 1) posMap = ['top'];
+      else if (opponents.length === 2) posMap = ['left', 'right'];
+      else posMap = ['left', 'top', 'right'];
+      const oppIdx = opponents.findIndex(p => p.index === playerIndex);
+      return oppIdx >= 0 ? posMap[oppIdx % posMap.length] : 'top';
     }
-    const oppIdx = opponents.findIndex(p => p.index === playerIndex);
-    return oppIdx >= 0 ? cwPositions[oppIdx % 3] : 'left';
-  }
 
   _animateBoneyardDraw(player) {
     const boneArea = document.getElementById('boneyard-area');
@@ -3278,9 +3281,15 @@ class Game {
         { pos: 'right', player: opps[1] }
       ];
     } else {
-      // Clockwise from human (bottom): left → top → right
-      const cwPositions = ['left', 'top', 'right'];
-      assignments = opponents.map((p, i) => ({ pos: cwPositions[i % 3], player: p }));
+      // Position based on opponent count:
+      // 1 opponent: top (across)
+      // 2 opponents: left, right
+      // 3 opponents: left, top, right (clockwise)
+      let posMap;
+      if (opponents.length === 1) posMap = ['top'];
+      else if (opponents.length === 2) posMap = ['left', 'right'];
+      else posMap = ['left', 'top', 'right'];
+      assignments = opponents.map((p, i) => ({ pos: posMap[i % posMap.length], player: p }));
     }
 
     for (const { pos, player } of assignments) {
