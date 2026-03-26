@@ -1432,6 +1432,25 @@ class Game {
       }
     });
 
+    // Zoom control buttons
+    document.getElementById('zoom-in-btn').addEventListener('click', () => {
+      if (!this.renderer) return;
+      this.renderer.userZoom = Math.min(3, this.renderer.userZoom * 1.25);
+      this._renderBoard();
+    });
+    document.getElementById('zoom-out-btn').addEventListener('click', () => {
+      if (!this.renderer) return;
+      this.renderer.userZoom = Math.max(0.3, this.renderer.userZoom * 0.8);
+      this._renderBoard();
+    });
+    document.getElementById('zoom-reset-btn').addEventListener('click', () => {
+      if (!this.renderer) return;
+      this.renderer.userZoom = 1;
+      this.renderer.userPanX = 0;
+      this.renderer.userPanY = 0;
+      this._renderBoard();
+    });
+
     window.addEventListener('resize', () => {
       if (this.renderer) {
         this.renderer.resize();

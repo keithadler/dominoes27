@@ -1305,3 +1305,25 @@ body.colorblind .match-badge {
 #custom-score-input {
   text-align: center; font-size: 1.1rem; font-weight: 700;
 }
+
+/* ===== Zoom controls ===== */
+#zoom-controls {
+  position: absolute; bottom: 10px; right: 10px; z-index: 5;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.zoom-btn {
+  width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
+  color: #fff; font-size: 1.2rem; font-weight: 700; border-radius: 8px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; line-height: 1;
+}
+.zoom-btn:hover { background: rgba(0,0,0,0.65); border-color: rgba(255,255,255,0.25); transform: scale(1.08); }
+.zoom-btn:active { transform: scale(0.95); }
+body[data-theme="light"] .zoom-btn {
+  background: rgba(255,255,255,0.6); border-color: rgba(0,0,0,0.12); color: #333;
+}
+body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
+@media (max-width: 600px) {
+  .zoom-btn { width: 30px; height: 30px; font-size: 1rem; border-radius: 6px; }
+}
