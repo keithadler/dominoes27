@@ -1526,8 +1526,8 @@ class Game {
         const cx = window.innerWidth / 2;
         const cy = window.innerHeight / 2;
         const tileCount = 28;
-        const tileW = 100;
-        const tileH = 50;
+        const tileW = 130;
+        const tileH = 65;
         const pileEls = [];
 
         // Phase 1: Show all tiles in a pile at center
@@ -2183,6 +2183,12 @@ class Game {
     this._pendingPlacements = null;
     this._hoverTile = null; this._hoverPlacements = null;
 
+    // Immediately disable all hand tiles so they don't flash as playable
+    document.querySelectorAll('.hand-tile').forEach(el => {
+      el.classList.remove('playable', 'hover-active', 'selected');
+      el.classList.add('not-playable');
+    });
+
     this._updateUI();
 
     const delay = scored ? 2000 : 800;
@@ -2302,20 +2308,21 @@ class Game {
   _getPlayerPosition(playerIndex) {
     if (playerIndex === 0) return 'bottom';
     const opponents = this.players.filter(p => p.index !== 0);
-    const positions = ['top', 'left', 'right'];
+    // Clockwise from bottom: left → top → right
+    const cwPositions = ['left', 'top', 'right'];
     if (this.teamMode && opponents.length === 3) {
       const partner = opponents.find(p => p.team === 0);
       const opps = opponents.filter(p => p.team !== 0);
       const map = [
-        { player: partner, pos: 'top' },
         { player: opps[0], pos: 'left' },
+        { player: partner, pos: 'top' },
         { player: opps[1], pos: 'right' }
       ];
       const found = map.find(m => m.player && m.player.index === playerIndex);
-      return found ? found.pos : 'top';
+      return found ? found.pos : 'left';
     }
     const oppIdx = opponents.findIndex(p => p.index === playerIndex);
-    return oppIdx >= 0 ? positions[oppIdx % 3] : 'top';
+    return oppIdx >= 0 ? cwPositions[oppIdx % 3] : 'left';
   }
 
   _animateBoneyardDraw(player) {
@@ -3194,13 +3201,16 @@ class Game {
     if (this.teamMode && opponents.length === 3) {
       const partner = opponents.find(p => p.team === 0);
       const opps = opponents.filter(p => p.team !== 0);
+      // Clockwise: left(opp1) → top(partner) → right(opp2)
       assignments = [
-        { pos: 'top', player: partner },
         { pos: 'left', player: opps[0] },
+        { pos: 'top', player: partner },
         { pos: 'right', player: opps[1] }
       ];
     } else {
-      assignments = opponents.map((p, i) => ({ pos: positions[i % 3], player: p }));
+      // Clockwise from human (bottom): left → top → right
+      const cwPositions = ['left', 'top', 'right'];
+      assignments = opponents.map((p, i) => ({ pos: cwPositions[i % 3], player: p }));
     }
 
     for (const { pos, player } of assignments) {
