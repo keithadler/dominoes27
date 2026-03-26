@@ -2954,19 +2954,20 @@ class Game {
       this.music.setIntensity(intensity);
     }
 
-    // Turn info in the end-sum panel
+    // Last played info in the end-sum panel
     const turnLeft = document.getElementById('end-sum-left');
-    if (turnLeft && this.players && this.players.length > 0) {
-      const cp = this.players[this.currentPlayer];
-      if (cp) {
-        const turnName = cp.isHuman ? 'Your turn' : cp.name + "'s turn";
+    if (turnLeft && this.players && this.placements && this.placements.length > 0) {
+      const lastPlayerIdx = this._lastPlayedBy;
+      const lp = lastPlayerIdx !== undefined ? this.players[lastPlayerIdx] : null;
+      if (lp) {
+        const label = lp.isHuman ? 'You played' : `${lp.name} played`;
         turnLeft.innerHTML = `
-          <img class="turn-avatar" src="${cp.avatar}" alt="${cp.name}">
-          <div>
-            <div class="turn-name">${turnName}</div>
-          </div>
+          <img class="turn-avatar" src="${lp.avatar}" alt="${lp.name}">
+          <div class="turn-name">${label}</div>
         `;
       }
+    } else if (turnLeft) {
+      turnLeft.innerHTML = '';
     }
 
     // Turn toast notification — suppress during countdown/announcement
