@@ -1757,26 +1757,23 @@ class Game {
       // Particles on human avatar
       this._spawnAvatarParticles(player);
 
-      // Check if human has exactly 1 possible move — auto-play it
-      const allMoves = [];
-      for (const t of player.hand) {
-        const placements = this.board.getValidPlacements(t);
-        for (const p of placements) allMoves.push({ tile: t, placement: p });
-      }
-
-      if (allMoves.length === 1) {
-        // Auto-play the only move after a brief delay
-        setTimeout(() => {
-          if (this.currentPlayer === player.index && !this.roundOver) {
-            this._executePlay(player, allMoves[0].tile, allMoves[0].placement);
-          }
-        }, 600);
-        return;
+      // Check if human has exactly 1 playable tile with 1 placement — auto-play it
+      const playableTiles = player.hand.filter(t => this.board.canPlay(t));
+      if (playableTiles.length === 1) {
+        const placements = this.board.getValidPlacements(playableTiles[0]);
+        if (placements.length === 1) {
+          setTimeout(() => {
+            if (this.currentPlayer === player.index && !this.roundOver) {
+              this._executePlay(player, playableTiles[0], placements[0]);
+            }
+          }, 600);
+          return;
+        }
       }
 
       this._enableHumanPlay(player);
       // If human can't play and boneyard is empty, auto-pass
-      if (allMoves.length === 0 && this.boneyard.length === 0) {
+      if (playableTiles.length === 0 && this.boneyard.length === 0) {
         setTimeout(() => {
           if (this.currentPlayer === player.index && !this.roundOver) {
             this.pass();
