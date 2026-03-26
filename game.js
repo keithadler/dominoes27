@@ -1904,12 +1904,12 @@ class Game {
       const scoreBar = document.getElementById('score-bar');
       const endSum = document.getElementById('end-sum-display');
       const boneyardArea = document.getElementById('boneyard-area');
+      const menuBtn = document.getElementById('menu-btn');
+      const zoomControls = document.getElementById('zoom-controls');
       const oppPanels = ['opponent-top', 'opponent-left', 'opponent-right'];
-      if (bottomBar) bottomBar.style.visibility = 'hidden';
-      if (scoreBar) scoreBar.style.visibility = 'hidden';
-      if (endSum) endSum.style.visibility = 'hidden';
-      if (boneyardArea) boneyardArea.style.visibility = 'hidden';
-      oppPanels.forEach(id => { const el = document.getElementById(id); if (el) el.style.visibility = 'hidden'; });
+      const allUI = [bottomBar, scoreBar, endSum, boneyardArea, menuBtn, zoomControls];
+      allUI.forEach(el => { if (el) { el.style.visibility = 'hidden'; el.style.opacity = '0'; } });
+      oppPanels.forEach(id => { const el = document.getElementById(id); if (el) { el.style.visibility = 'hidden'; el.style.opacity = '0'; } });
 
       // Clear any stale overlays
       ['countdown-overlay', 'count-overlay', 'message-overlay', 'thinking-overlay'].forEach(id => {
@@ -1917,17 +1917,56 @@ class Game {
         if (el) { el.classList.add('hidden'); el.innerHTML = ''; }
       });
 
-      // Animate dealing then proceed
-      this._animateDeal(() => {
-        // Show everything back except end-sum (shown after first move)
-        if (bottomBar) bottomBar.style.visibility = '';
-        if (scoreBar) scoreBar.style.visibility = '';
-        if (boneyardArea) boneyardArea.style.visibility = '';
-        oppPanels.forEach(id => { const el = document.getElementById(id); if (el) el.style.visibility = ''; });
+      // Cinematic intro: brief pause on empty table, then fade in avatars
+      const introDelay = 400;
 
-        this._updateUI();
-        this._renderBoard();
-        this._startSpinnerLoop();
+      // Show avatar intro overlay
+      const introEl = document.createElement('div');
+      introEl.id = 'round-intro';
+      introEl.style.cssText = 'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:24px;pointer-events:none;';
+      for (const p of this.players) {
+        const av = document.createElement('div');
+        av.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;transform:scale(0.7) translateY(20px);transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);';
+        av.innerHTML = `<img src="${p.avatar}" style="width:64px;height:64px;border-radius:50%;border:3px solid rgba(232,167,53,0.5);box-shadow:0 4px 20px rgba(0,0,0,0.5);">
+          <span style="font-weight:800;font-size:0.85rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.6);">${p.name}</span>`;
+        introEl.appendChild(av);
+      }
+      document.body.appendChild(introEl);
+
+      // Stagger avatar fade-ins
+      const avatarEls = introEl.children;
+      for (let i = 0; i < avatarEls.length; i++) {
+        setTimeout(() => {
+          avatarEls[i].style.opacity = '1';
+          avatarEls[i].style.transform = 'scale(1) translateY(0)';
+        }, introDelay + i * 150);
+      }
+
+      // After avatars shown, start deal and fade out intro
+      const dealDelay = introDelay + avatarEls.length * 150 + 600;
+      setTimeout(() => {
+        // Fade out avatar intro
+        introEl.style.transition = 'opacity 0.4s ease';
+        introEl.style.opacity = '0';
+        setTimeout(() => introEl.remove(), 400);
+
+        // Make boneyard visible for deal target
+        if (boneyardArea) { boneyardArea.style.visibility = ''; boneyardArea.style.opacity = '1'; }
+
+        // Animate dealing then proceed
+        this._animateDeal(() => {
+          // Fade in all UI
+          allUI.forEach(el => { if (el) { el.style.visibility = ''; el.style.transition = 'opacity 0.4s ease'; el.style.opacity = '1'; } });
+          oppPanels.forEach(id => { const el = document.getElementById(id); if (el) { el.style.visibility = ''; el.style.transition = 'opacity 0.4s ease'; el.style.opacity = '1'; } });
+          // Clean up inline transitions after fade
+          setTimeout(() => {
+            allUI.forEach(el => { if (el) el.style.transition = ''; });
+            oppPanels.forEach(id => { const el = document.getElementById(id); if (el) el.style.transition = ''; });
+          }, 500);
+
+          this._updateUI();
+          this._renderBoard();
+          this._startSpinnerLoop();
 
         if (this._roundNum === undefined) this._roundNum = 0;
         this._roundNum++;
@@ -1949,7 +1988,8 @@ class Game {
             this._doTurn();
           });
         }
-      });
+        }); // end _animateDeal callback
+      }, dealDelay); // end setTimeout for dealDelay
     }
 
     _animateDeal(callback) {
@@ -2033,19 +2073,29 @@ class Game {
           }
         }
 
-        // Remove remaining boneyard tiles
+        // Phase 4: Remaining tiles fly to boneyard area
         const boneyardStart = dealStart + dealt * 80;
+        const boneArea = document.getElementById('boneyard-area');
+        const boneRect = boneArea ? boneArea.getBoundingClientRect() : { left: cx - 70, top: window.innerHeight - 140, width: 140, height: 40 };
+        const boneTargetX = boneRect.left + boneRect.width / 2;
+        const boneTargetY = boneRect.top + boneRect.height / 2;
+
         for (let i = dealt; i < pileEls.length; i++) {
+          const delay = boneyardStart + (i - dealt) * 60;
           setTimeout(() => {
             const tile = pileEls[i];
             if (!tile) return;
-            tile.style.opacity = '0.2';
-            tile.style.transform += ' scale(0.5)';
-            setTimeout(() => tile.remove(), 300);
-          }, boneyardStart + (i - dealt) * 40);
+            tile.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            tile.style.left = (boneTargetX - tileW / 2 + (Math.random() - 0.5) * 30) + 'px';
+            tile.style.top = (boneTargetY - tileH / 2 + (Math.random() - 0.5) * 10) + 'px';
+            tile.style.transform = `rotate(${(Math.random() - 0.5) * 40}deg) scale(0.25)`;
+            tile.style.opacity = '0.6';
+            if (this.sfx) this.sfx._play(300 + Math.random() * 100, 0.02, 'sine', 0.03);
+            setTimeout(() => tile.remove(), 500);
+          }, delay);
         }
 
-        const totalTime = boneyardStart + (pileEls.length - dealt) * 40 + 400;
+        const totalTime = boneyardStart + (pileEls.length - dealt) * 60 + 600;
         setTimeout(callback, totalTime);
       }
 
@@ -4005,24 +4055,31 @@ class Game {
     tilesEl.innerHTML = '';
     labelEl.textContent = this.boneyard.length;
 
-    // Use a seeded random so the pile doesn't reshuffle every render
+    const count = this.boneyard.length;
+    if (count === 0) return;
+
+    // Seeded random for stable layout
     let seed = 42;
     const rand = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; };
 
-    const count = this.boneyard.length;
-    const pileW = 130;
-    const pileH = 30;
-
-    for (let i = 0; i < count; i++) {
+    const skin = getSkinColors();
+    // Show a neat stacked pile — max ~12 visible tiles for performance
+    const visible = Math.min(count, 12);
+    for (let i = 0; i < visible; i++) {
       const t = document.createElement('div');
       t.className = 'bone-tile';
-      const x = rand() * (pileW - 34);
-      const y = rand() * (pileH - 17);
-      const angle = (rand() - 0.5) * 90; // -45 to +45 degrees
-      t.style.left = x + 'px';
-      t.style.top = y + 'px';
+      // Stack with slight offsets for 3D depth effect
+      const stackOffset = i * 1.2;
+      const jitterX = (rand() - 0.5) * 8;
+      const jitterY = (rand() - 0.5) * 4;
+      const angle = (rand() - 0.5) * 30;
+      t.style.left = (50 + jitterX) + 'px';
+      t.style.top = (10 + jitterY - stackOffset) + 'px';
       t.style.transform = `rotate(${angle}deg)`;
       t.style.zIndex = i;
+      t.style.background = `linear-gradient(160deg, ${skin.face}, ${skin.faceDark})`;
+      t.style.borderColor = skin.border;
+      t.style.boxShadow = `0 ${1 + i * 0.3}px ${2 + i * 0.5}px rgba(0,0,0,${0.15 + i * 0.02})`;
       tilesEl.appendChild(t);
     }
   }

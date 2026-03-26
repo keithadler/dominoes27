@@ -272,27 +272,36 @@ body::after {
 
 /* 14. Boneyard with wood texture */
 #boneyard-area {
-  display: flex; align-items: center; gap: 12px;
-  padding: 6px 16px; flex-shrink: 0;
-  background: linear-gradient(0deg, rgba(60,30,10,0.2), rgba(40,20,5,0.1));
-  border-top: 2px solid rgba(90,60,20,0.15);
-  min-height: 44px; justify-content: center;
+  display: flex; align-items: center; gap: 16px;
+  padding: 8px 20px; flex-shrink: 0;
+  background: linear-gradient(0deg, rgba(60,30,10,0.25), rgba(40,20,5,0.15));
+  border-top: 2px solid rgba(90,60,20,0.2);
+  min-height: 52px; justify-content: center;
   position: relative; overflow: visible;
 }
-#boneyard-tiles { position: relative; width: 140px; height: 36px; }
-#boneyard-label { font-size: 0.8rem; opacity: 0.4; white-space: nowrap; flex-shrink: 0; font-weight: 700; letter-spacing: 0.5px; }
+#boneyard-tiles { position: relative; width: 140px; height: 40px; }
+#boneyard-label {
+  font-size: 0.85rem; white-space: nowrap; flex-shrink: 0; font-weight: 800; letter-spacing: 0.5px;
+  display: flex; align-items: center; gap: 6px;
+}
+#boneyard-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 28px; padding: 0 6px;
+  background: linear-gradient(145deg, rgba(232,167,53,0.25), rgba(232,167,53,0.1));
+  border: 1px solid rgba(232,167,53,0.3); border-radius: 8px;
+  font-weight: 900; font-size: 0.95rem; color: #f0b840;
+}
 .bone-tile {
-  width: 26px; height: 13px;
-  background: linear-gradient(160deg, #f8f4e4 0%, #e0d8b8 40%, #c8c0a0 100%);
-  border: 1px solid rgba(160,150,120,0.35); border-radius: 3px;
+  width: 28px; height: 14px;
+  border: 1.5px solid rgba(160,150,120,0.35); border-radius: 4px;
   position: absolute;
-  box-shadow: 0 1px 0 #b0a888, 0 2px 4px rgba(0,0,0,0.3),
-    inset 0 1px 0 rgba(255,255,255,0.7);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.6);
 }
 .bone-tile::after {
   content: '◆'; position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 5px; color: rgba(160,140,100,0.2); font-weight: 900;
+  font-size: 5px; color: rgba(160,140,100,0.15); font-weight: 900;
 }
 
 /* End sum */
