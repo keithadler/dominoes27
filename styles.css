@@ -1009,3 +1009,109 @@ body::after {
 /* Rage quit overlay */
 #ragequit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 210; backdrop-filter: blur(8px); }
 #ragequit-overlay.hidden { display: none; }
+
+/* Phone-specific (< 480px) */
+@media (max-width: 480px) {
+  .opponent-hand.left, .opponent-hand.right { width: 44px; padding: 2px 2px; }
+  .opponent-hand.top { min-height: 44px; padding: 3px 6px; }
+  .opp-avatar { width: 28px; height: 28px; border-width: 2px; }
+  .opp-name { font-size: 0.6rem; }
+  .opp-score { font-size: 0.85rem; }
+  .opp-record { display: none; }
+  .personality-badge { display: none; }
+  .face-down { width: 16px; height: 8px; border-radius: 2px; }
+  .face-down.vertical { width: 8px; height: 16px; }
+  .face-down::before, .face-down::after { display: none; }
+  .hand-tile { width: 42px; height: 84px; border-radius: 6px; }
+  .hand-tile .half svg { width: 34px; height: 34px; }
+  #player-hand { gap: 5px; padding: 6px 8px 10px; max-height: 120px; min-height: 70px; }
+  #human-info { gap: 6px; padding: 4px 6px; flex-wrap: wrap; }
+  #human-info .human-avatar { width: 28px; height: 28px; }
+  #human-info .human-name { font-size: 0.7rem; }
+  #human-info .human-score { font-size: 0.9rem; }
+  #human-info .human-record { display: none; }
+  .btn-draw, .btn-pass, .btn-hint { padding: 5px 8px; font-size: 0.65rem; border-radius: 6px; }
+  #boneyard-area { min-height: 28px; padding: 2px 6px; }
+  #boneyard-tiles { width: 50px; height: 18px; }
+  .bone-tile { width: 12px; height: 6px; }
+  #boneyard-label { font-size: 0.6rem; }
+  #floating-arrow { width: 40px; height: 40px; }
+  #floating-arrow::after { border-left-width: 20px; border-right-width: 20px; border-top-width: 34px; }
+  #floating-arrow.point-up::after { border-bottom-width: 34px; }
+  #floating-arrow.point-left::after { border-top-width: 20px; border-bottom-width: 20px; border-right-width: 34px; }
+  #floating-arrow.point-right::after { border-top-width: 20px; border-bottom-width: 20px; border-left-width: 34px; }
+  .score-popup { font-size: 2rem; }
+  .score-popup .score-label { font-size: 0.7rem; }
+  #score-bar { gap: 4px; padding: 4px 6px; font-size: 0.75rem; }
+  .sb-team-score, .sb-ps-score { font-size: 0.85rem; }
+  .sb-team, .sb-player-score { padding: 3px 6px; border-radius: 6px; }
+  .sb-target { font-size: 0.55rem; }
+  .sb-vs { font-size: 0.7rem; }
+  #end-sum-display { padding: 6px 8px; top: 4px; right: 4px; gap: 6px; border-radius: 10px; }
+  #end-sum-display .sum-value { font-size: 1rem; }
+  #end-sum-left .turn-avatar { width: 24px; height: 24px; }
+  #end-sum-left .turn-name { font-size: 0.6rem; }
+  #end-sum-left { min-width: 50px; gap: 2px; }
+  .menu-container { padding: 20px 16px; border-radius: 16px; }
+  .game-title { font-size: 1.8rem; letter-spacing: 3px; }
+  .subtitle { font-size: 0.85rem; letter-spacing: 4px; margin-bottom: 16px; }
+  .btn-option { padding: 8px 8px; font-size: 0.8rem; border-radius: 8px; }
+  .btn-start { padding: 12px 32px; font-size: 1rem; }
+  .roster-card .roster-avatar { width: 36px; height: 36px; }
+  .roster-card { padding: 8px 10px; gap: 8px; }
+  .roster-card .roster-name { font-size: 0.9rem; }
+  .speech-bubble { max-width: 140px; font-size: 0.8rem; padding: 6px 10px; border-radius: 10px; }
+  .think-card { padding: 6px 12px; gap: 6px; }
+  .think-card .think-avatar { width: 24px; height: 24px; }
+  .think-card .think-name { font-size: 0.7rem; }
+  .btn-menu { width: 32px; height: 32px; font-size: 0.9rem; border-radius: 6px; }
+  #game-dropdown { min-width: 160px; left: 6px; top: 44px; }
+  .dd-item { padding: 8px 10px; font-size: 0.8rem; }
+  .tutorial-panel { padding: 20px 16px; }
+  .tut-title { font-size: 1.1rem; }
+  .tut-body { font-size: 0.8rem; }
+  .tut-btn-prev, .tut-btn-next { padding: 8px 16px; font-size: 0.8rem; }
+  .rules-panel { padding: 20px 16px; }
+  .rules-content h3 { font-size: 0.8rem; }
+  .rules-content p { font-size: 0.75rem; }
+  .count-player { padding: 6px 8px; gap: 6px; min-width: auto; }
+  .count-avatar { width: 32px; height: 32px; }
+  .count-tile { width: 22px; height: 42px; }
+  .count-pips { font-size: 1rem; }
+  .count-total { font-size: 0.9rem; padding: 8px 12px; }
+  .final-score-row { padding: 8px 12px; min-width: auto; font-size: 0.85rem; }
+  .message-box { padding: 20px 16px; max-width: 90%; }
+  .xp-level { font-size: 0.55rem; padding: 2px 6px; }
+  .xp-bar { width: 50px; height: 4px; }
+  .match-badge { width: 14px; height: 14px; font-size: 0.5rem; top: -3px; right: -3px; }
+  .log-entry { padding: 6px 8px; font-size: 0.8rem; }
+  .log-entry .log-avatar { width: 22px; height: 22px; }
+  .tracker-grid { grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .stats-panel, .shortcuts-panel { padding: 20px 16px; }
+}
+
+/* Opponent low tile warning */
+.low-tiles-warn { font-size: 0.65rem; color: #e04a3a; font-weight: 700; text-align: center; animation: lowTilePulse 1s ease-in-out infinite; }
+@keyframes lowTilePulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
+
+/* Pip count in hand */
+.pip-count { font-size: 0.7rem; opacity: 0.5; font-weight: 700; font-family: 'Inter', monospace; }
+
+/* Block warning */
+.block-warning { position: fixed; bottom: 200px; left: 50%; transform: translateX(-50%); padding: 8px 20px; background: rgba(224,74,58,0.9); color: #fff; border-radius: 10px; font-weight: 700; font-size: 0.85rem; z-index: 11; pointer-events: none; animation: blockWarnIn 0.3s ease-out; }
+@keyframes blockWarnIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } }
+
+/* Scoring opportunity flash */
+.score-opp-flash { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); padding: 10px 24px; background: rgba(74,175,108,0.9); color: #fff; border-radius: 12px; font-weight: 800; font-size: 1rem; z-index: 11; pointer-events: none; animation: scoreOppIn 0.3s ease-out, scoreOppOut 0.4s ease-in 1.2s forwards; }
+@keyframes scoreOppIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } }
+@keyframes scoreOppOut { to { opacity: 0; } }
+
+/* Round timeline */
+.timeline-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.85rem; }
+.timeline-round { font-weight: 700; opacity: 0.6; min-width: 50px; }
+.timeline-scores { display: flex; gap: 12px; }
+.timeline-score { font-weight: 700; }
+.timeline-winner { color: #f0b840; }
+
+/* Move timer */
+.move-timer { font-size: 0.65rem; opacity: 0.35; font-family: 'Inter', monospace; }

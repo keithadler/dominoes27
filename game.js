@@ -1394,7 +1394,7 @@ class Game {
       if (this.teams) for (const t of this.teams) t.score = 0;
       this.renderer = new Renderer(document.getElementById('board-canvas'));
       this.gameOver = false;
-      this.gameLog = [];
+      this.gameLog = []; this._roundScores = [];
       this._roundNum = 0;
       this.showScreen('game-screen');
       this.startRound();
@@ -1466,7 +1466,7 @@ class Game {
     this.renderer = new Renderer(document.getElementById('board-canvas'));
     this.sfx = new SFX();
     this.gameOver = false;
-    this.gameLog = [];
+    this.gameLog = []; this._roundScores = [];
     this._roundNum = 0;
 
     // Assign player colors
@@ -1826,6 +1826,42 @@ class Game {
       this._hideThinking();
       // Particles on human avatar
       this._spawnAvatarParticles(player);
+
+      // Blocked game warning
+      if (this.boneyard.length === 0) {
+        let canPlayCount = 0;
+        for (const p of this.players) {
+          if (p.hand.some(t => this.board.canPlay(t))) canPlayCount++;
+        }
+        if (canPlayCount <= 1) {
+          const warn = document.createElement('div');
+          warn.className = 'block-warning';
+          warn.textContent = '⚠️ Game may block soon!';
+          document.body.appendChild(warn);
+          setTimeout(() => warn.remove(), 2500);
+        }
+      }
+
+      // Scoring opportunity flash — check if human can score
+      if (!this.board.isEmpty && player.hand.some(t => this.board.canPlay(t))) {
+        let canScore = false;
+        for (const t of player.hand) {
+          const placements = this.board.getValidPlacements(t);
+          for (const p of placements) {
+            const sim = new AI('easy')._cloneBoard(this.board);
+            sim.placeTile(t, p);
+            if (sim.getScore() > 0) { canScore = true; break; }
+          }
+          if (canScore) break;
+        }
+        if (canScore) {
+          const flash = document.createElement('div');
+          flash.className = 'score-opp-flash';
+          flash.textContent = '💰 You can score!';
+          document.body.appendChild(flash);
+          setTimeout(() => flash.remove(), 1800);
+        }
+      }
 
       // Check if human has exactly 1 playable tile with 1 placement — auto-play it
       const playableTiles = player.hand.filter(t => this.board.canPlay(t));
@@ -2518,6 +2554,16 @@ class Game {
       if (bonus > 0) winner.score += bonus;
     }
 
+    // Track round scores
+    if (!this._roundScores) this._roundScores = [];
+    const roundData = { round: this._roundNum };
+    if (this.teamMode && this.teams) {
+      this.teams.forEach(t => roundData[t.name] = t.score);
+    } else {
+      this.players.forEach(p => roundData[p.name] = p.score);
+    }
+    this._roundScores.push(roundData);
+
     // Celebration if human/human's team won
     if (humanWon && this.sfx) this.sfx.win();
 
@@ -2821,8 +2867,30 @@ class Game {
     const analysis = this._getAnalysis();
     const analysisDiv = document.createElement('div');
     analysisDiv.style.cssText = 'margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);';
+
+    // Round timeline
+    let timelineHTML = '';
+    if (this._roundScores && this._roundScores.length > 1) {
+      timelineHTML = '<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Round Timeline</div>';
+      let prevScores = {};
+      for (const rs of this._roundScores) {
+        const diffs = {};
+        for (const [k, v] of Object.entries(rs)) {
+          if (k === 'round') continue;
+          diffs[k] = v - (prevScores[k] || 0);
+          prevScores[k] = v;
+        }
+        timelineHTML += `<div class="timeline-row"><span class="timeline-round">R${rs.round}</span><div class="timeline-scores">`;
+        for (const [k, v] of Object.entries(diffs)) {
+          timelineHTML += `<span class="timeline-score">${k}: <span style="color:#f0b840;">+${v}</span></span>`;
+        }
+        timelineHTML += '</div></div>';
+      }
+    }
+
     analysisDiv.innerHTML = `
-      <div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;text-align:center;">Your Performance</div>
+      ${timelineHTML}
+      <div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;margin-top:12px;">Your Performance</div>
       <div class="analysis-row"><span>Tiles Played</span><span class="analysis-value">${analysis.plays}</span></div>
       <div class="analysis-row"><span>Tiles Drawn</span><span class="analysis-value">${analysis.draws}</span></div>
       <div class="analysis-row"><span>Scoring Plays</span><span class="analysis-value">${analysis.scoringPlays}</span></div>
@@ -3226,6 +3294,7 @@ class Game {
           <div class="human-info-text">
             <span class="human-name" id="human-name-label" style="cursor:pointer;" title="Double-click to edit">${human.name} ${turnLabel}</span>
             <span class="human-record">${rec.wins}W ${rec.losses}L</span>
+            <span class="pip-count">${human.hand.reduce((s,t) => s + t.pips, 0)} pips in hand</span>
           </div>
         `;
 
@@ -3364,6 +3433,14 @@ class Game {
         tilesWrap.appendChild(t);
       }
       el.appendChild(tilesWrap);
+
+      // Low tile warning
+      if (player.hand.length <= 2 && player.hand.length > 0 && !this.board.isEmpty) {
+        const warn = document.createElement('div');
+        warn.className = 'low-tiles-warn';
+        warn.textContent = player.hand.length === 1 ? '⚠️ Last tile!' : '⚠️ 2 tiles left!';
+        el.appendChild(warn);
+      }
     }
   }
 
@@ -3709,11 +3786,28 @@ class Game {
         for (const p of highlightEnds) {
           const pos = this._getEndPosition(p.end);
           if (pos) {
+            // Predict score for this placement
+            let predLabel = p.end.toUpperCase();
+            const activeTile = this._hoverTile || this.selectedTile;
+            if (activeTile) {
+              const sim = new AI('easy')._cloneBoard(this.board);
+              sim.placeTile(activeTile, p);
+              const predScore = sim.getScore();
+              predLabel = predScore > 0 ? `+${predScore}` : p.end.toUpperCase();
+              if (predScore > 0) {
+                ctx.fillStyle = 'rgba(74, 175, 108, 0.35)';
+                ctx.strokeStyle = '#4aaf6c';
+              } else {
+                ctx.fillStyle = 'rgba(232, 167, 53, 0.25)';
+                ctx.strokeStyle = '#e8a735';
+              }
+            } else {
+              ctx.fillStyle = 'rgba(232, 167, 53, 0.25)';
+              ctx.strokeStyle = '#e8a735';
+            }
             ctx.save();
-            ctx.fillStyle = 'rgba(232, 167, 53, 0.25)';
-            ctx.strokeStyle = '#e8a735';
             ctx.lineWidth = 3;
-            ctx.shadowColor = '#e8a735';
+            ctx.shadowColor = ctx.strokeStyle;
             ctx.shadowBlur = 20;
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, 35, 0, Math.PI * 2);
@@ -3722,10 +3816,10 @@ class Game {
 
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 13px sans-serif';
+            ctx.font = 'bold 14px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(p.end.toUpperCase(), pos.x, pos.y);
+            ctx.fillText(predLabel, pos.x, pos.y);
             ctx.restore();
           }
         }
