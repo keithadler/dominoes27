@@ -1091,9 +1091,6 @@ class Game {
     // Sound mute state from localStorage
     this._soundMuted = localStorage.getItem('domino_muted') === '1';
 
-    // Undo button
-    document.getElementById('undo-btn').addEventListener('click', () => this._undoLastPlay());
-
     // Tile tracker
     document.getElementById('tracker-btn').addEventListener('click', () => {
       document.getElementById('game-dropdown').classList.add('hidden');
@@ -2126,8 +2123,7 @@ class Game {
     if (this._playLock) return;
     this._playLock = true;
 
-    // Save undo state for human
-    if (player.isHuman) this._saveUndoState();
+    // Save undo state for human — removed
 
     player.hand = player.hand.filter(t => !t.equals(tile));
     this.board.placeTile(tile, placement);
@@ -2367,9 +2363,6 @@ class Game {
     this._pendingPlacements = null;
     this._hoverTile = null; this._hoverPlacements = null;
     this._suppressToast = false;
-    this._lastUndoState = null;
-    const undoBtn = document.getElementById('undo-btn');
-    if (undoBtn) undoBtn.disabled = true;
 
     this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
 
@@ -3078,7 +3071,7 @@ class Game {
 
       const isMyTurn = this.currentPlayer === 0 && human.isHuman;
       for (const tile of human.hand) {
-        const playable = isMyTurn && this.board.canPlay(tile);
+        const playable = isMyTurn && !this._suppressToast && !this.board.isEmpty && this.board.canPlay(tile);
         const matchCount = playable ? this.board.getValidPlacements(tile).length : 0;
         this.renderer.drawHandTile(
           container, tile, playable,
@@ -3434,38 +3427,7 @@ class Game {
       <div class="xp-bar"><div class="xp-fill" style="width:${xp.pct}%"></div></div>
     `;
   }
-  // --- Undo ---
-  _undoLastPlay() {
-    if (!this._lastUndoState || this._playLock) return;
-    const pts = this.teamMode && this.teams ? this.teams[0].score : this.players[0].score;
-    if (pts < 3) return;
-    // Deduct points
-    if (this.teamMode && this.teams) this.teams[0].score -= 3;
-    this.players[0].score -= 3;
-    if (this.players[0].score < 0) this.players[0].score = 0;
-    // Restore state
-    const s = this._lastUndoState;
-    this.board = s.board;
-    this.placements = s.placements;
-    this.players[0].hand = s.hand;
-    this.currentPlayer = 0;
-    this._lastUndoState = null;
-    document.getElementById('undo-btn').disabled = true;
-    this._updateUI();
-    this._renderBoard();
-    this._enableHumanPlay(this.players[0]);
-  }
 
-  _saveUndoState() {
-    if (!this.players[0].isHuman || this.currentPlayer !== 0) return;
-    const ai = new AI('easy');
-    this._lastUndoState = {
-      board: ai._cloneBoard(this.board),
-      placements: [...this.placements],
-      hand: [...this.players[0].hand]
-    };
-    document.getElementById('undo-btn').disabled = false;
-  }
 
   // --- Tile Tracker ---
   _renderTracker() {
