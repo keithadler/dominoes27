@@ -3174,20 +3174,23 @@ class Game {
     let pos = 'bottom';
     if (idx !== 0) {
       const opponents = this.players.filter(p => p.index !== 0);
-      const positions = ['top', 'left', 'right'];
       if (this.teamMode && opponents.length === 3) {
         const partner = opponents.find(p => p.team === 0);
         const opps = opponents.filter(p => p.team !== 0);
         const map = [
-          { player: partner, pos: 'top' },
           { player: opps[0], pos: 'left' },
+          { player: partner, pos: 'top' },
           { player: opps[1], pos: 'right' }
         ];
         const found = map.find(m => m.player && m.player.index === idx);
         if (found) pos = found.pos;
       } else {
+        let posMap;
+        if (opponents.length === 1) posMap = ['top'];
+        else if (opponents.length === 2) posMap = ['left', 'right'];
+        else posMap = ['left', 'top', 'right'];
         const oppIdx = opponents.findIndex(p => p.index === idx);
-        if (oppIdx >= 0) pos = positions[oppIdx % 3];
+        if (oppIdx >= 0) pos = posMap[oppIdx % posMap.length];
       }
     }
 
