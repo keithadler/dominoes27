@@ -754,7 +754,7 @@ class Renderer {
     ctx.closePath();
   }
 
-  drawHandTile(container, tile, playable, onClick, onHover, onLeave, matchCount) {
+  drawHandTile(container, tile, playable, onClick, onHover, onLeave, matchCount, onDragStart) {
     const el = document.createElement('div');
     el.className = 'hand-tile' + (playable ? ' playable' : ' not-playable');
 
@@ -771,6 +771,22 @@ class Renderer {
       el.addEventListener('click', () => onClick(tile, el));
       if (onHover) el.addEventListener('mouseenter', () => onHover(tile));
       if (onLeave) el.addEventListener('mouseleave', () => onLeave());
+      // Drag support
+      if (onDragStart) {
+        el.style.touchAction = 'none';
+        const startDrag = (startX, startY) => {
+          onDragStart(tile, el, startX, startY);
+        };
+        el.addEventListener('mousedown', (e) => {
+          if (e.button === 0) startDrag(e.clientX, e.clientY);
+        });
+        el.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            const t = e.touches[0];
+            startDrag(t.clientX, t.clientY);
+          }
+        }, { passive: true });
+      }
     }
     container.appendChild(el);
     return el;
@@ -1028,7 +1044,28 @@ class Game {
     this.roundOver = false;
     this.gameOver = false;
 
+    // Speed multiplier: 'fast' = 0.4, 'normal' = 1, 'slow' = 1.6
+    this._gameSpeed = localStorage.getItem('domino_speed') || 'normal';
+
+    // Theme
+    this._theme = localStorage.getItem('domino_theme') || 'dark';
+    document.body.setAttribute('data-theme', this._theme);
+
+    // Drag state
+    this._dragTile = null;
+    this._dragEl = null;
+    this._dragOffsetX = 0;
+    this._dragOffsetY = 0;
+
+    // Round history for recap
+    this._roundHistory = [];
+
     this._initUI();
+  }
+
+  _speedMs(ms) {
+    const mult = { fast: 0.4, normal: 1, slow: 1.6 };
+    return Math.round(ms * (mult[this._gameSpeed] || 1));
   }
 
   _initUI() {
@@ -1199,6 +1236,15 @@ class Game {
     // Initial roster preview
     this._updateRoster();
 
+    // Restore saved speed selection
+    const savedSpeed = localStorage.getItem('domino_speed') || 'normal';
+    const speedGroup = document.getElementById('game-speed');
+    if (speedGroup) {
+      speedGroup.querySelectorAll('.btn-option').forEach(b => {
+        b.classList.toggle('active', b.dataset.value === savedSpeed);
+      });
+    }
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       const key = e.key.toLowerCase();
@@ -1304,6 +1350,12 @@ class Game {
     } else {
       oppGroup.style.display = '';
     }
+    // Speed
+    const speed = this._getOption('game-speed');
+    if (speed) {
+      this._gameSpeed = speed;
+      localStorage.setItem('domino_speed', speed);
+    }
     this._updateRoster();
   }
 
@@ -1355,7 +1407,8 @@ class Game {
     }
 
     roster.innerHTML = '<div class="roster-title">Players</div>';
-    for (const p of players) {
+    for (let pi = 0; pi < players.length; pi++) {
+      const p = players[pi];
       const card = document.createElement('div');
       card.className = 'roster-card' + (p.isHuman ? ' human' : '');
       const teamBadge = p.team === 'teammate' ? ' 🤝' : p.team === 'opponent' ? ' ⚔️' : '';
@@ -1367,6 +1420,23 @@ class Game {
           <div class="roster-record">${p.record.wins}W - ${p.record.losses}L</div>
         </div>
       `;
+      if (!p.isHuman) {
+        const rerollBtn = document.createElement('button');
+        rerollBtn.className = 'roster-reroll';
+        rerollBtn.textContent = '🎲';
+        rerollBtn.title = 'Re-roll opponent';
+        const oppIdx = pi - 1; // index into preview arrays (0-based for opponents)
+        rerollBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const newPick = pickRandomNames(1)[0];
+          this._previewNames[oppIdx] = newPick.name;
+          this._previewCities[oppIdx] = newPick.city;
+          this._previewSeeds[oppIdx] = newPick.name + '-preview-' + oppIdx + '-' + Date.now();
+          seedAIRecord(newPick.name, this._previewDiffs[oppIdx]);
+          this._updateRoster();
+        });
+        card.appendChild(rerollBtn);
+      }
       roster.appendChild(card);
     }
   }
@@ -1395,6 +1465,7 @@ class Game {
       this.renderer = new Renderer(document.getElementById('board-canvas'));
       this.gameOver = false;
       this.gameLog = []; this._roundScores = [];
+      this._roundHistory = [];
       this._roundNum = 0;
       this.showScreen('game-screen');
       this.startRound();
@@ -1467,6 +1538,7 @@ class Game {
     this.sfx = new SFX();
     this.gameOver = false;
     this.gameLog = []; this._roundScores = [];
+    this._roundHistory = [];
     this._roundNum = 0;
 
     // Assign player colors
@@ -1730,7 +1802,7 @@ class Game {
       overlay.classList.add('hidden');
       overlay.innerHTML = '';
       callback();
-    }, 3000);
+    }, this._speedMs(3000));
   }
 
   _showCountdown(callback) {
@@ -1757,7 +1829,7 @@ class Game {
       overlay.innerHTML = `<div class="${step.cls}">${step.text}</div>`;
       if (this.sfx) this.sfx._play(step.freq, 0.15, 'sine', 0.12);
       i++;
-      setTimeout(next, i === steps.length ? 500 : 800);
+      setTimeout(next, i === steps.length ? this._speedMs(500) : this._speedMs(800));
     };
     next();
   }
@@ -1810,7 +1882,7 @@ class Game {
       this.forcedFirstTile = null;
       setTimeout(() => {
         this._executePlay(player, tile, { end: 'first' });
-      }, player.isHuman ? 600 : 1500);
+      }, player.isHuman ? this._speedMs(600) : this._speedMs(1500));
       return;
     }
 
@@ -1821,7 +1893,7 @@ class Game {
       this._spawnAvatarParticles(player);
       const base = 1500;
       const jitter = 500 + Math.random() * 1500;
-      setTimeout(() => this._aiTurn(player), base + jitter);
+      setTimeout(() => this._aiTurn(player), this._speedMs(base + jitter));
     } else {
       this._hideThinking();
       // Particles on human avatar
@@ -1969,7 +2041,7 @@ class Game {
         const drawPhrase = getPhrase(player, 'draw');
         if (drawPhrase) setTimeout(() => this._showSpeechBubble(player, drawPhrase), 300);
         this._updateUI();
-        setTimeout(() => this._aiTurn(player), 1400);
+        setTimeout(() => this._aiTurn(player), this._speedMs(1400));
         return;
       } else {
         // AI must pass — show dialogue and pause
@@ -1981,7 +2053,7 @@ class Game {
           avatar: player.avatar,
           action: 'pass'
         });
-        setTimeout(() => this._nextTurn(), 1500);
+        setTimeout(() => this._nextTurn(), this._speedMs(1500));
         return;
       }
     }
@@ -2206,6 +2278,103 @@ class Game {
     }
   }
 
+  _onDragStart(tile, el, startX, startY) {
+    if (this._playLock || !this.board.canPlay(tile)) return;
+    const placements = this.board.getValidPlacements(tile);
+    if (placements.length === 0) return;
+
+    this._dragTile = tile;
+    this._dragPlacements = placements;
+    this._dragStartX = startX;
+    this._dragStartY = startY;
+    this._dragActive = false;
+    this._dragSourceEl = el;
+
+    // Create ghost element
+    const ghost = el.cloneNode(true);
+    ghost.className = 'hand-tile drag-ghost';
+    ghost.style.position = 'fixed';
+    ghost.style.zIndex = '100';
+    ghost.style.pointerEvents = 'none';
+    ghost.style.width = el.offsetWidth + 'px';
+    ghost.style.height = el.offsetHeight + 'px';
+    ghost.style.left = (startX - el.offsetWidth / 2) + 'px';
+    ghost.style.top = (startY - el.offsetHeight / 2) + 'px';
+    ghost.style.opacity = '0.85';
+    ghost.style.transform = 'scale(1.1) rotate(-3deg)';
+    ghost.style.transition = 'none';
+    ghost.style.animation = 'none';
+    document.body.appendChild(ghost);
+    this._dragGhost = ghost;
+
+    // Show valid placements on board
+    this._renderBoard(placements);
+
+    const onMove = (cx, cy) => {
+      const dx = cx - this._dragStartX;
+      const dy = cy - this._dragStartY;
+      if (!this._dragActive && Math.hypot(dx, dy) < 8) return;
+      this._dragActive = true;
+      ghost.style.left = (cx - el.offsetWidth / 2) + 'px';
+      ghost.style.top = (cy - el.offsetHeight / 2) + 'px';
+      el.style.opacity = '0.3';
+    };
+
+    const onEnd = (cx, cy) => {
+      document.removeEventListener('mousemove', mouseMove);
+      document.removeEventListener('mouseup', mouseUp);
+      document.removeEventListener('touchmove', touchMove);
+      document.removeEventListener('touchend', touchEnd);
+      document.removeEventListener('touchcancel', touchEnd);
+      if (this._dragGhost) { this._dragGhost.remove(); this._dragGhost = null; }
+      el.style.opacity = '';
+
+      if (!this._dragActive) return; // was just a click, let click handler deal with it
+
+      // Find closest end
+      const rect = this.renderer.canvas.getBoundingClientRect();
+      const scale = this.renderer._viewScale || 1;
+      const offX = this.renderer._viewOffsetX || 0;
+      const offY = this.renderer._viewOffsetY || 0;
+      const mx = (cx - rect.left - offX) / scale;
+      const my = (cy - rect.top - offY) / scale;
+
+      let bestEnd = null, bestDist = Infinity;
+      for (const p of placements) {
+        const endPos = this._getEndPosition(p.end);
+        if (endPos) {
+          const dist = Math.hypot(mx - endPos.x, my - endPos.y);
+          if (dist < bestDist) { bestDist = dist; bestEnd = p; }
+        }
+      }
+
+      if (bestEnd && bestDist < 100) {
+        const player = this.players[this.currentPlayer];
+        this._executePlay(player, tile, bestEnd);
+        this.selectedTile = null; this.selectedEl = null;
+        this._pendingPlacements = null;
+        this._hoverTile = null; this._hoverPlacements = null;
+      } else {
+        this._renderBoard();
+      }
+      this._dragTile = null; this._dragPlacements = null; this._dragActive = false;
+    };
+
+    const mouseMove = (e) => onMove(e.clientX, e.clientY);
+    const mouseUp = (e) => onEnd(e.clientX, e.clientY);
+    const touchMove = (e) => { if (e.touches.length === 1) { e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); } };
+    const touchEnd = (e) => {
+      const t = e.changedTouches && e.changedTouches[0];
+      onEnd(t ? t.clientX : this._dragStartX, t ? t.clientY : this._dragStartY);
+    };
+
+    document.addEventListener('mousemove', mouseMove);
+    document.addEventListener('mouseup', mouseUp);
+    document.addEventListener('touchmove', touchMove, { passive: false });
+    document.addEventListener('touchend', touchEnd);
+    document.addEventListener('touchcancel', touchEnd);
+  }
+
   _getEndPosition(end) {
     if (this.placements.length === 0) return null;
     const cx = this.renderer.canvas.width / 2;
@@ -2294,7 +2463,7 @@ class Game {
 
     this._updateUI();
 
-    const delay = scored ? 2000 : 800;
+    const delay = scored ? this._speedMs(2000) : this._speedMs(800);
     setTimeout(() => {
       this._playLock = false;
       if (player.hand.length === 0) {
@@ -2564,6 +2733,21 @@ class Game {
     }
     this._roundScores.push(roundData);
 
+    // Track round history for recap
+    if (!this._roundHistory) this._roundHistory = [];
+    const roundPlays = this.gameLog.filter(e => e.action === 'play');
+    const roundScoring = roundPlays.filter(e => e.score > 0);
+    const bestPlay = roundScoring.length > 0 ? roundScoring.reduce((a, b) => a.score > b.score ? a : b) : null;
+    this._roundHistory.push({
+      round: this._roundNum,
+      winner: winner.name,
+      winnerAvatar: winner.avatar,
+      bonus: bonusCalc.bonus,
+      bestPlay: bestPlay ? { player: bestPlay.player, score: bestPlay.score, tile: bestPlay.tile } : null,
+      totalPlays: roundPlays.length,
+      blocked: false
+    });
+
     // Celebration if human/human's team won
     if (humanWon && this.sfx) this.sfx.win();
 
@@ -2606,7 +2790,7 @@ class Game {
     };
 
     // Delay so the board state is visible before counting
-    setTimeout(showCounting, 2500);
+    setTimeout(showCounting, this._speedMs(2500));
   }
 
   _endRoundBlocked() {
@@ -2638,6 +2822,18 @@ class Game {
     }
 
     this._updateUI();
+
+    // Track round history for recap (blocked)
+    if (!this._roundHistory) this._roundHistory = [];
+    this._roundHistory.push({
+      round: this._roundNum,
+      winner: winnerLabel,
+      winnerAvatar: '',
+      bonus: bonusCalc.bonus,
+      bestPlay: null,
+      totalPlays: 0,
+      blocked: true
+    });
 
     // Log blocked round end
     const logScores = {};
@@ -2870,7 +3066,21 @@ class Game {
 
     // Round timeline
     let timelineHTML = '';
-    if (this._roundScores && this._roundScores.length > 1) {
+    if (this._roundHistory && this._roundHistory.length > 0) {
+      timelineHTML = '<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Round Recap</div>';
+      for (const rh of this._roundHistory) {
+        const bestStr = rh.bestPlay ? `Best: ${rh.bestPlay.player} +${rh.bestPlay.score}` : '';
+        const blockedTag = rh.blocked ? '<span style="color:#e04a3a;font-size:0.7rem;font-weight:700;">BLOCKED</span> ' : '';
+        timelineHTML += `<div class="timeline-row">
+          <span class="timeline-round">R${rh.round}</span>
+          <div class="timeline-scores">
+            <span class="timeline-score">${blockedTag}Won by <span style="color:#f0b840;">${rh.winner}</span></span>
+            ${rh.bonus > 0 ? `<span class="timeline-score">+${rh.bonus} bonus</span>` : ''}
+            ${bestStr ? `<span class="timeline-score" style="opacity:0.6;">${bestStr}</span>` : ''}
+          </div>
+        </div>`;
+      }
+    } else if (this._roundScores && this._roundScores.length > 1) {
       timelineHTML = '<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Round Timeline</div>';
       let prevScores = {};
       for (const rs of this._roundScores) {
@@ -2918,7 +3128,7 @@ class Game {
         overlay.classList.add('hidden');
         overlay.innerHTML = '';
         this.showScreen('gameover-screen');
-      }, 3000);
+      }, this._speedMs(3000));
     } else {
       this.showScreen('gameover-screen');
     }
@@ -3259,7 +3469,8 @@ class Game {
           (t, el) => this._onTileClick(t, el),
           isMyTurn ? (t) => this._onTileHover(t) : null,
           isMyTurn ? () => this._onTileLeave() : null,
-          matchCount
+          matchCount,
+          isMyTurn ? (t, el, x, y) => this._onDragStart(t, el, x, y) : null
         );
       }
 
@@ -3520,10 +3731,25 @@ class Game {
       const musicOn = this.music && this.music.enabled;
       const sfxOn = !this._soundMuted;
 
+      const currentTheme = this._theme || 'dark';
+
       container.innerHTML = `
         <div class="pref-group">
           <div class="pref-label">Player Name</div>
           <input type="text" id="pref-name-input" class="name-edit" maxlength="12" value="${currentName}" style="width:100%;">
+        </div>
+        <div class="pref-group">
+          <div class="pref-label">Theme</div>
+          <div class="skin-options" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="skin-option ${currentTheme === 'dark' ? 'active' : ''}" data-theme-val="dark">
+              <div class="skin-preview" style="background:linear-gradient(135deg,#1e7a35,#0d3a18);"></div>
+              <span>🌙 Dark</span>
+            </div>
+            <div class="skin-option ${currentTheme === 'light' ? 'active' : ''}" data-theme-val="light">
+              <div class="skin-preview" style="background:linear-gradient(135deg,#e8f5e9,#a5d6a7);"></div>
+              <span>☀️ Light</span>
+            </div>
+          </div>
         </div>
         <div class="pref-group">
           <div class="pref-label">Tile Skin</div>
@@ -3557,6 +3783,20 @@ class Game {
             </label>
           </div>
         </div>
+        <div class="pref-group">
+          <div class="pref-label">Game Speed</div>
+          <div class="skin-options" style="grid-template-columns: repeat(3, 1fr);" id="pref-speed-options">
+            <div class="skin-option ${this._gameSpeed === 'fast' ? 'active' : ''}" data-speed="fast">
+              <span>🐇</span><span>Fast</span>
+            </div>
+            <div class="skin-option ${this._gameSpeed === 'normal' ? 'active' : ''}" data-speed="normal">
+              <span>🎯</span><span>Normal</span>
+            </div>
+            <div class="skin-option ${this._gameSpeed === 'slow' ? 'active' : ''}" data-speed="slow">
+              <span>🐢</span><span>Slow</span>
+            </div>
+          </div>
+        </div>
       `;
 
       // Name change
@@ -3588,11 +3828,22 @@ class Game {
     }
 
     // Skin click handlers
-      container.querySelectorAll('.skin-option').forEach(el => {
+      container.querySelectorAll('.skin-option[data-skin]').forEach(el => {
         el.addEventListener('click', () => {
           setTileSkin(el.dataset.skin);
           this._renderPrefs();
           this._renderBoard();
+        });
+      });
+
+      // Theme click handlers
+      container.querySelectorAll('.skin-option[data-theme-val]').forEach(el => {
+        el.addEventListener('click', () => {
+          this._theme = el.dataset.themeVal;
+          localStorage.setItem('domino_theme', this._theme);
+          document.body.setAttribute('data-theme', this._theme);
+          this._renderPrefs();
+          if (this.renderer) this._renderBoard();
         });
       });
 
@@ -3613,6 +3864,23 @@ class Game {
         sfxCb.addEventListener('change', () => {
           this._soundMuted = !sfxCb.checked;
           localStorage.setItem('domino_muted', this._soundMuted ? '1' : '0');
+        });
+      }
+
+      // Speed toggle in prefs
+      const speedOpts = document.getElementById('pref-speed-options');
+      if (speedOpts) {
+        speedOpts.querySelectorAll('.skin-option').forEach(el => {
+          el.addEventListener('click', () => {
+            this._gameSpeed = el.dataset.speed;
+            localStorage.setItem('domino_speed', this._gameSpeed);
+            // Also sync menu buttons
+            const menuGroup = document.getElementById('game-speed');
+            if (menuGroup) {
+              menuGroup.querySelectorAll('.btn-option').forEach(b => b.classList.toggle('active', b.dataset.value === this._gameSpeed));
+            }
+            this._renderPrefs();
+          });
         });
       }
     }

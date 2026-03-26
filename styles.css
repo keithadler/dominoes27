@@ -1115,3 +1115,140 @@ body::after {
 
 /* Move timer */
 .move-timer { font-size: 0.65rem; opacity: 0.35; font-family: 'Inter', monospace; }
+
+
+/* ===== Light Theme ===== */
+body[data-theme="light"] {
+  background: #e8f0e4;
+  color: #1a2e1a;
+}
+body[data-theme="light"]::before {
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(255,255,255,0.3) 100%),
+    radial-gradient(ellipse at 50% 50%, #c8e6c0 0%, #a8d8a0 40%, #88c880 80%);
+}
+body[data-theme="light"]::after { opacity: 0.03; }
+body[data-theme="light"] .menu-container {
+  background: linear-gradient(145deg, rgba(255,255,255,0.85), rgba(240,240,235,0.95));
+  border-color: rgba(0,0,0,0.08);
+  box-shadow: 0 0 80px rgba(0,0,0,0.08), 0 30px 80px rgba(0,0,0,0.12);
+  color: #1a2e1a;
+}
+body[data-theme="light"] .game-title {
+  background: linear-gradient(180deg, #2a5a2a 20%, #c07800 60%, #8a5a00);
+  -webkit-background-clip: text; background-clip: text;
+}
+body[data-theme="light"] .subtitle { color: #555; }
+body[data-theme="light"] .option-group label { color: #666; }
+body[data-theme="light"] .btn-option {
+  background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #333;
+}
+body[data-theme="light"] .btn-option:hover { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.2); }
+body[data-theme="light"] .btn-option.active { color: #1a1a1a; }
+body[data-theme="light"] #player-roster {
+  background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.06);
+}
+body[data-theme="light"] .roster-card {
+  background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.06); color: #1a2e1a;
+}
+body[data-theme="light"] .roster-card.human { background: rgba(232,167,53,0.08); border-color: rgba(232,167,53,0.25); }
+body[data-theme="light"] .roster-card:hover { background: rgba(0,0,0,0.06); }
+body[data-theme="light"] #score-bar {
+  background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(240,240,235,0.7));
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+body[data-theme="light"] .sb-team, body[data-theme="light"] .sb-player-score {
+  background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.06);
+}
+body[data-theme="light"] .sb-team-name, body[data-theme="light"] .sb-ps-name { color: #333; }
+body[data-theme="light"] #board-area {
+  border-color: rgba(90,60,20,0.2);
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.1);
+}
+body[data-theme="light"] .opponent-hand.top { background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent); }
+body[data-theme="light"] .opponent-hand.left { background: linear-gradient(90deg, rgba(255,255,255,0.3), transparent); }
+body[data-theme="light"] .opponent-hand.right { background: linear-gradient(-90deg, rgba(255,255,255,0.3), transparent); }
+body[data-theme="light"] .opp-name { color: rgba(0,0,0,0.8); }
+body[data-theme="light"] .opp-record { color: #666; }
+body[data-theme="light"] #bottom-bar {
+  background: linear-gradient(0deg, rgba(255,255,255,0.5), rgba(255,255,255,0.2));
+  border-top-color: rgba(0,0,0,0.08);
+}
+body[data-theme="light"] #end-sum-display {
+  background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(240,240,235,0.85));
+  border-color: rgba(0,0,0,0.08); color: #333;
+}
+body[data-theme="light"] .message-box,
+body[data-theme="light"] .rules-panel,
+body[data-theme="light"] .log-panel,
+body[data-theme="light"] .shortcuts-panel,
+body[data-theme="light"] .stats-panel,
+body[data-theme="light"] .tracker-panel {
+  background: linear-gradient(145deg, #fafafa, #f0f0ec);
+  border-color: rgba(0,0,0,0.08); color: #1a2e1a;
+}
+body[data-theme="light"] .message-box p { color: #333; }
+body[data-theme="light"] .gm-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); color: #333; }
+body[data-theme="light"] .gm-btn:hover { background: rgba(0,0,0,0.1); }
+body[data-theme="light"] #game-dropdown {
+  background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(245,245,240,0.98));
+  border-color: rgba(0,0,0,0.1);
+}
+body[data-theme="light"] .dd-item { color: #333; }
+body[data-theme="light"] .dd-item:hover { background: rgba(0,0,0,0.06); }
+body[data-theme="light"] .btn-menu {
+  background: linear-gradient(145deg, rgba(255,255,255,0.7), rgba(240,240,235,0.5));
+  border-color: rgba(0,0,0,0.1); color: #333;
+}
+body[data-theme="light"] .think-card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.92), rgba(245,245,240,0.95));
+  border-color: rgba(0,0,0,0.08); color: #333;
+}
+body[data-theme="light"] .speech-bubble {
+  background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(245,245,240,0.98));
+  border-color: rgba(0,0,0,0.1); color: #333;
+}
+body[data-theme="light"] #turn-indicator {
+  background: linear-gradient(145deg, rgba(255,255,255,0.92), rgba(245,245,240,0.95));
+  border-color: rgba(0,0,0,0.08);
+}
+body[data-theme="light"] #turn-indicator .toast-text { color: #333; }
+body[data-theme="light"] .name-edit {
+  background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.15); color: #333;
+}
+body[data-theme="light"] .pref-label { color: #666; }
+body[data-theme="light"] .skin-option { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.1); color: #333; }
+body[data-theme="light"] .skin-option:hover { background: rgba(0,0,0,0.06); }
+body[data-theme="light"] .toggle-row span { color: #333; }
+body[data-theme="light"] .toggle-slider { background: rgba(0,0,0,0.15); }
+body[data-theme="light"] .stat-row { border-bottom-color: rgba(0,0,0,0.06); color: #333; }
+body[data-theme="light"] .stat-label { color: #555; }
+body[data-theme="light"] .log-entry { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.04); color: #333; }
+body[data-theme="light"] .sc-row { border-bottom-color: rgba(0,0,0,0.06); color: #333; }
+body[data-theme="light"] .sc-row span { color: #555; }
+body[data-theme="light"] .sc-row kbd { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.15); }
+body[data-theme="light"] .rules-content p { color: #444; }
+body[data-theme="light"] .final-score-row { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.06); color: #333; }
+body[data-theme="light"] .analysis-row { border-bottom-color: rgba(0,0,0,0.06); color: #333; }
+body[data-theme="light"] .timeline-row { border-bottom-color: rgba(0,0,0,0.06); color: #333; }
+body[data-theme="light"] .tracker-tile.unplayed { background: rgba(0,0,0,0.06); color: #333; }
+body[data-theme="light"] .count-player { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.06); color: #333; }
+
+/* ===== Roster re-roll button ===== */
+.roster-reroll {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  color: #fff; width: 36px; height: 36px; border-radius: 50%;
+  cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s; flex-shrink: 0;
+}
+.roster-reroll:hover { background: rgba(255,255,255,0.15); transform: rotate(180deg) scale(1.1); }
+body[data-theme="light"] .roster-reroll {
+  background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.12);
+}
+body[data-theme="light"] .roster-reroll:hover { background: rgba(0,0,0,0.12); }
+
+/* ===== Drag ghost ===== */
+.drag-ghost {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(232,167,53,0.3);
+  cursor: grabbing;
+}
