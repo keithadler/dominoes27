@@ -1059,8 +1059,29 @@ class Game {
     });
     document.getElementById('ragequit-btn').addEventListener('click', () => {
       document.getElementById('game-dropdown').classList.add('hidden');
+      // Show confirmation with random taunt
+      const taunts = [
+        'Really? You\'re just gonna walk away? 🏃‍♂️\nThe bones aren\'t THAT scary...',
+        'Quitting already? The AI opponents are literally laughing at you right now. 😂',
+        'Winners never quit.\nQuitters never win.\nWhich one are you? 🤔',
+        'You sure? Your opponents will tell EVERYONE about this. 📢',
+        'The boneyard called. It said even IT has more backbone than you. 🦴',
+        'Rage quitting is just losing with extra steps. 💀',
+        'Your avatar is literally crying right now. Don\'t do this to them. 😢',
+        'Fun fact: 100% of rage quitters regret it.\nOkay I made that up. But still. 📊',
+        'The dominoes believe in you even if you don\'t believe in yourself. 🁣',
+        'Plot twist: you were about to win. Probably. Maybe. 🎬',
+        'Quitting now? But you were SO close to... well, something. 🤷',
+        'Your opponents are already practicing their victory dances. Don\'t let them. 💃',
+      ];
+      const phrase = taunts[Math.floor(Math.random() * taunts.length)];
+      document.getElementById('ragequit-phrase').innerHTML = phrase.replace(/\n/g, '<br>');
+      document.getElementById('ragequit-overlay').classList.remove('hidden');
+    });
+
+    document.getElementById('ragequit-yes').addEventListener('click', () => {
+      document.getElementById('ragequit-overlay').classList.add('hidden');
       recordLoss(getPlayerName());
-      // Full reset
       this.gameOver = true;
       this.roundOver = true;
       this._playLock = false;
@@ -1073,6 +1094,10 @@ class Game {
       this.boneyard = [];
       this.showScreen('menu-screen');
       this._updateRoster();
+    });
+
+    document.getElementById('ragequit-no').addEventListener('click', () => {
+      document.getElementById('ragequit-overlay').classList.add('hidden');
     });
     document.getElementById('rules-close-btn').addEventListener('click', () => {
       document.getElementById('rules-overlay').classList.add('hidden');

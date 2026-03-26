@@ -1005,3 +1005,7 @@ body::after {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
+
+/* Rage quit overlay */
+#ragequit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 210; backdrop-filter: blur(8px); }
+#ragequit-overlay.hidden { display: none; }

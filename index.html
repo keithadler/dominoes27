@@ -208,7 +208,17 @@
           <button class="gm-btn" id="prefs-close-btn" style="text-align:center;margin-top:16px;">Close</button>
         </div>
       </div>
-      <!-- Tutorial overlay moved to app level -->
+      <!-- Rage quit confirmation -->
+      <div id="ragequit-overlay" class="hidden">
+        <div class="message-box" style="max-width:460px;">
+          <div id="ragequit-phrase" style="font-size:1.3rem;font-weight:800;line-height:1.5;margin-bottom:20px;"></div>
+          <p style="font-size:0.85rem;opacity:0.5;margin-bottom:20px;">This counts as a loss on your record.</p>
+          <div style="display:flex;gap:12px;justify-content:center;">
+            <button id="ragequit-yes" class="btn-start" style="background:linear-gradient(145deg,#e04a3a,#b83025);padding:14px 28px;font-size:1rem;">💀 Yes, I Quit</button>
+            <button id="ragequit-no" class="btn-start" style="padding:14px 28px;font-size:1rem;">💪 No, I'll Stay</button>
+          </div>
+        </div>
+      </div>
       <div id="tracker-overlay" class="hidden">
         <div class="tracker-panel">
           <h2 style="font-size:1.2rem;text-align:center;margin-bottom:14px;background:linear-gradient(180deg,#fff 20%,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Tile Tracker</h2>
