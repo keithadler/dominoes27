@@ -1259,7 +1259,7 @@ class Game {
       if (key === 'escape') {
         const dd = document.getElementById('game-dropdown');
         if (dd && !dd.classList.contains('hidden')) { dd.classList.add('hidden'); return; }
-        const overlays = ['rules-overlay', 'log-overlay', 'shortcuts-overlay'];
+        const overlays = ['rules-overlay', 'log-overlay', 'shortcuts-overlay', 'stats-overlay', 'tracker-overlay', 'prefs-overlay', 'ragequit-overlay'];
         for (const id of overlays) {
           const el = document.getElementById(id);
           if (el && !el.classList.contains('hidden')) { el.classList.add('hidden'); return; }
@@ -1274,7 +1274,7 @@ class Game {
         if (el) el.classList.toggle('hidden');
         return;
       }
-      const anyOverlay = ['rules-overlay', 'log-overlay', 'count-overlay', 'message-overlay', 'shortcuts-overlay', 'tracker-overlay']
+      const anyOverlay = ['rules-overlay', 'log-overlay', 'count-overlay', 'message-overlay', 'shortcuts-overlay', 'tracker-overlay', 'stats-overlay', 'prefs-overlay']
         .some(id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); });
       if (anyOverlay) return;
 
@@ -1333,6 +1333,26 @@ class Game {
       if (key === 'g') {
         this._renderLog();
         document.getElementById('log-overlay').classList.remove('hidden');
+      }
+      // R = Rules (when not placing a tile)
+      if (key === 'r' && !activeTile) {
+        document.getElementById('game-dropdown').classList.add('hidden');
+        document.getElementById('rules-overlay').classList.remove('hidden');
+      }
+      // T = Tile tracker
+      if (key === 't') {
+        this._renderTracker();
+        document.getElementById('tracker-overlay').classList.remove('hidden');
+      }
+      // A = Stats & Achievements
+      if (key === 'a') {
+        this._renderStats();
+        document.getElementById('stats-overlay').classList.remove('hidden');
+      }
+      // E = Preferences (sEttings)
+      if (key === 'e') {
+        this._renderPrefs();
+        document.getElementById('prefs-overlay').classList.remove('hidden');
       }
       if (key >= '1' && key <= '9') {
         const idx = parseInt(key) - 1;
