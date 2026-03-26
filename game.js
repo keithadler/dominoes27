@@ -1104,28 +1104,6 @@ class Game {
       document.getElementById('tracker-overlay').classList.add('hidden');
     });
 
-    // Emotes
-    document.querySelectorAll('.emote-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const emote = btn.dataset.emote;
-        const el = document.createElement('div');
-        el.className = 'emote-float';
-        el.textContent = emote;
-        el.style.left = (window.innerWidth / 2 - 20) + 'px';
-        el.style.top = (window.innerHeight / 2) + 'px';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1500);
-        // AI reacts
-        if (this.players) {
-          const aiPlayers = this.players.filter(p => !p.isHuman);
-          if (aiPlayers.length > 0) {
-            const reactor = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
-            const reactions = ['😄','🤔','😏','👀','🙄','😎','🤷'];
-            setTimeout(() => this._showSpeechBubble(reactor, reactions[Math.floor(Math.random() * reactions.length)]), 800);
-          }
-        }
-      });
-    });
 
     // Player name input
     const nameInput = document.getElementById('player-name-input');
