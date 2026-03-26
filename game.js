@@ -1505,8 +1505,23 @@ class Game {
       const arrow = document.getElementById('floating-arrow');
       if (arrow) arrow.style.display = 'none';
 
+      // Hide bottom bar, opponent panels, score bar, and end-sum during deal
+      const bottomBar = document.getElementById('bottom-bar');
+      const scoreBar = document.getElementById('score-bar');
+      const endSum = document.getElementById('end-sum-display');
+      const oppPanels = ['opponent-top', 'opponent-left', 'opponent-right'];
+      if (bottomBar) bottomBar.style.visibility = 'hidden';
+      if (scoreBar) scoreBar.style.visibility = 'hidden';
+      if (endSum) endSum.style.visibility = 'hidden';
+      oppPanels.forEach(id => { const el = document.getElementById(id); if (el) el.style.visibility = 'hidden'; });
+
       // Animate dealing then proceed
       this._animateDeal(() => {
+        // Show everything back except end-sum (shown after first move)
+        if (bottomBar) bottomBar.style.visibility = '';
+        if (scoreBar) scoreBar.style.visibility = '';
+        oppPanels.forEach(id => { const el = document.getElementById(id); if (el) el.style.visibility = ''; });
+
         this._updateUI();
         this._renderBoard();
         this._startSpinnerLoop();
@@ -2397,6 +2412,7 @@ class Game {
     this._pendingPlacements = null;
     this._hoverTile = null; this._hoverPlacements = null;
     this._suppressToast = false;
+    const _endSumEl = document.getElementById("end-sum-display"); if (_endSumEl) _endSumEl.style.visibility = "";
 
     this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
 
