@@ -754,11 +754,10 @@ class Renderer {
     ctx.closePath();
   }
 
-  drawHandTile(container, tile, playable, onClick, onHover, onLeave) {
+  drawHandTile(container, tile, playable, onClick, onHover, onLeave, matchCount) {
     const el = document.createElement('div');
     el.className = 'hand-tile' + (playable ? ' playable' : ' not-playable');
 
-    // Apply skin colors to hand tile
     const skin = getSkinColors();
     el.style.background = `linear-gradient(160deg, ${skin.face} 0%, ${skin.faceDark} 100%)`;
 
@@ -766,6 +765,7 @@ class Renderer {
       <div class="half">${this._pipHTML(tile.a, skin.pip)}</div>
       <div class="divider"></div>
       <div class="half">${this._pipHTML(tile.b, skin.pip)}</div>
+      ${playable && matchCount > 0 ? `<div class="match-badge">${matchCount}</div>` : ''}
     `;
     if (playable) {
       el.addEventListener('click', () => onClick(tile, el));
@@ -1090,6 +1090,42 @@ class Game {
     });
     // Sound mute state from localStorage
     this._soundMuted = localStorage.getItem('domino_muted') === '1';
+
+    // Undo button
+    document.getElementById('undo-btn').addEventListener('click', () => this._undoLastPlay());
+
+    // Tile tracker
+    document.getElementById('tracker-btn').addEventListener('click', () => {
+      document.getElementById('game-dropdown').classList.add('hidden');
+      this._renderTracker();
+      document.getElementById('tracker-overlay').classList.remove('hidden');
+    });
+    document.getElementById('tracker-close-btn').addEventListener('click', () => {
+      document.getElementById('tracker-overlay').classList.add('hidden');
+    });
+
+    // Emotes
+    document.querySelectorAll('.emote-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const emote = btn.dataset.emote;
+        const el = document.createElement('div');
+        el.className = 'emote-float';
+        el.textContent = emote;
+        el.style.left = (window.innerWidth / 2 - 20) + 'px';
+        el.style.top = (window.innerHeight / 2) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1500);
+        // AI reacts
+        if (this.players) {
+          const aiPlayers = this.players.filter(p => !p.isHuman);
+          if (aiPlayers.length > 0) {
+            const reactor = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
+            const reactions = ['😄','🤔','😏','👀','🙄','😎','🤷'];
+            setTimeout(() => this._showSpeechBubble(reactor, reactions[Math.floor(Math.random() * reactions.length)]), 800);
+          }
+        }
+      });
+    });
 
     // Player name input
     const nameInput = document.getElementById('player-name-input');
@@ -2123,6 +2159,9 @@ class Game {
     if (this._playLock) return;
     this._playLock = true;
 
+    // Save undo state for human
+    if (player.isHuman) this._saveUndoState();
+
     player.hand = player.hand.filter(t => !t.equals(tile));
     this.board.placeTile(tile, placement);
     this._lastPlayedBy = player.index;
@@ -2361,6 +2400,9 @@ class Game {
     this._pendingPlacements = null;
     this._hoverTile = null; this._hoverPlacements = null;
     this._suppressToast = false;
+    this._lastUndoState = null;
+    const undoBtn = document.getElementById('undo-btn');
+    if (undoBtn) undoBtn.disabled = true;
 
     this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
 
@@ -2709,6 +2751,21 @@ class Game {
     checkAchievements(this);
     if (humanWon && unlockAchievement('domino_win')) showAchievementPopup('domino_win');
 
+    // Post-game analysis
+    const analysis = this._getAnalysis();
+    const analysisDiv = document.createElement('div');
+    analysisDiv.style.cssText = 'margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);';
+    analysisDiv.innerHTML = `
+      <div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;text-align:center;">Your Performance</div>
+      <div class="analysis-row"><span>Tiles Played</span><span class="analysis-value">${analysis.plays}</span></div>
+      <div class="analysis-row"><span>Tiles Drawn</span><span class="analysis-value">${analysis.draws}</span></div>
+      <div class="analysis-row"><span>Scoring Plays</span><span class="analysis-value">${analysis.scoringPlays}</span></div>
+      <div class="analysis-row"><span>Total Points Scored</span><span class="analysis-value">${analysis.totalScored}</span></div>
+      <div class="analysis-row"><span>Best Single Play</span><span class="analysis-value">+${analysis.bestPlay}</span></div>
+      <div class="analysis-row"><span>Avg Points/Play</span><span class="analysis-value">${analysis.avgScore}</span></div>
+    `;
+    container.appendChild(analysisDiv);
+
     // Show "GAME OVER!" on the board first, then transition
     const overlay = document.getElementById('countdown-overlay');
     if (overlay) {
@@ -3056,11 +3113,13 @@ class Game {
       const isMyTurn = this.currentPlayer === 0 && human.isHuman;
       for (const tile of human.hand) {
         const playable = isMyTurn && this.board.canPlay(tile);
+        const matchCount = playable ? this.board.getValidPlacements(tile).length : 0;
         this.renderer.drawHandTile(
           container, tile, playable,
           (t, el) => this._onTileClick(t, el),
           isMyTurn ? (t) => this._onTileHover(t) : null,
-          isMyTurn ? () => this._onTileLeave() : null
+          isMyTurn ? () => this._onTileLeave() : null,
+          matchCount
         );
       }
 
@@ -3320,6 +3379,10 @@ class Game {
           </div>
         </div>
         <div class="pref-group">
+        <div class="pref-group">
+          <div class="pref-label">Table Theme</div>
+          <div class="skin-options" id="table-theme-options"></div>
+        </div>
           <div class="pref-label">Audio</div>
           <div class="toggle-row">
             <span>🎵 Background Music</span>
@@ -3349,7 +3412,24 @@ class Game {
         });
       }
 
-      // Skin click handlers
+      // Populate table themes
+    const tableOpts = document.getElementById('table-theme-options');
+    if (tableOpts) {
+      tableOpts.innerHTML = TABLE_THEMES.map(t => `
+        <div class="skin-option ${t.id === getTableTheme() ? 'active' : ''}" data-table="${t.id}">
+          <div class="skin-preview" style="background:linear-gradient(135deg,${t.felt},${t.dark});"></div>
+          <span>${t.name}</span>
+        </div>
+      `).join('');
+      tableOpts.querySelectorAll('.skin-option').forEach(el => {
+        el.addEventListener('click', () => {
+          setTableTheme(el.dataset.table);
+          this._renderPrefs();
+        });
+      });
+    }
+
+    // Skin click handlers
       container.querySelectorAll('.skin-option').forEach(el => {
         el.addEventListener('click', () => {
           setTileSkin(el.dataset.skin);
@@ -3387,6 +3467,72 @@ class Game {
       <span class="xp-level">Lv.${xp.level}</span>
       <div class="xp-bar"><div class="xp-fill" style="width:${xp.pct}%"></div></div>
     `;
+  }
+  // --- Undo ---
+  _undoLastPlay() {
+    if (!this._lastUndoState || this._playLock) return;
+    const pts = this.teamMode && this.teams ? this.teams[0].score : this.players[0].score;
+    if (pts < 3) return;
+    // Deduct points
+    if (this.teamMode && this.teams) this.teams[0].score -= 3;
+    this.players[0].score -= 3;
+    if (this.players[0].score < 0) this.players[0].score = 0;
+    // Restore state
+    const s = this._lastUndoState;
+    this.board = s.board;
+    this.placements = s.placements;
+    this.players[0].hand = s.hand;
+    this.currentPlayer = 0;
+    this._lastUndoState = null;
+    document.getElementById('undo-btn').disabled = true;
+    this._updateUI();
+    this._renderBoard();
+    this._enableHumanPlay(this.players[0]);
+  }
+
+  _saveUndoState() {
+    if (!this.players[0].isHuman || this.currentPlayer !== 0) return;
+    const ai = new AI('easy');
+    this._lastUndoState = {
+      board: ai._cloneBoard(this.board),
+      placements: [...this.placements],
+      hand: [...this.players[0].hand]
+    };
+    document.getElementById('undo-btn').disabled = false;
+  }
+
+  // --- Tile Tracker ---
+  _renderTracker() {
+    const grid = document.getElementById('tracker-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const played = new Set();
+    for (const p of this.placements) {
+      if (p.tile) played.add(`${Math.min(p.tile.a,p.tile.b)}-${Math.max(p.tile.a,p.tile.b)}`);
+    }
+    for (let a = 0; a <= 6; a++) {
+      for (let b = a; b <= 6; b++) {
+        const key = `${a}-${b}`;
+        const isPlayed = played.has(key);
+        const el = document.createElement('div');
+        el.className = 'tracker-tile ' + (isPlayed ? 'played' : 'unplayed');
+        el.innerHTML = `<span>${a}</span><hr style="width:60%;margin:1px 0;border-color:rgba(255,255,255,0.15);"><span>${b}</span>`;
+        grid.appendChild(el);
+      }
+    }
+  }
+
+  // --- Post-Game Analysis ---
+  _getAnalysis() {
+    if (!this.gameLog) return {};
+    const pName = this.players[0] ? this.players[0].name : 'Human';
+    const myPlays = this.gameLog.filter(e => e.player === pName && e.action === 'play');
+    const myDraws = this.gameLog.filter(e => e.player === pName && e.action === 'draw');
+    const myScores = myPlays.filter(e => e.score > 0);
+    const totalScored = myScores.reduce((s, e) => s + e.score, 0);
+    const bestPlay = myScores.length > 0 ? Math.max(...myScores.map(e => e.score)) : 0;
+    const avgScore = myPlays.length > 0 ? Math.round(totalScored / myPlays.length * 10) / 10 : 0;
+    return { plays: myPlays.length, draws: myDraws.length, totalScored, bestPlay, avgScore, scoringPlays: myScores.length };
   }
   _renderLog() {
     const container = document.getElementById('log-entries');
@@ -3570,6 +3716,40 @@ class SFX {
       setTimeout(() => this._play(f, 0.35, 'sine', 0.12), i * 120)
     );
   }
+}
+
+// --- Table Themes ---
+const TABLE_THEMES = [
+  { id: 'green', name: 'Classic Green', felt: '#1e7a35', dark: '#0d3a18' },
+  { id: 'blue', name: 'Ocean Blue', felt: '#1a4a7a', dark: '#0a2a4a' },
+  { id: 'red', name: 'Casino Red', felt: '#7a1a2a', dark: '#3a0a14' },
+  { id: 'purple', name: 'Royal Purple', felt: '#4a1a6a', dark: '#2a0a3a' },
+  { id: 'wood', name: 'Wooden', felt: '#6a4a2a', dark: '#3a2a14' },
+];
+function getTableTheme() { return localStorage.getItem('domino_table_theme') || 'green'; }
+function setTableTheme(id) {
+  localStorage.setItem('domino_table_theme', id);
+  applyTableTheme();
+}
+function applyTableTheme() {
+  const t = TABLE_THEMES.find(t => t.id === getTableTheme()) || TABLE_THEMES[0];
+  document.body.style.setProperty('--felt', t.felt);
+  document.body.style.setProperty('--dark', t.dark);
+  const before = document.querySelector('body');
+  // Update the body::before gradient via a style override
+  let style = document.getElementById('theme-style');
+  if (!style) { style = document.createElement('style'); style.id = 'theme-style'; document.head.appendChild(style); }
+  style.textContent = `body::before { background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.5) 100%), radial-gradient(ellipse at 50% 50%, ${t.felt} 0%, ${t.dark} 80%) !important; }`;
+}
+applyTableTheme();
+
+// --- Season Themes ---
+function getSeasonTheme() {
+  const month = new Date().getMonth();
+  if (month === 9) return 'halloween';
+  if (month === 11) return 'christmas';
+  if (month >= 5 && month <= 7) return 'summer';
+  return null;
 }
 
 // --- Custom Player Name ---

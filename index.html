@@ -91,6 +91,13 @@
             <button id="draw-btn" class="btn-draw" disabled>Draw</button>
             <button id="pass-btn" class="btn-pass" style="display:none">Pass</button>
             <button id="hint-btn" class="btn-hint" disabled>💡 Hint (-5 pts)</button>
+            <button id="undo-btn" class="btn-undo" disabled>↩ Undo (-3 pts)</button>
+            <div class="emote-bar">
+              <button class="emote-btn" data-emote="👏">👏</button>
+              <button class="emote-btn" data-emote="😤">😤</button>
+              <button class="emote-btn" data-emote="🎯">🎯</button>
+              <button class="emote-btn" data-emote="😂">😂</button>
+            </div>
           </div>
         </div>
         <div id="player-hand"></div>
@@ -101,6 +108,7 @@
         <button class="dd-item" id="rules-btn">📖 Rules</button>
         <button class="dd-item" id="tutorial-btn">🎓 Tutorial</button>
         <button class="dd-item" id="log-btn">📋 Game Log</button>
+        <button class="dd-item" id="tracker-btn">🔍 Tile Tracker</button>
         <button class="dd-item" id="stats-btn">📊 Stats & Achievements</button>
         <button class="dd-item" id="prefs-btn">🎨 Preferences</button>
         <button class="dd-item" id="shortcuts-btn">❓ Shortcuts</button>
@@ -198,7 +206,14 @@
           <button class="gm-btn" id="prefs-close-btn" style="text-align:center;margin-top:16px;">Close</button>
         </div>
       </div>
-      <!-- Tutorial overlay moved to app level -->    </div>
+      <!-- Tutorial overlay moved to app level -->
+      <div id="tracker-overlay" class="hidden">
+        <div class="tracker-panel">
+          <h2 style="font-size:1.2rem;text-align:center;margin-bottom:14px;background:linear-gradient(180deg,#fff 20%,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Tile Tracker</h2>
+          <div id="tracker-grid" class="tracker-grid"></div>
+          <button class="gm-btn" id="tracker-close-btn" style="text-align:center;margin-top:14px;">Close</button>
+        </div>
+      </div>    </div>
 
     <!-- Game Over Screen -->
     <div id="gameover-screen" class="screen">

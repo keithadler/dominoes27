@@ -966,3 +966,37 @@ body::after {
 .toggle-switch input:checked + .toggle-slider::before {
   transform: translateX(22px);
 }
+
+/* Undo button */
+.btn-undo { padding: 8px 16px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; background: linear-gradient(145deg, #e8a735, #c07800); color: #1a1a1a; box-shadow: 0 3px 8px rgba(232,167,53,0.3); }
+.btn-undo:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+
+/* Tile tracker popup */
+#tracker-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(10px); }
+#tracker-overlay.hidden { display: none; }
+.tracker-panel { background: linear-gradient(145deg, #252525, #151515); padding: 28px 32px; border-radius: 24px; max-width: 400px; width: 90%; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 30px 100px rgba(0,0,0,0.8); animation: msgEntrance 0.3s ease-out; }
+.tracker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.tracker-tile { width: 100%; aspect-ratio: 1/1.6; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); }
+.tracker-tile.played { background: rgba(232,167,53,0.2); border-color: rgba(232,167,53,0.3); opacity: 0.4; }
+.tracker-tile.unplayed { background: rgba(255,255,255,0.06); }
+
+/* Match count badge on hand tiles */
+.match-badge { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: #f0b840; color: #1a1a1a; font-size: 0.65rem; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 2; }
+
+/* Emotes */
+.emote-bar { display: flex; gap: 4px; }
+.emote-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 4px 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.15s; }
+.emote-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.15); }
+.emote-float { position: fixed; font-size: 3rem; pointer-events: none; z-index: 55; animation: emoteRise 1.5s ease-out forwards; }
+@keyframes emoteRise { 0% { opacity: 1; transform: scale(0.5); } 20% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: translateY(-80px) scale(0.8); } }
+
+/* Table themes */
+.table-green { --felt: #1e7a35; --felt-dark: #0d3a18; }
+.table-blue { --felt: #1a4a7a; --felt-dark: #0a2a4a; }
+.table-red { --felt: #7a1a2a; --felt-dark: #3a0a14; }
+.table-purple { --felt: #4a1a6a; --felt-dark: #2a0a3a; }
+.table-wood { --felt: #6a4a2a; --felt-dark: #3a2a14; }
+
+/* Post-game analysis */
+.analysis-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
+.analysis-value { font-weight: 800; color: #f0b840; }
