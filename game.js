@@ -2658,7 +2658,7 @@ class Game {
       if (bonus > 0) this.teams[winTeamIdx].score += bonus;
       countPlayers = this.players.filter(p => p.hand.length > 0);
       winnerLabel = this.teams[winTeamIdx].name;
-      bonusCalc = { bonus, recipient: this.teams[winTeamIdx].name };
+      bonusCalc = { bonus, recipient: this.teams[winTeamIdx].name, oppPips: teamPips[loseTeamIdx], partnerPips: teamPips[winTeamIdx] };
     } else {
       let minPips = Infinity, winner = null;
       for (const p of this.players) { if (p.handPips < minPips) { minPips = p.handPips; winner = p; } }
@@ -2925,8 +2925,14 @@ class Game {
       trackStat('winStreak', 1);
       addXP(50);
       // Victory animation variety based on margin
-      const scores = this.players.map(p => p.score).sort((a, b) => b - a);
-      const margin = scores[0] - (scores[1] || 0);
+      let margin;
+      if (this.teamMode && this.teams) {
+        const sorted = [...this.teams].map(t => t.score).sort((a, b) => b - a);
+        margin = sorted[0] - (sorted[1] || 0);
+      } else {
+        const scores = this.players.map(p => p.score).sort((a, b) => b - a);
+        margin = scores[0] - (scores[1] || 0);
+      }
       if (margin > 100) {
         // Blowout — double confetti + extra particles
         spawnConfetti(); spawnConfetti();
