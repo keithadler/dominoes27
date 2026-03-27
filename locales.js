@@ -166,6 +166,14 @@ LOCALES.en = {
     scPrefs: 'Preferences',
     scToggle: 'Toggle this panel',
     scClose: 'Close any overlay',
+    // Theme/skin/table names
+    darkTheme: '🌙 Dark', lightTheme: '☀️ Light',
+    skinClassic: 'Classic', skinMarble: 'Marble', skinWood: 'Wood',
+    skinNeon: 'Neon', skinGold: 'Gold', skinMidnight: 'Midnight',
+    tableRandom: 'Random', tableGreen: 'Classic Green', tableBlue: 'Ocean Blue',
+    tableRed: 'Casino Red', tablePurple: 'Royal Purple', tableWood: 'Wooden',
+    resetStats: '🗑️ Reset All Stats',
+    resetConfirm: 'This will erase all stats, achievements, and XP. Are you sure?',
   },
   p: {
     z: {
@@ -414,6 +422,13 @@ LOCALES.es = {
     scPrefs: 'Preferencias',
     scToggle: 'Mostrar/ocultar este panel',
     scClose: 'Cerrar cualquier ventana',
+    darkTheme: '🌙 Oscuro', lightTheme: '☀️ Claro',
+    skinClassic: 'Clásico', skinMarble: 'Mármol', skinWood: 'Madera',
+    skinNeon: 'Neón', skinGold: 'Dorado', skinMidnight: 'Medianoche',
+    tableRandom: 'Aleatorio', tableGreen: 'Verde Clásico', tableBlue: 'Azul Océano',
+    tableRed: 'Rojo Casino', tablePurple: 'Púrpura Real', tableWood: 'Madera',
+    resetStats: '🗑️ Borrar Estadísticas',
+    resetConfirm: 'Esto borrará todas las estadísticas, logros y XP. ¿Estás seguro?',
   },
   p: {
     z: {
@@ -614,6 +629,13 @@ LOCALES.ar = {
     scPrefs: 'الإعدادات',
     scToggle: 'إظهار/إخفاء هذا',
     scClose: 'إغلاق أي نافذة',
+    darkTheme: '🌙 داكن', lightTheme: '☀️ فاتح',
+    skinClassic: 'كلاسيكي', skinMarble: 'رخام', skinWood: 'خشب',
+    skinNeon: 'نيون', skinGold: 'ذهبي', skinMidnight: 'منتصف الليل',
+    tableRandom: 'عشوائي', tableGreen: 'أخضر كلاسيكي', tableBlue: 'أزرق محيطي',
+    tableRed: 'أحمر كازينو', tablePurple: 'بنفسجي ملكي', tableWood: 'خشبي',
+    resetStats: '🗑️ مسح الإحصائيات',
+    resetConfirm: 'سيتم مسح جميع الإحصائيات والإنجازات والخبرة. هل أنت متأكد؟',
   },
   p: {
     z: {
@@ -814,6 +836,13 @@ LOCALES.zh = {
     scPrefs: '设置',
     scToggle: '显示/隐藏此面板',
     scClose: '关闭任何弹窗',
+    darkTheme: '🌙 深色', lightTheme: '☀️ 浅色',
+    skinClassic: '经典', skinMarble: '大理石', skinWood: '木质',
+    skinNeon: '霓虹', skinGold: '金色', skinMidnight: '午夜',
+    tableRandom: '随机', tableGreen: '经典绿', tableBlue: '海洋蓝',
+    tableRed: '赌场红', tablePurple: '皇家紫', tableWood: '木质',
+    resetStats: '🗑️ 重置所有数据',
+    resetConfirm: '这将清除所有统计、成就和经验值。确定吗？',
   },
   p: {
     z: {

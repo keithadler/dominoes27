@@ -3357,7 +3357,24 @@ class Game {
           </div>`;
         }).join('')}
       </div>
+      <div class="stat-section" style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.06);padding-top:16px;">
+        <button id="reset-stats-btn" class="gm-btn" style="width:100%;background:rgba(224,74,58,0.15);border:1px solid rgba(224,74,58,0.3);color:#e04a3a;">${this._t('resetStats')}</button>
+      </div>
     `;
+
+    // Reset stats button handler
+    const resetBtn = document.getElementById('reset-stats-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (confirm(this._t('resetConfirm'))) {
+          localStorage.removeItem('domino_stats');
+          localStorage.removeItem('domino_game_stats');
+          localStorage.removeItem('domino_achievements');
+          localStorage.removeItem('domino_xp');
+          this._renderStats();
+        }
+      });
+    }
   }
   _renderPrefs() {
       const container = document.getElementById('prefs-content');
@@ -3390,23 +3407,25 @@ class Game {
           <div class="skin-options" style="grid-template-columns: repeat(2, 1fr);">
             <div class="skin-option ${currentTheme === 'dark' ? 'active' : ''}" data-theme-val="dark">
               <div class="skin-preview" style="background:linear-gradient(135deg,#1e7a35,#0d3a18);"></div>
-              <span>🌙 Dark</span>
+              <span>${this._t('darkTheme')}</span>
             </div>
             <div class="skin-option ${currentTheme === 'light' ? 'active' : ''}" data-theme-val="light">
               <div class="skin-preview" style="background:linear-gradient(135deg,#e8f5e9,#a5d6a7);"></div>
-              <span>☀️ Light</span>
+              <span>${this._t('lightTheme')}</span>
             </div>
           </div>
         </div>
         <div class="pref-group">
           <div class="pref-label">${this._t('tileSkin')}</div>
           <div class="skin-options">
-            ${TILE_SKINS.map(s => `
+            ${TILE_SKINS.map(s => {
+              const skinKey = 'skin' + s.id.charAt(0).toUpperCase() + s.id.slice(1);
+              return `
               <div class="skin-option ${s.id === currentSkin ? 'active' : ''}" data-skin="${s.id}">
                 <div class="skin-preview" style="background:linear-gradient(135deg,${s.face},${s.faceDark});border-color:${s.border};"></div>
-                <span>${s.name}</span>
-              </div>
-            `).join('')}
+                <span>${this._t(skinKey)}</span>
+              </div>`;
+            }).join('')}
           </div>
         </div>
         <div class="pref-group">
@@ -3479,12 +3498,14 @@ class Game {
       // Populate table themes
     const tableOpts = document.getElementById('table-theme-options');
     if (tableOpts) {
-      tableOpts.innerHTML = TABLE_THEMES.map(t => `
+      tableOpts.innerHTML = TABLE_THEMES.map(t => {
+        const tableKey = 'table' + t.id.charAt(0).toUpperCase() + t.id.slice(1);
+        return `
         <div class="skin-option ${t.id === getTableTheme() ? 'active' : ''}" data-table="${t.id}">
           <div class="skin-preview" style="background:linear-gradient(135deg,${t.felt},${t.dark});"></div>
-          <span>${t.name}</span>
-        </div>
-      `).join('');
+          <span>${this._t(tableKey)}</span>
+        </div>`;
+      }).join('');
       tableOpts.querySelectorAll('.skin-option').forEach(el => {
         el.addEventListener('click', () => {
           setTableTheme(el.dataset.table);
