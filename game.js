@@ -821,115 +821,194 @@ function avatarURL(seed) {
   return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 }
 // --- Trash talk / celebration phrases ---
-const PHRASES = {
-  opponent: {
-    low: [
-      'Lucky!', 'Ooh, nice!', 'Didn\'t expect that!', 'Hey, points!',
-      'Wait, I scored?', 'Cool cool cool', 'I\'ll take it!', 'Surprise!',
-      'Not bad for me!', 'Beginner\'s luck 😅', 'Whoa, that worked?',
-      'Even a blind squirrel...', 'I meant to do that!', 'Happy accident! 🎨',
-      'Don\'t mind if I do!', 'Is this right?', 'Haha, yes!',
-      'My first good play!', 'Mom would be proud 🥲', 'I\'m learning!'
-    ],
-    mid: [
-      'Read it and weep!', 'That\'s how it\'s done 💪', 'Calculated.',
-      'You saw that coming, right?', 'Boom! 🎯', 'Easy money.',
-      'Taking notes?', 'Textbook play.', 'Cha-ching! 💰', 'Smooth operator.',
-      'Like clockwork ⚙️', 'That\'s what I do.', 'Pay attention.',
-      'Clean. 🧹', 'Money in the bank.', 'You\'re welcome.',
-      'Not my first rodeo 🤠', 'Saw it a mile away.', 'Standard procedure.',
-      'All skill, no luck.', 'Write that down. 📝'
-    ],
-    high: [
-      'Too easy. 🥱', 'Is that all you got?', 'Bow down. 👑',
-      'I do this in my sleep.', 'You\'re welcome for the lesson.',
-      'Masterclass in session.', 'GG already? 😏', 'Levels to this game.',
-      'Call me the GOAT. 🐐', 'Domino KING. 👑', 'Fear the bones.',
-      'That\'s called TALENT.', 'I don\'t miss. 🎯', 'Child\'s play. 🧸',
-      'Are you even trying?', 'I could do this blindfolded.',
-      'Another day, another victim.', 'Kneel. 🧎', 'Pathetic resistance.',
-      'I\'m built different. 💅', 'Stay in your lane.', 'Witness greatness.',
-      'You should screenshot this.', 'Hall of fame play. 🏛️',
-      'They\'ll write about this one.', 'Legendary. 🔥'
-    ]
+// Organized by generation for varied, realistic dialogue
+const PHRASE_GENS = ['gen_z', 'millennial', 'gen_x', 'boomer'];
+
+const PHRASES_BY_GEN = {
+  gen_z: {
+    opponent: {
+      low: [
+        'no way that worked 💀', 'wait i scored??', 'lowkey didn\'t expect that', 'slay i guess?',
+        'that\'s giving main character', 'bestie i\'m shook', 'not me actually scoring',
+        'it\'s giving beginner\'s luck', 'rent free in your head now', 'understood the assignment fr',
+        'ate that up ngl', 'this is so unserious lol', 'me when i accidentally win',
+      ],
+      mid: [
+        'no cap that was clean 🧹', 'it\'s giving strategy', 'stay mad about it',
+        'that play was bussin fr', 'slay 💅', 'living rent free', 'main character energy',
+        'not you losing to me rn', 'this is my roman empire', 'understood the assignment',
+        'period. 💅', 'the vibes are immaculate', 'touch grass after this L',
+        'skill issue on your part', 'that\'s so real of me', 'ate and left no crumbs',
+      ],
+      high: [
+        'you\'re literally cooked 💀', 'gg no re', 'it\'s giving domination era',
+        'this is my villain arc', 'ratio + you fell off', 'cope and seethe',
+        'not even close lmao', 'built different fr fr', 'you\'re NPC energy rn',
+        'L + bozo + you\'re done', 'that\'s the tweet. 🐦', 'delulu if you think you\'re winning',
+        'this is canon now', 'your whole strategy is mid', 'i woke up and chose violence',
+        'no thoughts just wins', 'the algorithm chose me 🤖',
+      ]
+    },
+    teammate: {
+      low: ['we\'re so real for this', 'bestie we got this 🥺', 'slay together fr', 'us coded 💕', 'team slay!', 'we\'re literally iconic'],
+      mid: ['we\'re eating rn 🔥', 'duo diff no cap', 'we\'re that couple fr', 'the synergy is giving', 'we understood the assignment together', 'unmatched duo energy'],
+      high: ['we\'re literally unbeatable 💀', 'they should just forfeit ngl', 'iconic duo behavior', 'we\'re the main characters', 'this is our era', 'they can\'t touch us fr']
+    },
+    draw: {
+      low: ['this is not it 😭', 'boneyard arc begins', 'me when nothing works', 'down bad rn', 'not the boneyard again 💀', 'this timeline is cursed'],
+      mid: ['slight setback ngl', 'it\'s giving struggle', 'loading new strategy...', 'character development arc', 'plot twist incoming', 'trust the process fr'],
+      high: ['strategic boneyard visit 🧠', 'all part of the lore', 'you think this matters? lol', 'building my final form', 'the comeback arc starts now', 'this is filler episode energy']
+    },
+    domino: {
+      low: ['WAIT I WON?? 💀', 'no way no way no way', 'i\'m literally shaking rn', 'this can\'t be real', 'screaming crying throwing up (happy)', 'MOM I DID IT'],
+      mid: ['DOMINO let\'s gooo 🔥', 'cleared. 💅', 'that\'s a wrap bestie', 'mic drop energy', 'and scene. 🎬', 'gg that was so real'],
+      high: ['absolutely devoured 💀', 'they were never ready', 'this is my legacy', 'GOATED behavior 🐐', 'delete the app fr', 'i don\'t lose. it\'s not in my code.']
+    }
   },
-  teammate: {
-    low: [
-      'Nice one, partner!', 'We got this!', 'Teamwork! 🤝',
-      'Go us!', 'Great play!', 'Yay team! 🎉',
-      'That helps!', 'Good thinking!', 'Way to go!',
-      'I believe in us!', 'Together we\'re strong! 💪', 'Keep it up!'
-    ],
-    mid: [
-      'That\'s my partner! 💪', 'We\'re cooking now! 🔥', 'Unstoppable duo!',
-      'Keep it rolling!', 'They can\'t handle us!', 'Dream team! ⭐',
-      'Synergy! 🔗', 'We read each other\'s minds!', 'Perfect setup!',
-      'That\'s the play I wanted!', 'We\'re in the zone! 🎯', 'Chemistry! ⚗️',
-      'Like we practiced!', 'Tag team champions! 🏅'
-    ],
-    high: [
-      'WE\'RE INEVITABLE. 🔥', 'They never had a chance!', 'Dynamic duo strikes again!',
-      'Partner in CRIME! 💎', 'We run this table. 👑', 'Legends only. 🏆',
-      'Bow before the TEAM.', 'Unbeatable. Unstoppable. Us. 💪',
-      'This is what domination looks like.', 'They should just forfeit.',
-      'Two heads, one crown. 👑👑', 'We don\'t lose. Period.',
-      'History in the making!', 'The dream team delivers AGAIN.'
-    ]
+  millennial: {
+    opponent: {
+      low: [
+        'I can\'t even 😂', 'Did that just happen?', 'Adulting at dominoes!',
+        'That\'s what avocado toast gets you', 'I\'m literally dead 💀', 'Hashtag blessed',
+        'This sparks joy ✨', 'I\'m not crying, you\'re crying', 'Plot twist!',
+        'Living my best domino life', 'That was very on brand for me', 'Okay but like... nice?',
+      ],
+      mid: [
+        'It me. Scoring. 💁', 'That\'s the tea ☕', 'I did a thing!',
+        'Netflix and score 📺', 'Sorry not sorry 💅', 'Mic drop moment',
+        'This is fine. 🔥🐕', 'Crushing it like my student loans crush me',
+        'Treat yourself! 🎁', 'Self care is scoring points', 'Big mood.',
+        'That hit different', 'Core memory unlocked 🧠', 'Main character moment',
+        'I\'m something of a domino player myself', 'Okay I see me',
+      ],
+      high: [
+        'I\'m the captain now. 🚢', 'Bye Felicia 👋', 'Hold my craft beer 🍺',
+        'This is my TED talk.', 'And I oop—', 'It\'s giving winner energy',
+        'You just got millennialed', 'I can\'t adult but I CAN domino',
+        'That\'s what therapy taught me 🧘', 'Namaste winning 🙏',
+        'I\'m literally obsessed with winning', 'Okay but this slaps',
+        'Chef\'s kiss on that play 👨‍🍳💋', 'Sending thoughts and prayers... to you',
+        'This is the way.', 'I have spoken.',
+      ]
+    },
+    teammate: {
+      low: ['We\'re adulting together! 🥺', 'Squad goals!', 'This is so wholesome', 'Friendship is magic ✨', 'We\'re literally the best', 'I can\'t even with how good we are'],
+      mid: ['We\'re the dream team! 💪', 'Collab of the century', 'We\'re vibing so hard rn', 'This partnership sparks joy', 'We\'re that meme of two people winning', 'Synergy is our love language'],
+      high: ['We\'re literally unstoppable 🔥', 'They can\'t sit with us 💅', 'Power couple energy', 'We didn\'t come to play... wait, we did', 'Iconic. Legendary. Us.', 'This is our origin story']
+    },
+    draw: {
+      low: ['This is fine. 🔥🐕', 'I need a drink 🍷', 'Adulting is hard', 'Why is this happening to me', 'I can\'t even right now', 'Mercury must be in retrograde'],
+      mid: ['Just a plot twist 📖', 'Building character rn', 'It\'s called strategy, look it up', 'Manifesting good tiles ✨', 'The universe is testing me', 'Growth mindset activated'],
+      high: ['All part of my five-year plan', 'Strategic investment in future plays', 'You think this bothers me? I have student loans.', 'I\'ve survived worse Mondays', 'This is nothing compared to 2020', 'Calculated chaos']
+    },
+    domino: {
+      low: ['I CAN\'T EVEN 😭', 'Is this real life?? Is this just fantasy??', 'I\'m literally shaking', 'Someone screenshot this!', 'MOM GET THE CAMERA', 'I\'m not crying YOU\'RE crying'],
+      mid: ['DOMINO! That\'s the tweet. 🐦', 'And that\'s on periodt.', 'Mic. Drop. 🎤', 'This is my Roman Empire', 'Crushed it like my dreams... wait', 'Living. My. Best. Life.'],
+      high: ['I didn\'t choose the domino life, it chose me 👑', 'This is my villain origin story', 'Absolutely unhinged performance', 'They\'ll make a podcast about this', 'I peaked and I\'m okay with it', 'Legendary behavior only']
+    }
   },
-  draw: {
-    low: [
-      'I got nothing... 😬', 'Ugh, drawing again.', 'This is rough.',
-      'Help me out here!', 'Not my day... 😅', 'Boneyard, my old friend.',
-      'Come on, give me something!', 'Please be good... 🤞',
-      'I\'m in trouble.', 'This is embarrassing.', 'Why me? 😩',
-      'The bones have forsaken me.', 'One more try...',
-      'I swear I had a plan.', 'Well, this is awkward.'
-    ],
-    mid: [
-      'Hmm, nothing fits.', 'Drawing... not ideal.', 'Boneyard time. 🦴',
-      'Regrouping...', 'Just a minor setback.', 'I\'ll bounce back.',
-      'Temporary inconvenience.', 'Building my arsenal... 🔧',
-      'Not worried. Yet.', 'Slight detour.', 'The comeback starts now.',
-      'Loading... ⏳', 'Patience pays off.', 'Gathering intel. 🕵️'
-    ],
-    high: [
-      'Strategic draw. 🧠', 'All part of the plan.', 'Loading up ammo...',
-      'You think this helps you? 😏', 'I\'ll be back stronger.', 'Patience is a virtue.',
-      'Lulling you into false security.', 'I WANTED to draw. 🧐',
-      'More tiles, more power.', 'You should be worried.',
-      'This changes nothing.', 'Calculated risk. 📊',
-      'I see three moves ahead.', 'The boneyard fears ME.',
-      'Every draw makes me stronger. 💪'
-    ]
+  gen_x: {
+    opponent: {
+      low: [
+        'Huh, that worked.', 'I\'ll take it.', 'Not bad, not bad.',
+        'Hey, points are points.', 'Didn\'t see that coming.', 'Well alright then.',
+        'Lucky break.', 'I\'ll take what I can get.', 'Okay, cool.',
+        'That\'ll do.', 'Pleasantly surprised.', 'Works for me.',
+      ],
+      mid: [
+        'That\'s how you do it. 😎', 'Smooth.', 'Been doing this a while.',
+        'Experience pays off.', 'Read the table, made the play.', 'Textbook.',
+        'Old school cool. 🕶️', 'Still got it.', 'Like riding a bike.',
+        'Fundamentals, baby.', 'That\'s called experience.', 'Quiet confidence.',
+        'No drama, just results.', 'Steady hand wins.', 'Patience pays.',
+        'I\'ve seen this board before.', 'Muscle memory.',
+      ],
+      high: [
+        'Sit down, kid.', 'I was playing dominoes before you were born.',
+        'Class is in session. 📚', 'Respect your elders.', 'That\'s a grown-up play.',
+        'Welcome to the real world.', 'I don\'t need luck.',
+        'Been there, dominated that.', 'This is what decades of practice looks like.',
+        'You\'re out of your league.', 'I invented that move.',
+        'Whatever. I win. 🤷', 'Don\'t hate the player.',
+        'I could do this all day.', 'Yawn. Next.',
+      ]
+    },
+    teammate: {
+      low: ['Good play, partner.', 'Solid.', 'We\'re getting there.', 'Nice one.', 'Teamwork.', 'That helps.'],
+      mid: ['Now we\'re cooking. 🍳', 'Great minds think alike.', 'We\'re dialed in.', 'Like a well-oiled machine.', 'That\'s the stuff.', 'We\'ve got chemistry.'],
+      high: ['Unstoppable.', 'They don\'t stand a chance.', 'We own this table.', 'Veteran duo.', 'This is what winning looks like.', 'Flawless teamwork.']
+    },
+    draw: {
+      low: ['Whatever.', 'It happens.', 'Not ideal.', 'Meh.', 'Could be worse.', 'I\'ve had worse hands.'],
+      mid: ['Just regrouping.', 'Patience.', 'I\'ve been here before.', 'No panic.', 'Steady.', 'Part of the game.'],
+      high: ['You think this rattles me?', 'I\'ve survived worse.', 'Strategic patience.', 'This changes nothing.', 'I\'ve got a plan.', 'Watch and learn.']
+    },
+    domino: {
+      low: ['Hey, I won!', 'Well how about that.', 'Not bad for an old timer.', 'I\'ll take it!', 'Still got the touch.', 'Pleasantly surprised.'],
+      mid: ['DOMINO. Clean. 🧹', 'That\'s a wrap.', 'Job done.', 'Efficient.', 'No fuss, no muss.', 'Like clockwork.'],
+      high: ['And that\'s why experience matters.', 'Class dismissed. 📚', 'Another day at the office.', 'I make it look easy because it is.', 'Decades of dominoes, baby.', 'Respect the craft.']
+    }
   },
-  domino: {
-    low: [
-      'I did it! 😲', 'Wait... I won?!', 'Woohoo! 🎉',
-      'Can\'t believe it!', 'Finally! 😭', 'That was close!',
-      'OMG it happened!', 'Pinch me! 🤯', 'Is this real life?',
-      'I\'m shaking!', 'Best day ever!', 'Against all odds! 🌟',
-      'Never give up!', 'Dreams DO come true!'
-    ],
-    mid: [
-      'DOMINO! 🎯', 'Clean sweep!', 'That\'s game! 💪',
-      'Read \'em and weep!', 'Nothing left! ✨', 'Bone dry over here! 🦴',
-      'Empty handed and proud!', 'Cleared the rack! 🧹',
-      'That\'s how you finish.', 'No tiles, no problem.',
-      'Mic drop. 🎤', 'And THAT\'S a wrap!', 'Goodnight! 🌙',
-      'Table cleared. Next? 😎'
-    ],
-    high: [
-      'DOMINO, BABY! 👑', 'Flawless victory. 🏆', 'Was there ever any doubt? 😏',
-      'Sit DOWN. 🪑', 'Another one bites the dust.', 'I AM the table. 🐐',
-      'GG EZ. 💀', 'Perfection. 💎', 'You never had a chance.',
-      'Absolute DESTRUCTION. 🔥', 'Bow. Now. 🧎',
-      'That wasn\'t even my final form.', 'Speed run complete. ⚡',
-      'Delete the app. You\'re done.', 'I don\'t play games. I END them.',
-      'Another trophy for the case. 🏆🏆🏆',
-      'They should name a move after me.', 'GOAT things. 🐐'
-    ]
+  boomer: {
+    opponent: {
+      low: [
+        'Well I\'ll be!', 'How about that!', 'Lady luck smiled on me!',
+        'Even a broken clock!', 'I\'m still in this!', 'Not too shabby!',
+        'The old dog learned a trick!', 'Ha! Take that!', 'Still kicking!',
+        'My grandkids would be proud!', 'Back in my day... just kidding, nice play!',
+        'The bones are with me today!',
+      ],
+      mid: [
+        'Now THAT\'S a play! 👆', 'They don\'t make \'em like me anymore.',
+        'Old school dominoes right there.', 'That\'s how we did it back in the day.',
+        'Read it like a book. 📖', 'Experience over everything.',
+        'I\'ve forgotten more about dominoes than you know.',
+        'That\'s a veteran move.', 'Steady as she goes.',
+        'The classics never go out of style.', 'Fundamentals win games.',
+        'You can\'t teach this.', 'Wisdom of the ages.',
+        'That\'s called table sense.', 'I wrote the book on that play.',
+      ],
+      high: [
+        'Back in MY day, we called that a whooping!',
+        'Son, you\'re out of your depth.', 'I\'ve been playing since before Google.',
+        'Respect your elders! 👴', 'That\'s REAL dominoes.',
+        'They should put me in the hall of fame.',
+        'I didn\'t walk uphill both ways for nothing!',
+        'You young folks don\'t stand a chance.',
+        'That\'s decades of wisdom right there.',
+        'I\'ve seen it all and I\'ve beaten it all.',
+        'The table respects experience.', 'Masterful. Simply masterful.',
+        'When you\'ve played as long as I have...', 'Take notes, youngster.',
+      ]
+    },
+    teammate: {
+      low: ['Good play, partner!', 'That\'s the spirit!', 'We make a fine team!', 'Atta boy!', 'Now we\'re talking!', 'That\'s what I like to see!'],
+      mid: ['We\'re a well-oiled machine!', 'Just like the old days!', 'Dynamic duo!', 'That\'s teamwork!', 'We\'re on fire!', 'Partners in crime!'],
+      high: ['Unstoppable force!', 'They\'ll tell stories about us!', 'Best team at the table!', 'We\'re making history!', 'Championship caliber!', 'Hall of fame duo!']
+    },
+    draw: {
+      low: ['Oh fiddlesticks.', 'Well, darn.', 'The bones aren\'t cooperating.', 'Back to the well.', 'These things happen.', 'Patience is a virtue.'],
+      mid: ['Just a bump in the road.', 'I\'ve weathered worse storms.', 'Building up my hand.', 'Good things come to those who wait.', 'Steady now.', 'The tide will turn.'],
+      high: ['You think this bothers me? I raised teenagers.', 'Strategic reserve building.', 'I\'ve got more patience than you\'ve got years.', 'This is chess, not checkers.', 'The long game is MY game.', 'Watch the master work.']
+    },
+    domino: {
+      low: ['Well I\'ll be darned! I won!', 'Hot diggity! 🎉', 'Still got it after all these years!', 'Wait till I tell the grandkids!', 'The old timer pulls through!', 'Never count out experience!'],
+      mid: ['DOMINO! That\'s how it\'s done! 🎯', 'Clean as a whistle!', 'Textbook finish!', 'That\'s old school dominoes!', 'Smooth as butter!', 'The classics never fail!'],
+      high: ['And THAT is why you respect your elders! 👑', 'Decades of dominoes, right there!', 'I\'ve still got the magic touch!', 'They don\'t make players like me anymore!', 'Hall of fame performance!', 'Absolute masterclass!']
+    }
   }
 };
+
+// Legacy flat PHRASES for backward compat — merge all gens
+const PHRASES = {};
+for (const cat of ['opponent', 'teammate', 'draw', 'domino']) {
+  PHRASES[cat] = { low: [], mid: [], high: [] };
+  for (const gen of PHRASE_GENS) {
+    for (const tier of ['low', 'mid', 'high']) {
+      PHRASES[cat][tier].push(...(PHRASES_BY_GEN[gen][cat][tier] || []));
+    }
+  }
+}
 
 function getPhrase(player, category) {
   const rec = getRecord(player.name);
@@ -939,6 +1018,15 @@ function getPhrase(player, category) {
   if (ratio >= 0.6) tier = 'high';
   else if (ratio >= 0.35) tier = 'mid';
   else tier = 'low';
+
+  // Use generation-specific phrases if player has one
+  const gen = player.generation;
+  if (gen && PHRASES_BY_GEN[gen] && PHRASES_BY_GEN[gen][category]) {
+    const pool = PHRASES_BY_GEN[gen][category][tier];
+    if (pool && pool.length > 0) return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // Fallback to merged pool
   const pool = PHRASES[category] && PHRASES[category][tier];
   if (!pool) return '';
   return pool[Math.floor(Math.random() * pool.length)];
@@ -1117,6 +1205,7 @@ class Game {
         hand: p.hand.map(t => [t.a, t.b]),
         aiDiff: p.ai ? p.ai.difficulty : null,
         personality: p.personality,
+        generation: p.generation,
         color: p.color
       })),
       board: {
@@ -1159,7 +1248,7 @@ class Game {
         pl.score = p.score; pl.team = p.team; pl.avatar = p.avatar; pl.city = p.city;
         pl.hand = p.hand.map(t => new Tile(t[0], t[1]));
         pl.color = p.color;
-        if (p.aiDiff) { pl.ai = new AI(p.aiDiff); pl.personality = p.personality; }
+        if (p.aiDiff) { pl.ai = new AI(p.aiDiff); pl.personality = p.personality; pl.generation = p.generation; }
         return pl;
       });
       this.board = new Board();
@@ -1768,6 +1857,7 @@ class Game {
       opp1.team = 1;
       opp1.ai = new AI(resolvedDiffs[0]);
       opp1.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
+      opp1.generation = PHRASE_GENS[Math.floor(Math.random() * PHRASE_GENS.length)];
       opp1.avatar = avatarURL(seeds[0]);
       this.players.push(opp1);
 
@@ -1775,6 +1865,7 @@ class Game {
       partner.team = 0;
       partner.ai = new AI(resolvedDiffs[1]);
       partner.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
+      partner.generation = PHRASE_GENS[Math.floor(Math.random() * PHRASE_GENS.length)];
       partner.avatar = avatarURL(seeds[1]);
       this.players.push(partner);
 
@@ -1782,6 +1873,7 @@ class Game {
       opp2.team = 1;
       opp2.ai = new AI(resolvedDiffs[2]);
       opp2.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
+      opp2.generation = PHRASE_GENS[Math.floor(Math.random() * PHRASE_GENS.length)];
       opp2.avatar = avatarURL(seeds[2]);
       this.players.push(opp2);
 
@@ -1800,6 +1892,7 @@ class Game {
         const p = new Player(name, false, i + 1);
         p.ai = new AI(resolvedDiffs[i] || 'medium');
         p.personality = AI_PERSONALITIES[Math.floor(Math.random() * AI_PERSONALITIES.length)];
+        p.generation = PHRASE_GENS[Math.floor(Math.random() * PHRASE_GENS.length)];
         p.avatar = avatarURL(seeds[i]);
         p.city = (this._previewCities && this._previewCities[i]) || '';
         this.players.push(p);
@@ -1973,18 +2066,17 @@ class Game {
 
         const firstPlayer = this.players[this.currentPlayer];
         const spinnerTile = this.forcedFirstTile;
-        const whoLabel = firstPlayer.isHuman ? 'You have' : `${firstPlayer.name} has`;
 
         if (this._roundNum === 1) {
           this._updateFloatingArrow();
           this._showCountdown(() => {
-            this._showRoundAnnouncement(whoLabel, spinnerTile, () => {
+            this._showRoundAnnouncement(firstPlayer, spinnerTile, () => {
               this._doTurn();
             });
           });
         } else {
           this._updateFloatingArrow();
-          this._showRoundAnnouncement(whoLabel, spinnerTile, () => {
+          this._showRoundAnnouncement(firstPlayer, spinnerTile, () => {
             this._doTurn();
           });
         }
@@ -2099,10 +2191,12 @@ class Game {
         setTimeout(callback, totalTime);
       }
 
-  _showRoundAnnouncement(whoLabel, spinnerTile, callback) {
+  _showRoundAnnouncement(firstPlayer, spinnerTile, callback) {
     const overlay = document.getElementById('countdown-overlay');
     if (!overlay) { callback(); return; }
     overlay.classList.remove('hidden');
+
+    const whoLabel = firstPlayer.isHuman ? 'You have' : `${firstPlayer.name} has`;
 
     // Build SVG domino tile
     let tileHTML = '';
@@ -2131,7 +2225,10 @@ class Game {
     overlay.innerHTML = `
       <div style="text-align:center;animation:announceIn 0.5s ease-out forwards;">
         <div style="font-size:6rem;font-weight:900;letter-spacing:8px;margin-bottom:20px;background:linear-gradient(180deg,#fff 20%,#f0b840 60%,#c07800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;line-height:1;">ROUND ${this._roundNum}</div>
-        <div style="margin-bottom:20px;">${tileHTML}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px;">
+          <img src="${firstPlayer.avatar}" style="width:72px;height:72px;border-radius:50%;border:3px solid rgba(232,167,53,0.6);box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 20px rgba(232,167,53,0.2);">
+          ${tileHTML}
+        </div>
         <div style="font-size:1.4rem;font-weight:700;color:rgba(255,255,255,0.9);">${whoLabel} the highest double</div>
       </div>
     `;
@@ -4683,64 +4780,59 @@ function tutTileSVG(a, b, w, h, highlight) {
 
 const TUTORIAL_STEPS = [
   {
-    title: 'Welcome to All Fives!',
-    body: 'All Fives is a classic domino game where you score points by making the <strong>open ends add up to multiples of 5</strong>. Let\'s learn how to play!',
+    title: '👋 Welcome!',
+    body: 'This is <strong>All Fives</strong> — the domino game where math meets strategy. Make the open ends add up to <strong>multiples of 5</strong> to score. Simple to learn, tricky to master.',
     visual: () => `<div class="tut-visual">${tutTileSVG(5,5,60,108,true)} ${tutTileSVG(6,4,60,108)} ${tutTileSVG(3,2,60,108)} ${tutTileSVG(1,0,60,108)}</div>`
   },
   {
-    title: 'The Tiles',
-    body: 'A standard set has <strong>28 tiles</strong> with every combination from 0-0 to 6-6. Each tile has two halves with pip values.',
+    title: '🦴 28 Bones',
+    body: 'Every combo from <strong>0|0</strong> to <strong>6|6</strong>. You get 5 tiles (or 7 in a 2-player game). The rest sit in the <strong>boneyard</strong> face-down.',
     visual: () => `<div class="tut-visual">${tutTileSVG(0,0,44,80)} ${tutTileSVG(1,2,44,80)} ${tutTileSVG(3,5,44,80)} ${tutTileSVG(6,6,44,80)} <span style="opacity:0.4;font-size:0.9rem;">...28 total</span></div>`
   },
   {
-    title: 'Starting the Game',
-    body: 'The player with the <strong>highest double</strong> plays first. That tile becomes the <strong>spinner</strong> — the center of the board that can branch in all 4 directions.',
-    visual: () => `<div class="tut-visual">${tutTileSVG(6,6,70,126,true)}</div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">The 6-6 is the highest double — it goes first</div>`
+    title: '🏁 First Move',
+    body: 'Whoever holds the <strong>highest double</strong> plays it first. This tile becomes the <strong>spinner</strong> — the center of everything.',
+    visual: () => `<div class="tut-visual">${tutTileSVG(6,6,70,126,true)}</div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">6|6 goes first — it's the boss tile</div>`
   },
   {
-    title: 'Playing Tiles',
-    body: 'On your turn, play a tile that <strong>matches</strong> an open end. The matching numbers connect, and the other number becomes the new open end.',
+    title: '🎮 Your Turn',
+    body: 'Match a tile to any <strong>open end</strong> on the board. The matching numbers connect. No match? Tap <strong>Draw</strong> to grab from the boneyard.',
     visual: () => `<div class="tut-visual">
       ${tutTileSVG(6,3,50,90)} <span class="tut-plus">→</span> ${tutTileSVG(6,6,50,90,true)} <span class="tut-plus">←</span> ${tutTileSVG(6,1,50,90)}
-    </div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">Both tiles match the 6 on the spinner</div>`
+    </div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">Both tiles match the 6</div>`
   },
   {
-    title: 'Scoring — Multiples of 5',
-    body: 'After each play, add up <strong>all open ends</strong>. If the total is a <strong>multiple of 5</strong>, you score that many points!',
+    title: '💰 Ka-ching!',
+    body: 'After you play, the game adds up <strong>all open ends</strong>. Divisible by 5? <strong>You score that many points.</strong> This is the whole game right here.',
     visual: () => `<div class="tut-highlight">
       <div style="text-align:center;opacity:0.6;font-size:0.85rem;">Open ends: 3 + 1 + 6 = 10</div>
-      <div class="tut-score-example">+10 points! ⭐⭐</div>
+      <div class="tut-score-example">+10 points! 🔥</div>
     </div>`
   },
   {
-    title: 'Doubles Count Both Sides',
-    body: 'When a <strong>double</strong> is at an open end, <strong>both halves count</strong> for scoring. A 4-4 at the end counts as 8, not 4!',
+    title: '🎲 Doubles = Double Trouble',
+    body: 'A double at an open end counts <strong>BOTH halves</strong>. So 4|4 = 8 toward the sum, not 4. Doubles are your best friends for scoring.',
     visual: () => `<div class="tut-visual">${tutTileSVG(4,4,50,90,true)}</div>
-    <div class="tut-highlight"><div style="text-align:center;opacity:0.6;font-size:0.85rem;">This counts as <strong>4 + 4 = 8</strong> toward the end sum</div></div>`
+    <div class="tut-highlight"><div style="text-align:center;">This counts as <strong>4 + 4 = 8</strong> 🤯</div></div>`
   },
   {
-    title: 'The Spinner Branches',
-    body: 'The spinner can be played on <strong>all 4 sides</strong>. The north and south arms open once both left and right have tiles. This creates more scoring opportunities!',
+    title: '⭐ The Spinner Opens Up',
+    body: 'Once tiles are on both left and right of the spinner, the <strong>north and south</strong> arms unlock. Now you have <strong>4 open ends</strong> — way more scoring combos.',
     visual: () => `<div class="tut-visual" style="flex-direction:column;gap:4px;">
       <div>${tutTileSVG(5,5,40,72)}</div>
       <div style="display:flex;align-items:center;gap:4px;">${tutTileSVG(3,5,40,72)} ${tutTileSVG(5,5,40,72,true)} ${tutTileSVG(5,2,40,72)}</div>
       <div>${tutTileSVG(5,1,40,72)}</div>
-    </div><div style="text-align:center;opacity:0.5;font-size:0.8rem;">4 open ends: N, S, L, R</div>`
+    </div><div style="text-align:center;opacity:0.5;font-size:0.8rem;">4 directions = 4x the fun</div>`
   },
   {
-    title: 'Drawing & Passing',
-    body: 'Can\'t play? You must <strong>draw from the boneyard</strong> until you get a playable tile. If the boneyard is empty, you <strong>pass</strong>.',
-    visual: () => `<div style="text-align:center;font-size:2.5rem;margin:16px 0;">🦴</div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">The boneyard = leftover tiles face-down</div>`
+    title: '🏆 Round Over!',
+    body: 'Play your last tile and yell <strong>"Domino!"</strong> (the game does it for you). You get <strong>bonus points</strong> from everyone else\'s leftover pips. If nobody can move, lowest pips wins.',
+    visual: () => `<div class="tut-highlight"><div style="text-align:center;">Opponent has ${tutTileSVG(3,6,36,64)} ${tutTileSVG(2,2,36,64)} left<br><span style="opacity:0.6;font-size:0.85rem;">= 13 pips → rounded to <strong>+15 bonus!</strong></span></div></div>`
   },
   {
-    title: 'End of Round',
-    body: 'A round ends when someone plays their last tile (<strong>dominoes!</strong>) or the game is blocked. The winner gets <strong>bonus points</strong> from opponents\' remaining tiles, rounded to the nearest 5.',
-    visual: () => `<div class="tut-highlight"><div style="text-align:center;">Opponent has ${tutTileSVG(3,6,36,64)} ${tutTileSVG(2,2,36,64)} left<br><span style="opacity:0.6;font-size:0.85rem;">= 13 pips → rounded to <strong>15 bonus points!</strong></span></div></div>`
-  },
-  {
-    title: 'Winning the Game',
-    body: 'First to reach the <strong>target score</strong> (usually 200) wins! Use the <strong>💡 Hint</strong> button for AI-powered move suggestions (costs 5 points). Press <strong>?</strong> for keyboard shortcuts.',
-    visual: () => `<div style="text-align:center;font-size:3rem;margin:16px 0;">🏆</div><div style="text-align:center;opacity:0.6;font-size:0.9rem;">Good luck and have fun!</div>`
+    title: '🚀 You\'re Ready!',
+    body: 'First to the <strong>target score</strong> wins. Use <strong>💡 Hint</strong> if you\'re stuck (costs 5 pts). Press <strong>?</strong> anytime for keyboard shortcuts. Now go dominate!',
+    visual: () => `<div style="text-align:center;font-size:3.5rem;margin:16px 0;">🏆🦴🔥</div>`
   }
 ];
 
