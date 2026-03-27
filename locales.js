@@ -803,9 +803,20 @@ function getLocalePhrase(lang, gen, category, tier) {
 
 // Standalone UI translation helper (for code outside Game class)
 function _tUI(key) {
-  const lang = localStorage.getItem('domino_lang') || 'en';
+  const lang = localStorage.getItem('domino_lang') || detectBrowserLang();
   const loc = getLocale(lang);
   return (loc.ui && loc.ui[key]) || (LOCALES.en.ui && LOCALES.en.ui[key]) || key;
+}
+
+// Detect browser language and map to supported locale
+function detectBrowserLang() {
+  const supported = Object.keys(LOCALES); // ['en','es','ar','zh']
+  const langs = navigator.languages || [navigator.language || 'en'];
+  for (const raw of langs) {
+    const code = raw.toLowerCase().split('-')[0];
+    if (supported.includes(code)) return code;
+  }
+  return 'en';
 }
 
   const loc = getLocale(lang);

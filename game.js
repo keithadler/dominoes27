@@ -840,7 +840,7 @@ function _buildPhrases(lang) {
   }
   return phrases;
 }
-let PHRASES = _buildPhrases(localStorage.getItem('domino_lang') || 'en');
+let PHRASES = _buildPhrases(localStorage.getItem('domino_lang') || detectBrowserLang());
 
 function getPhrase(player, category) {
   const rec = getRecord(player.name);
@@ -851,7 +851,7 @@ function getPhrase(player, category) {
   else if (ratio >= 0.35) tier = 'mid';
   else tier = 'low';
 
-  const lang = localStorage.getItem('domino_lang') || 'en';
+  const lang = localStorage.getItem('domino_lang') || detectBrowserLang();
   const gen = player.generation;
   if (gen) {
     const phrase = getLocalePhrase(lang, gen, category, tier);
@@ -874,11 +874,11 @@ function getHumanAvatarSeed() {
 }
 
 // Random real names pool — now from locale
-const REAL_NAMES = (getLocale(localStorage.getItem('domino_lang') || 'en')).names;
-const US_CITIES = (getLocale(localStorage.getItem('domino_lang') || 'en')).cities;
+const REAL_NAMES = (getLocale(localStorage.getItem('domino_lang') || detectBrowserLang())).names;
+const US_CITIES = (getLocale(localStorage.getItem('domino_lang') || detectBrowserLang())).cities;
 
 function pickRandomNames(count) {
-  const lang = localStorage.getItem('domino_lang') || 'en';
+  const lang = localStorage.getItem('domino_lang') || detectBrowserLang();
   const loc = getLocale(lang);
   const names = [...(loc.names || LOCALES.en.names)].sort(() => Math.random() - 0.5);
   const cities = [...(loc.cities || LOCALES.en.cities)].sort(() => Math.random() - 0.5);
@@ -963,7 +963,7 @@ class Game {
     document.body.setAttribute('data-theme', this._theme);
 
     // Language direction
-    const savedLang = localStorage.getItem('domino_lang') || 'en';
+    const savedLang = localStorage.getItem('domino_lang') || detectBrowserLang();
     document.documentElement.dir = getLocale(savedLang).dir || 'ltr';
 
     // Drag state
@@ -1003,7 +1003,7 @@ class Game {
   }
 
   _getLang() {
-    return localStorage.getItem('domino_lang') || 'en';
+    return localStorage.getItem('domino_lang') || detectBrowserLang();
   }
 
   _t(key) {
@@ -1132,6 +1132,62 @@ class Game {
         });
       });
     }
+  }
+
+  _showLangPicker(onDone) {
+    const overlay = document.getElementById('countdown-overlay');
+    if (!overlay) { onDone(); return; }
+    overlay.classList.remove('hidden');
+
+    const detected = detectBrowserLang();
+    const langs = Object.entries(LOCALES);
+
+    overlay.innerHTML = `
+      <div style="text-align:center;animation:announceIn 0.4s ease-out forwards;max-width:360px;margin:0 auto;">
+        <div style="font-size:2.5rem;margin-bottom:12px;">🌍</div>
+        <div style="font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:6px;">Choose Your Language</div>
+        <div style="font-size:0.85rem;opacity:0.5;margin-bottom:20px;">Elige tu idioma · اختر لغتك · 选择语言</div>
+        <div id="lang-picker-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          ${langs.map(([code, loc]) => `
+            <button class="lang-pick-btn${code === detected ? ' detected' : ''}" data-lang="${code}" style="
+              display:flex;align-items:center;gap:10px;padding:14px 16px;
+              background:${code === detected ? 'rgba(232,167,53,0.15)' : 'rgba(255,255,255,0.05)'};
+              border:2px solid ${code === detected ? 'rgba(232,167,53,0.5)' : 'rgba(255,255,255,0.1)'};
+              border-radius:12px;cursor:pointer;transition:all 0.2s;color:#fff;font-size:1rem;font-weight:600;
+            ">
+              <span style="font-size:1.6rem;">${loc.flag}</span>
+              <span>${loc.name}</span>
+              ${code === detected ? '<span style="margin-left:auto;font-size:0.7rem;opacity:0.6;background:rgba(232,167,53,0.2);padding:2px 6px;border-radius:4px;">auto</span>' : ''}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    overlay.querySelectorAll('.lang-pick-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = 'rgba(232,167,53,0.2)';
+        btn.style.borderColor = 'rgba(232,167,53,0.6)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        const isDetected = btn.dataset.lang === detected;
+        btn.style.background = isDetected ? 'rgba(232,167,53,0.15)' : 'rgba(255,255,255,0.05)';
+        btn.style.borderColor = isDetected ? 'rgba(232,167,53,0.5)' : 'rgba(255,255,255,0.1)';
+      });
+      btn.addEventListener('click', () => {
+        const lang = btn.dataset.lang;
+        localStorage.setItem('domino_lang', lang);
+        localStorage.setItem('domino_lang_chosen', '1');
+        PHRASES = _buildPhrases(lang);
+        this._previewNames = null;
+        this._previewPersonalities = null;
+        this._applyLocale();
+        this._updateRoster();
+        overlay.classList.add('hidden');
+        overlay.innerHTML = '';
+        onDone();
+      });
+    });
   }
 
   _getHeadToHead(name) {
@@ -1425,8 +1481,14 @@ class Game {
       showTutorial();
     });
 
-    // Show tutorial on first visit — immediately, no delay
-    if (!localStorage.getItem('domino_tutorial_done')) {
+    // Show language picker on first visit, then tutorial
+    if (!localStorage.getItem('domino_lang_chosen')) {
+      this._showLangPicker(() => {
+        if (!localStorage.getItem('domino_tutorial_done')) {
+          showTutorial();
+        }
+      });
+    } else if (!localStorage.getItem('domino_tutorial_done')) {
       showTutorial();
     }
 
@@ -4203,7 +4265,7 @@ class Game {
       const sfxOn = !this._soundMuted;
 
       const currentTheme = this._theme || 'dark';
-      const currentLang = localStorage.getItem('domino_lang') || 'en';
+      const currentLang = localStorage.getItem('domino_lang') || detectBrowserLang();
 
       container.innerHTML = `
         <div class="pref-group">
