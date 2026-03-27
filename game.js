@@ -643,6 +643,54 @@ class Game {
       }
     });
 
+    // Touch pinch-zoom and two-finger pan on board
+    let touchState = { active: false, startDist: 0, startZoom: 1, startPanX: 0, startPanY: 0, startMidX: 0, startMidY: 0 };
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const t0 = e.touches[0], t1 = e.touches[1];
+        touchState.active = true;
+        touchState.startDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+        touchState.startZoom = this.renderer ? this.renderer.userZoom : 1;
+        touchState.startPanX = this.renderer ? this.renderer.userPanX : 0;
+        touchState.startPanY = this.renderer ? this.renderer.userPanY : 0;
+        touchState.startMidX = (t0.clientX + t1.clientX) / 2;
+        touchState.startMidY = (t0.clientY + t1.clientY) / 2;
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => {
+      if (touchState.active && e.touches.length === 2 && this.renderer) {
+        e.preventDefault();
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+        const midX = (t0.clientX + t1.clientX) / 2;
+        const midY = (t0.clientY + t1.clientY) / 2;
+        // Pinch zoom
+        const scale = dist / touchState.startDist;
+        this.renderer.userZoom = Math.max(0.3, Math.min(3, touchState.startZoom * scale));
+        // Pan
+        this.renderer.userPanX = touchState.startPanX + (midX - touchState.startMidX);
+        this.renderer.userPanY = touchState.startPanY + (midY - touchState.startMidY);
+        this._renderBoard();
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchend', () => { touchState.active = false; });
+    canvas.addEventListener('touchcancel', () => { touchState.active = false; });
+
+    // Disable pinch zoom globally (except on board canvas handled above)
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 1 && !e.target.closest('#board-canvas')) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    // Disable Safari gesture zoom
+    document.addEventListener('gesturestart', (e) => {
+      if (!e.target.closest('#board-canvas')) e.preventDefault();
+    });
+    document.addEventListener('gesturechange', (e) => {
+      if (!e.target.closest('#board-canvas')) e.preventDefault();
+    });
+
     // Zoom control buttons
     document.getElementById('zoom-in-btn').addEventListener('click', () => {
       if (!this.renderer) return;
@@ -3003,7 +3051,7 @@ class Game {
     } else {
       const isTeammate = this.teamMode && player.team === this.players[0].team;
       const tag = isTeammate ? ` <span style="font-size:0.75rem;opacity:0.6;">🤝 ${this._t('teammate')}</span>` : '';
-      turnText = `<span>${player.name}</span>${tag}`;
+      turnText = `<span>${player.name}</span> ${this._t('turn')}${tag}`;
     }
     toast.innerHTML = `
       <img class="toast-avatar" src="${player.avatar}" alt="${player.name}">
