@@ -33,13 +33,31 @@ body::after {
   box-shadow: 0 0 80px rgba(232,167,53,0.08), 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
   max-height: 95vh; overflow-y: auto;
 }
+.title-wrap {
+  display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 8px;
+}
+.title-tile {
+  opacity: 0.6; filter: drop-shadow(0 0 12px rgba(232,167,53,0.3));
+  animation: titleTileFloat 3s ease-in-out infinite alternate;
+}
+.title-tile:last-of-type { animation-delay: 1.5s; }
+@keyframes titleTileFloat {
+  0% { transform: translateY(0) rotate(-2deg); }
+  100% { transform: translateY(-6px) rotate(2deg); }
+}
 .game-title {
-  font-size: 3.4rem; letter-spacing: 8px; margin-bottom: 6px; font-weight: 900;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 60px rgba(232,167,53,0.25);
-  background: linear-gradient(180deg, #fff 20%, #f0b840 60%, #c07800);
+  font-size: 3.8rem; letter-spacing: 10px; margin-bottom: 2px; font-weight: 900;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 80px rgba(232,167,53,0.3);
+  background: linear-gradient(180deg, #fff 10%, #f0b840 45%, #c09830 70%, #8a6a20);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1.1;
+}
+.subtitle {
+  font-size: 1.3rem; opacity: 0.45; margin-bottom: 36px; letter-spacing: 14px;
+  text-transform: uppercase; font-weight: 400; text-align: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.25));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.subtitle { font-size: 1.1rem; opacity: 0.4; margin-bottom: 36px; letter-spacing: 10px; text-transform: uppercase; font-weight: 400; }
 .option-group { margin-bottom: 20px; text-align: left; }
 .option-group label { display: block; margin-bottom: 8px; font-size: 0.8rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
 .btn-group { display: flex; gap: 8px; }
@@ -631,7 +649,9 @@ body::after {
   #floating-arrow.point-left::after { border-top-width: 15px; border-bottom-width: 15px; border-right-width: 25px; }
   #floating-arrow.point-right::after { border-top-width: 15px; border-bottom-width: 15px; border-left-width: 25px; }
   .menu-container { padding: 24px 28px; }
-  .game-title { font-size: 2rem; letter-spacing: 4px; }
+  .game-title { font-size: 2.2rem; letter-spacing: 5px; }
+  .title-tile { width: 36px; height: 64px; }
+  .subtitle { letter-spacing: 8px; font-size: 1rem; }
   .roster-card .roster-avatar { width: 40px; height: 40px; }
   #score-bar { gap: 6px; padding: 4px 8px; font-size: 0.8rem; }
   .sb-team-score, .sb-ps-score { font-size: 0.95rem; }
@@ -1064,7 +1084,9 @@ body::after {
   #end-sum-left { min-width: 50px; gap: 2px; }
   .menu-container { padding: 20px 16px; border-radius: 16px; }
   .game-title { font-size: 1.8rem; letter-spacing: 3px; }
-  .subtitle { font-size: 0.85rem; letter-spacing: 4px; margin-bottom: 16px; }
+  .subtitle { font-size: 0.85rem; letter-spacing: 5px; margin-bottom: 16px; }
+  .title-tile { width: 30px; height: 54px; }
+  .title-wrap { gap: 12px; }
   .btn-option { padding: 8px 8px; font-size: 0.8rem; border-radius: 8px; }
   .btn-start { padding: 12px 32px; font-size: 1rem; }
   .roster-card .roster-avatar { width: 36px; height: 36px; }
@@ -1145,10 +1167,14 @@ body[data-theme="light"] .menu-container {
   color: #1a2e1a;
 }
 body[data-theme="light"] .game-title {
-  background: linear-gradient(180deg, #2a5a2a 20%, #c07800 60%, #8a5a00);
+  background: linear-gradient(180deg, #2a5a2a 10%, #c07800 50%, #8a5a00);
   -webkit-background-clip: text; background-clip: text;
 }
-body[data-theme="light"] .subtitle { color: #555; }
+body[data-theme="light"] .subtitle {
+  background: linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.25));
+  -webkit-background-clip: text; background-clip: text;
+}
+body[data-theme="light"] .title-tile { opacity: 0.4; }
 body[data-theme="light"] .option-group label { color: #666; }
 body[data-theme="light"] .btn-option {
   background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #333;

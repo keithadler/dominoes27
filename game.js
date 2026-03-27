@@ -108,6 +108,10 @@ class Game {
     const setTxt = (sel, txt) => { const el = document.querySelector(sel); if (el) el.textContent = txt; };
     const setHTML = (sel, html) => { const el = document.querySelector(sel); if (el) el.innerHTML = html; };
 
+    // Title and subtitle
+    setTxt('#menu-title', u.gameTitle || 'ALL FIVES');
+    setTxt('#menu-subtitle', u.gameSubtitle || 'DOMINOES');
+
     // Menu option labels
     setTxt('#game-mode + label, [for="game-mode"]', u.gameMode);
     const labels = document.querySelectorAll('.option-group label');
