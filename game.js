@@ -2946,11 +2946,11 @@ class Game {
     // Build turn label
     let turnText;
     if (player.isHuman) {
-      turnText = '<span>Your</span> turn';
+      turnText = `<span>${this._t('yourTurn')}</span>`;
     } else {
       const isTeammate = this.teamMode && player.team === this.players[0].team;
-      const tag = isTeammate ? ' <span style="font-size:0.75rem;opacity:0.6;">🤝 Teammate</span>' : '';
-      turnText = `<span>${player.name}</span>'s turn${tag}`;
+      const tag = isTeammate ? ` <span style="font-size:0.75rem;opacity:0.6;">🤝 ${this._t('teammate')}</span>` : '';
+      turnText = `<span>${player.name}</span>${tag}`;
     }
     toast.innerHTML = `
       <img class="toast-avatar" src="${player.avatar}" alt="${player.name}">
@@ -3096,7 +3096,7 @@ class Game {
         const rec = getRecord(human.name);
         const score = this.teamMode && this.teams ? this.teams[human.team].score : human.score;
         const isTurn = this.currentPlayer === 0;
-        const turnLabel = isTurn ? '<span style="color:#f0b840;font-size:0.8rem;font-weight:700;">YOUR TURN</span>' : '';
+        const turnLabel = isTurn ? `<span style="color:#f0b840;font-size:0.8rem;font-weight:700;">${this._t('yourTurn')}</span>` : '';
 
         let infoSection = humanInfo.querySelector('.human-info-section');
         if (!infoSection) {
@@ -3113,7 +3113,7 @@ class Game {
           <div class="human-info-text">
             <span class="human-name" id="human-name-label" style="cursor:pointer;" title="Double-click to edit">${human.name} ${turnLabel}</span>
             <span class="human-record">${rec.wins}W ${rec.losses}L</span>
-            <span class="pip-count">${human.hand.reduce((s,t) => s + t.pips, 0)} pips in hand</span>
+            <span class="pip-count">${human.hand.reduce((s,t) => s + t.pips, 0)} ${this._t('pipsInHand')}</span>
           </div>
         `;
 
@@ -3190,8 +3190,8 @@ class Game {
       const rec = getRecord(player.name);
       const teamIcon = isTeammate ? '🤝 ' : '';
       const teamLabel = this.teamMode ? (isTeammate
-        ? '<span style="font-size:0.6rem;color:#4aaf6c;font-weight:700;">TEAMMATE</span>'
-        : '<span style="font-size:0.6rem;color:#e04a3a;font-weight:700;">Opps</span>') : '';
+        ? `<span style="font-size:0.6rem;color:#4aaf6c;font-weight:700;">${this._t('teammate')}</span>`
+        : `<span style="font-size:0.6rem;color:#e04a3a;font-weight:700;">${this._t('opps')}</span>`) : '';
 
       // Apply player color gradient — from their color to a darker shade of same hue
       const c = player.color || { h: 0, s: 0, l: 50 };
@@ -3257,7 +3257,7 @@ class Game {
       if (player.hand.length <= 2 && player.hand.length > 0 && !this.board.isEmpty) {
         const warn = document.createElement('div');
         warn.className = 'low-tiles-warn' + (player.hand.length === 1 ? ' last-tile-alert' : '');
-        warn.textContent = player.hand.length === 1 ? '🔔 LAST TILE!' : '⚠️ 2 tiles left!';
+        warn.textContent = player.hand.length === 1 ? this._t('lastTile') : `⚠️ 2 ${this._t('tilesLeft')}!`;
         el.appendChild(warn);
       }
     }
@@ -3381,7 +3381,7 @@ class Game {
           </div>
         </div>
         <div class="pref-group">
-          <div class="pref-label">Tile Skin</div>
+          <div class="pref-label">${this._t('tileSkin')}</div>
           <div class="skin-options">
             ${TILE_SKINS.map(s => `
               <div class="skin-option ${s.id === currentSkin ? 'active' : ''}" data-skin="${s.id}">
@@ -3393,19 +3393,19 @@ class Game {
         </div>
         <div class="pref-group">
         <div class="pref-group">
-          <div class="pref-label">Table Theme</div>
+          <div class="pref-label">${this._t('tableTheme')}</div>
           <div class="skin-options" id="table-theme-options"></div>
         </div>
-          <div class="pref-label">Audio</div>
+          <div class="pref-label">${this._t('audio')}</div>
           <div class="toggle-row">
-            <span>🎵 Background Music</span>
+            <span>${this._t('music')}</span>
             <label class="toggle-switch">
               <input type="checkbox" id="music-toggle-cb" ${musicOn ? 'checked' : ''}>
               <span class="toggle-slider"></span>
             </label>
           </div>
           <div class="toggle-row">
-            <span>🔊 Sound Effects</span>
+            <span>${this._t('sfx')}</span>
             <label class="toggle-switch">
               <input type="checkbox" id="sfx-toggle-cb" ${sfxOn ? 'checked' : ''}>
               <span class="toggle-slider"></span>
@@ -3413,32 +3413,32 @@ class Game {
           </div>
         </div>
         <div class="pref-group">
-          <div class="pref-label">Game Speed</div>
+          <div class="pref-label">${this._t('gameSpeed')}</div>
           <div class="skin-options" style="grid-template-columns: repeat(3, 1fr);" id="pref-speed-options">
             <div class="skin-option ${this._gameSpeed === 'fast' ? 'active' : ''}" data-speed="fast">
-              <span>🐇</span><span>Fast</span>
+              <span>🐇</span><span>${this._t('fast').replace(/^\S+\s/,'')}</span>
             </div>
             <div class="skin-option ${this._gameSpeed === 'normal' ? 'active' : ''}" data-speed="normal">
-              <span>🎯</span><span>Normal</span>
+              <span>🎯</span><span>${this._t('normal').replace(/^\S+\s/,'')}</span>
             </div>
             <div class="skin-option ${this._gameSpeed === 'slow' ? 'active' : ''}" data-speed="slow">
-              <span>🐢</span><span>Slow</span>
+              <span>🐢</span><span>${this._t('slow').replace(/^\S+\s/,'')}</span>
             </div>
           </div>
         </div>
         <div class="pref-group">
-          <div class="pref-label">AI Trash Talk</div>
+          <div class="pref-label">${this._t('trashTalk')}</div>
           <div class="skin-options" style="grid-template-columns: repeat(4, 1fr);" id="pref-trash-talk">
-            <div class="skin-option ${this._trashTalkFreq === 0 ? 'active' : ''}" data-trash="0"><span>🔇</span><span>Off</span></div>
-            <div class="skin-option ${this._trashTalkFreq === 1 ? 'active' : ''}" data-trash="1"><span>🤫</span><span>Low</span></div>
-            <div class="skin-option ${this._trashTalkFreq === 2 ? 'active' : ''}" data-trash="2"><span>💬</span><span>Normal</span></div>
-            <div class="skin-option ${this._trashTalkFreq === 3 ? 'active' : ''}" data-trash="3"><span>🗣️</span><span>Max</span></div>
+            <div class="skin-option ${this._trashTalkFreq === 0 ? 'active' : ''}" data-trash="0"><span>🔇</span><span>${this._t('off')}</span></div>
+            <div class="skin-option ${this._trashTalkFreq === 1 ? 'active' : ''}" data-trash="1"><span>🤫</span><span>${this._t('low')}</span></div>
+            <div class="skin-option ${this._trashTalkFreq === 2 ? 'active' : ''}" data-trash="2"><span>💬</span><span>${this._t('normal').replace(/^\S+\s/,'')}</span></div>
+            <div class="skin-option ${this._trashTalkFreq === 3 ? 'active' : ''}" data-trash="3"><span>🗣️</span><span>${this._t('max')}</span></div>
           </div>
         </div>
         <div class="pref-group">
-          <div class="pref-label">Accessibility</div>
+          <div class="pref-label">${this._t('accessibility')}</div>
           <div class="toggle-row">
-            <span>♿ Colorblind Mode</span>
+            <span>${this._t('colorblind')}</span>
             <label class="toggle-switch">
               <input type="checkbox" id="colorblind-toggle-cb" ${this._colorblindMode ? 'checked' : ''}>
               <span class="toggle-slider"></span>
