@@ -1723,25 +1723,29 @@ class Game {
     if (this.sfx) this.sfx.draw();
     this._haptic(10);
     this._animateBoneyardDraw(player);
-    this._updateUI();
 
-    // Check if exactly one move exists after drawing — auto-play it
-    const playable = [];
-    for (const tile of player.hand) {
-      const placements = this.board.getValidPlacements(tile);
-      for (const p of placements) playable.push({ tile, placement: p });
-    }
-    if (playable.length === 1) {
-      this._showAutoPlayBanner(this._t('autoPlayOnly'));
-      setTimeout(() => {
-        this._playLock = false;
-        this._executePlay(player, playable[0].tile, playable[0].placement);
-      }, this._speedMs(600));
-      return;
-    }
+    // Delay hand re-render until after draw animation settles
+    setTimeout(() => {
+      this._updateUI();
 
-    this._playLock = false;
-    this._enableHumanPlay(player);
+      // Check if exactly one move exists after drawing — auto-play it
+      const playable = [];
+      for (const tile of player.hand) {
+        const placements = this.board.getValidPlacements(tile);
+        for (const p of placements) playable.push({ tile, placement: p });
+      }
+      if (playable.length === 1) {
+        this._showAutoPlayBanner(this._t('autoPlayOnly'));
+        setTimeout(() => {
+          this._playLock = false;
+          this._executePlay(player, playable[0].tile, playable[0].placement);
+        }, this._speedMs(400));
+        return;
+      }
+
+      this._playLock = false;
+      this._enableHumanPlay(player);
+    }, this._speedMs(400));
   }
 
   pass() {
