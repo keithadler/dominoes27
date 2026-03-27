@@ -1552,14 +1552,14 @@ body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
 /* Round intro avatars responsive */
 #round-intro { flex-wrap: wrap; padding: 20px; }
 @media (max-width: 600px) {
-  #round-intro { gap: 20px; }
-  #round-intro img { width: 80px !important; height: 80px !important; }
-  #round-intro span { font-size: 0.9rem !important; }
+  #round-intro { gap: 16px; }
+  #round-intro img { width: 64px !important; height: 64px !important; }
+  #round-intro span { font-size: 0.8rem !important; }
 }
 @media (max-width: 400px) {
-  #round-intro { gap: 14px; }
-  #round-intro img { width: 64px !important; height: 64px !important; }
-  #round-intro span { font-size: 0.75rem !important; }
+  #round-intro { gap: 12px; }
+  #round-intro img { width: 52px !important; height: 52px !important; }
+  #round-intro span { font-size: 0.7rem !important; }
 }
 
 /* Dropdown key badges hide on small screens */
