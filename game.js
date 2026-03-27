@@ -1879,6 +1879,8 @@ class Game {
   drawFromBoneyard() {
     const player = this.players[this.currentPlayer];
     if (!player.isHuman || this.boneyard.length === 0 || this._playLock) return;
+    // Guard: don't allow drawing when the player can already play
+    if (player.hand.some(t => this.board.canPlay(t))) return;
     this._playLock = true;
 
     const drawn = this.boneyard.pop();
@@ -1922,6 +1924,9 @@ class Game {
   pass() {
     const player = this.players[this.currentPlayer];
     if (!player.isHuman) return;
+    // Guard: only allow pass when player truly can't play and boneyard is empty
+    if (this.boneyard.length > 0) return;
+    if (player.hand.some(t => this.board.canPlay(t))) return;
     this.gameLog.push({
       turn: this._logTurn++,
       player: player.name,
