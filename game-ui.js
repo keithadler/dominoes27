@@ -28,8 +28,23 @@ Object.assign(Game.prototype, {
           <span class="sb-target">${this._t('playingTo')} ${this.targetScore}</span>
         `;
         // Animate score changes (team mode)
+        if (!this._prevDisplayScores) this._prevDisplayScores = {};
         requestAnimationFrame(() => {
           scoreBar.querySelectorAll('.sb-ps-score, .sb-team-score').forEach(el => {
+            const target = parseInt(el.textContent) || 0;
+            const key = el.previousElementSibling ? el.previousElementSibling.textContent : el.parentElement.textContent;
+            const prev = this._prevDisplayScores[key] || 0;
+            if (prev !== target) {
+              this._prevDisplayScores[key] = target;
+              let current = prev;
+              const step = () => {
+                current += Math.ceil((target - current) / 6);
+                if (current >= target) { el.textContent = target; return; }
+                el.textContent = current;
+                requestAnimationFrame(step);
+              };
+              requestAnimationFrame(step);
+            }
             el.classList.remove('score-bump');
             void el.offsetWidth;
             el.classList.add('score-bump');
@@ -47,8 +62,23 @@ Object.assign(Game.prototype, {
         html += `<span class="sb-target">${this._t('playingTo')} ${this.targetScore}</span>`;
         scoreBar.innerHTML = html;
         // Animate score changes
+        if (!this._prevDisplayScores) this._prevDisplayScores = {};
         requestAnimationFrame(() => {
           scoreBar.querySelectorAll('.sb-ps-score, .sb-team-score').forEach(el => {
+            const target = parseInt(el.textContent) || 0;
+            const key = el.previousElementSibling ? el.previousElementSibling.textContent : el.parentElement.textContent;
+            const prev = this._prevDisplayScores[key] || 0;
+            if (prev !== target) {
+              this._prevDisplayScores[key] = target;
+              let current = prev;
+              const step = () => {
+                current += Math.ceil((target - current) / 6);
+                if (current >= target) { el.textContent = target; return; }
+                el.textContent = current;
+                requestAnimationFrame(step);
+              };
+              requestAnimationFrame(step);
+            }
             el.classList.remove('score-bump');
             void el.offsetWidth;
             el.classList.add('score-bump');
@@ -443,6 +473,7 @@ Object.assign(Game.prototype, {
           <span class="opp-name${isTurn ? ' active-turn' : ''}" style="${!isTurn ? 'color:hsla(' + c.h + ',' + c.s + '%,' + (c.l + 30) + '%,0.9);' : ''}">${teamIcon}${escHTML(player.name)}</span>
           ${teamLabel}
           <span class="opp-record">${rec.wins}W ${rec.losses}L</span>
+          <span class="pip-count">${player.handPips} pips</span>
           ${player.personality ? '<span class="personality-badge">' + player.personality.icon + ' ' + _tUI(player.personality.name) + '</span>' : ''}
         </div>
       `;
@@ -494,6 +525,13 @@ Object.assign(Game.prototype, {
 
     tilesEl.innerHTML = '';
     labelEl.textContent = this.boneyard.length;
+
+    // Pulse red when boneyard is low (#8)
+    if (this.boneyard.length <= 4 && this.boneyard.length > 0) {
+      labelEl.classList.add('boneyard-low');
+    } else {
+      labelEl.classList.remove('boneyard-low');
+    }
 
     const count = this.boneyard.length;
     if (count === 0) return;
@@ -551,6 +589,7 @@ Object.assign(Game.prototype, {
         <div class="stat-row"><span class="stat-label">${this._t('totalTiles')}</span><span class="stat-value">${s.totalTilesPlayed || 0}</span></div>
         <div class="stat-row"><span class="stat-label">${this._t('totalDraws')}</span><span class="stat-value">${s.totalDraws || 0}</span></div>
         <div class="stat-row"><span class="stat-label">${this._t('totalPasses')}</span><span class="stat-value">${s.totalPasses || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">Time Played</span><span class="stat-value">${Math.floor(getPlayTime() / 3600)}h ${Math.floor((getPlayTime() % 3600) / 60)}m</span></div>
       </div>
       <div class="stat-section">
         <div class="stat-section-title">${this._t('achievements')} (${unlocked.length}/${ACHIEVEMENTS.length})</div>
@@ -1386,9 +1425,9 @@ Object.assign(Game.prototype, {
   },
 
   /** Render the board on canvas, optionally highlighting valid placement ends. */
-  _renderBoard(highlightEnds, animProgress, flyFrom) {
+  _renderBoard(highlightEnds, animProgress, flyFrom, spinnerEntrance) {
     if (!this.renderer) return;
-    this.renderer.renderFromPlacements(this.placements, this.placements.length - 1, animProgress, flyFrom);
+    this.renderer.renderFromPlacements(this.placements, this.placements.length - 1, animProgress, flyFrom, spinnerEntrance);
 
       // Draw end highlights if choosing (in world-space, inside the view transform)
       if (highlightEnds && highlightEnds.length > 0) {

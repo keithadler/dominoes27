@@ -248,17 +248,23 @@ Object.assign(Game.prototype, {
   /** Animate the last-placed tile flying in from the player's position to the board. */
   _animateFlyIn() {
     this._flyingIn = true;
-    const duration = 700;
+    const isSpinner = this._spinnerEntrance;
+    const duration = isSpinner ? 1200 : 700;
+    if (isSpinner) this._spinnerEntrance = false;
     const start = performance.now();
     const flyFrom = this._getPlayerPosition(this._lastPlayedBy || 0);
     const animate = () => {
       const elapsed = performance.now() - start;
       const progress = elapsed < duration ? elapsed / duration : 1;
-      this._renderBoard(null, progress, flyFrom);
+      this._renderBoard(null, progress, flyFrom, isSpinner);
       if (elapsed < duration) {
         requestAnimationFrame(animate);
       } else {
         this._flyingIn = false;
+        // Extra particles for spinner entrance
+        if (isSpinner) {
+          spawnParticles(window.innerWidth / 2, window.innerHeight * 0.45, 25, 'particle-gold');
+        }
       }
     };
     requestAnimationFrame(animate);
@@ -297,28 +303,47 @@ Object.assign(Game.prototype, {
 
     // Create flying tile element
     const flyTile = document.createElement('div');
+    const skin = getSkinColors();
+    // Show tile face-up briefly for human player (#18)
+    const isHuman = player.isHuman;
+    let faceUpHTML = '';
+    if (isHuman && player.hand.length > 0) {
+      const drawnTile = player.hand[player.hand.length - 1];
+      faceUpHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;font-size:10px;font-weight:900;color:${skin.pip};gap:1px;"><span>${drawnTile.a}</span><hr style="width:70%;margin:0;border:none;border-top:1px solid rgba(0,0,0,0.2)"><span>${drawnTile.b}</span></div>`;
+    }
     flyTile.style.cssText = `
       position: fixed; z-index: 60; pointer-events: none;
-      width: 44px; height: 22px;
-      background: linear-gradient(160deg, #f5f0dc, #c8c0a0);
-      border: 2px solid rgba(180,170,140,0.5); border-radius: 5px;
-      box-shadow: 0 2px 0 #a8a080, 0 4px 8px rgba(0,0,0,0.4);
-      left: ${startX - 22}px; top: ${startY - 11}px;
+      width: 44px; height: ${isHuman ? '66px' : '22px'};
+      background: linear-gradient(160deg, ${skin.face}, ${skin.faceDark});
+      border: 2px solid ${isHuman ? '#e8a735' : 'rgba(180,170,140,0.5)'}; border-radius: 5px;
+      box-shadow: 0 2px 0 ${skin.depth || '#a8a080'}, 0 4px 8px rgba(0,0,0,0.4);
+      left: ${startX - 22}px; top: ${startY - (isHuman ? 33 : 11)}px;
       transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
                   top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
                   transform 0.5s ease-out, opacity 0.5s ease-out;
       transform: scale(1.2);
     `;
+    if (isHuman) flyTile.innerHTML = faceUpHTML;
     document.body.appendChild(flyTile);
 
-    requestAnimationFrame(() => {
-      flyTile.style.left = (endX - 22) + 'px';
-      flyTile.style.top = (endY - 11) + 'px';
-      flyTile.style.transform = 'scale(0.6)';
-      flyTile.style.opacity = '0.3';
-    });
+    // For human: show face-up for 400ms, then flip and fly
+    const flyDelay = isHuman ? 400 : 0;
+    setTimeout(() => {
+      if (isHuman) {
+        flyTile.innerHTML = '';
+        flyTile.style.height = '22px';
+        flyTile.style.top = (startY - 11) + 'px';
+        flyTile.style.borderColor = 'rgba(180,170,140,0.5)';
+      }
+      requestAnimationFrame(() => {
+        flyTile.style.left = (endX - 22) + 'px';
+        flyTile.style.top = (endY - 11) + 'px';
+        flyTile.style.transform = 'scale(0.6)';
+        flyTile.style.opacity = '0.3';
+      });
+    }, flyDelay);
 
-    setTimeout(() => flyTile.remove(), 600);
+    setTimeout(() => flyTile.remove(), 600 + flyDelay);
   },
 
   /** Compute visual placement data (x, y, orientation) for a tile and add it to the placements array. */
@@ -339,6 +364,8 @@ Object.assign(Game.prototype, {
         branch: 'first', placedAt: now,
         isSpinner: tile.isDouble
       });
+      // Dramatic spinner entrance (#16)
+      if (tile.isDouble) this._spinnerEntrance = true;
       this._animateFlyIn();
       return;
     }
@@ -520,6 +547,20 @@ Object.assign(Game.prototype, {
 
   /** Show a score popup with the player's name and points earned. */
   _showScorePopup(score, player) {
+    // First blood check (#6) — first scoring play of the round
+    if (this.gameLog) {
+      const lastRoundEndIdx = this.gameLog.reduce((acc, e, i) => e.action === 'round-end' ? i : acc, -1);
+      const roundLog = lastRoundEndIdx >= 0 ? this.gameLog.slice(lastRoundEndIdx + 1) : this.gameLog;
+      const priorScoring = roundLog.filter(e => e.action === 'play' && e.score > 0);
+      if (priorScoring.length === 0) {
+        const fb = document.createElement('div');
+        fb.className = 'first-blood-banner';
+        fb.textContent = 'FIRST BLOOD 🩸';
+        document.body.appendChild(fb);
+        setTimeout(() => fb.remove(), 1500);
+      }
+    }
+
     const popup = document.createElement('div');
     popup.className = 'score-popup';
 
@@ -639,6 +680,41 @@ Object.assign(Game.prototype, {
   },
 
   _showBoneCounting(title, countPlayers, bonusCalc, callback) {
+    // Reveal opponent tiles briefly before counting (#12)
+    this._revealOpponentHands(countPlayers, () => {
+      this._showBoneCountingInner(title, countPlayers, bonusCalc, callback);
+    });
+  },
+
+  /** Briefly flash opponent hands face-up in their panels for 1.5s before bone counting. */
+  _revealOpponentHands(countPlayers, callback) {
+    if (!countPlayers || countPlayers.length === 0) { callback(); return; }
+    const skin = getSkinColors();
+    const reveals = [];
+    for (const p of countPlayers) {
+      const pos = this._getPlayerPosition(p.index);
+      const panel = document.getElementById('opponent-' + pos);
+      if (!panel) continue;
+      const tilesWrap = panel.querySelector('div[style*="flex"]');
+      if (!tilesWrap) continue;
+      const origHTML = tilesWrap.innerHTML;
+      // Replace face-down tiles with face-up mini tiles
+      tilesWrap.innerHTML = '';
+      for (const tile of p.hand) {
+        const t = document.createElement('div');
+        t.style.cssText = `display:inline-flex;flex-direction:column;align-items:center;width:22px;height:40px;background:linear-gradient(160deg,${skin.face},${skin.faceDark});border:1px solid ${skin.border};border-radius:3px;font-size:7px;justify-content:center;gap:1px;margin:1px;`;
+        t.innerHTML = `<span>${tile.a}</span><hr style="width:80%;margin:0;border:none;border-top:1px solid rgba(0,0,0,0.15)"><span>${tile.b}</span>`;
+        tilesWrap.appendChild(t);
+      }
+      reveals.push({ tilesWrap, origHTML });
+    }
+    setTimeout(() => {
+      for (const r of reveals) r.tilesWrap.innerHTML = r.origHTML;
+      callback();
+    }, 1500);
+  },
+
+  _showBoneCountingInner(title, countPlayers, bonusCalc, callback) {
     const overlay = document.getElementById('count-overlay');
     overlay.classList.remove('hidden');
     overlay.innerHTML = '';

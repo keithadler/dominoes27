@@ -39,6 +39,19 @@ class Renderer {
     this._impactTime = 0;
     /** @type {{x: number, y: number}} Position of last impact. */
     this._impactPos = { x: 0, y: 0 };
+
+    // Gyroscope parallax (#13) — subtle offset based on device orientation
+    this._gyroOffsetX = 0;
+    this._gyroOffsetY = 0;
+    if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReduced) {
+        window.addEventListener('deviceorientation', (e) => {
+          if (e.gamma != null) this._gyroOffsetX = Math.max(-10, Math.min(10, (e.gamma || 0) * 0.3));
+          if (e.beta != null) this._gyroOffsetY = Math.max(-10, Math.min(10, ((e.beta || 0) - 45) * 0.3));
+        });
+      }
+    }
   }
 
   /** Trigger a tile impact nudge effect at the given board position. */
@@ -87,7 +100,7 @@ class Renderer {
    * @param {number}   animProgress - Animation progress 0→1 (eased cubic).
    * @param {string}   [flyFrom]   - Direction the tile flies from ('top'|'bottom'|'left'|'right').
    */
-  renderFromPlacements(placements, lastIndex, animProgress, flyFrom) {
+  renderFromPlacements(placements, lastIndex, animProgress, flyFrom, spinnerEntrance) {
     this.resize();
     this.clear();
     if (placements.length === 0) return;
@@ -118,8 +131,8 @@ class Renderer {
     const centerY = (minY + maxY) / 2;
 
     this._viewScale = scale;
-    this._viewOffsetX = cw / 2 - centerX * scale + this.userPanX;
-    this._viewOffsetY = ch / 2 - centerY * scale + this.userPanY - 40; // offset up to avoid hand overlap
+    this._viewOffsetX = cw / 2 - centerX * scale + this.userPanX + (this._gyroOffsetX || 0);
+    this._viewOffsetY = ch / 2 - centerY * scale + this.userPanY - 40 + (this._gyroOffsetY || 0); // offset up to avoid hand overlap
 
     const ctx = this.ctx;
     ctx.save();
@@ -143,7 +156,12 @@ class Renderer {
         const curX = startX + (p.x - startX) * ease;
         const curY = startY + (p.y - startY) * ease;
         const startScale = 0.4;
-        const curScale = startScale + (1 - startScale) * ease;
+        let curScale = startScale + (1 - startScale) * ease;
+        // Spinner entrance: scale overshoot 1.0 → 1.3 → 1.0 (#16)
+        if (spinnerEntrance && ease > 0.5) {
+          const overshoot = Math.sin((ease - 0.5) * 2 * Math.PI) * 0.3;
+          curScale += Math.max(0, overshoot);
+        }
         const alpha = Math.min(1, animProgress * 2.5);
         // Slight rotation that settles
         const rotation = (1 - ease) * (dir === 'left' ? -0.3 : dir === 'right' ? 0.3 : dir === 'top' ? -0.2 : 0.2);

@@ -301,7 +301,7 @@ function importGameData(json) {
     'domino_theme', 'domino_speed', 'domino_music', 'domino_muted',
     'domino_table_theme', 'domino_tile_skin', 'domino_tutorial_done',
     'domino_trash_talk', 'domino_colorblind', 'domino_last_played',
-    'domino_saved_game'
+    'domino_saved_game', 'domino_play_time'
   ]);
   try {
     const data = JSON.parse(json);
@@ -313,4 +313,26 @@ function importGameData(json) {
     }
     return true;
   } catch(e) { return false; }
+}
+
+
+// ---------------------------------------------------------------------------
+// Play Time Tracking (#14)
+// ---------------------------------------------------------------------------
+
+/**
+ * Add seconds to the cumulative play time stored in localStorage.
+ * @param {number} seconds - Seconds to add.
+ */
+function trackPlayTime(seconds) {
+  const current = parseInt(localStorage.getItem('domino_play_time') || '0');
+  localStorage.setItem('domino_play_time', String(current + seconds));
+}
+
+/**
+ * Get the total play time in seconds.
+ * @returns {number}
+ */
+function getPlayTime() {
+  return parseInt(localStorage.getItem('domino_play_time') || '0');
 }

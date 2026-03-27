@@ -91,6 +91,13 @@ class Game {
     // Score combo counter for human player
     this._humanCombo = 0;
 
+    // Play time tracking (#14) — increment every 60s while game is active
+    this._playTimeInterval = setInterval(() => {
+      if (!this.gameOver && this.players.length > 0) {
+        trackPlayTime(60);
+      }
+    }, 60000);
+
     this._initUI();
   }
 
@@ -1615,6 +1622,17 @@ class Game {
       blocked: false
     });
 
+    // Perfect round detection (#11) — human scored on every play they made
+    const humanName = this.players[0] ? this.players[0].name : '';
+    const humanRoundPlays = roundPlays.filter(e => e.player === humanName);
+    if (humanRoundPlays.length > 0 && humanRoundPlays.every(e => e.score > 0)) {
+      const prPopup = document.createElement('div');
+      prPopup.className = 'perfect-round-popup';
+      prPopup.textContent = 'PERFECT ROUND ✨';
+      document.body.appendChild(prPopup);
+      setTimeout(() => prPopup.remove(), 2000);
+    }
+
     // Celebration if human/human's team won
     if (humanWon && this.sfx) this.sfx.win();
 
@@ -1899,6 +1917,30 @@ class Game {
       }
     }
     analysisDiv.innerHTML += missedHTML;
+
+    // MVP Awards (#7)
+    if (this.gameLog) {
+      const playerScoring = {};
+      const playerBest = {};
+      const playerDraws = {};
+      for (const e of this.gameLog) {
+        if (e.action === 'play' && e.score > 0) {
+          playerScoring[e.player] = (playerScoring[e.player] || 0) + 1;
+          playerBest[e.player] = Math.max(playerBest[e.player] || 0, e.score);
+        }
+        if (e.action === 'draw') {
+          playerDraws[e.player] = (playerDraws[e.player] || 0) + 1;
+        }
+      }
+      const mvpMost = Object.entries(playerScoring).sort((a, b) => b[1] - a[1])[0];
+      const mvpBest = Object.entries(playerBest).sort((a, b) => b[1] - a[1])[0];
+      const mvpDraws = Object.entries(playerDraws).sort((a, b) => b[1] - a[1])[0];
+      let mvpHTML = '<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;margin-top:12px;">MVP Awards</div>';
+      if (mvpMost) mvpHTML += `<div class="analysis-row"><span>🏅 Most Scoring Plays</span><span class="analysis-value">${escHTML(mvpMost[0])} (${mvpMost[1]})</span></div>`;
+      if (mvpBest) mvpHTML += `<div class="analysis-row"><span>🎯 Best Single Play</span><span class="analysis-value">${escHTML(mvpBest[0])} (+${mvpBest[1]})</span></div>`;
+      if (mvpDraws) mvpHTML += `<div class="analysis-row"><span>🦴 Most Draws</span><span class="analysis-value">${escHTML(mvpDraws[0])} (${mvpDraws[1]})</span></div>`;
+      analysisDiv.innerHTML += mvpHTML;
+    }
 
     container.appendChild(analysisDiv);
 
