@@ -1326,23 +1326,23 @@ class Game {
         }, introDelay + i * 200);
       }
 
-      // After avatars shown, start deal and fade out intro
-      const dealDelay = introDelay + cards.length * 200 + 1200;
+      // After avatars shown, start deal BEHIND the player cards
+      // (cards stay visible while bones fly to each player's card)
+      const dealDelay = introDelay + cards.length * 200 + 800;
       setTimeout(() => {
-        // Fade out avatar intro
-        introEl.style.transition = 'opacity 0.4s ease';
-        introEl.style.opacity = '0';
-        setTimeout(() => introEl.remove(), 400);
-
         // Make boneyard visible for deal target
         if (boneyardArea) { boneyardArea.style.visibility = ''; boneyardArea.style.opacity = '1'; }
 
-        // Animate dealing then proceed
-        this._animateDeal(() => {
+        // Deal tiles — they fly to each player's card position
+        this._animateDealToCards(grid, () => {
+          // NOW fade out the intro cards
+          introEl.style.transition = 'opacity 0.5s ease';
+          introEl.style.opacity = '0';
+          setTimeout(() => introEl.remove(), 500);
+
           // Fade in all UI
           allUI.forEach(el => { if (el) { el.style.visibility = ''; el.style.transition = 'opacity 0.4s ease'; el.style.opacity = '1'; } });
           oppPanels.forEach(id => { const el = document.getElementById(id); if (el) { el.style.visibility = ''; el.style.transition = 'opacity 0.4s ease'; el.style.opacity = '1'; } });
-          // Clean up inline transitions after fade
           setTimeout(() => {
             allUI.forEach(el => { if (el) el.style.transition = ''; });
             oppPanels.forEach(id => { const el = document.getElementById(id); if (el) el.style.transition = ''; });
@@ -1371,7 +1371,7 @@ class Game {
             this._doTurn();
           });
         }
-        }); // end _animateDeal callback
+        }); // end _animateDealToCards callback
       }, dealDelay); // end setTimeout for dealDelay
     }
 
@@ -1483,6 +1483,135 @@ class Game {
         const totalTime = boneyardStart + (pileEls.length - dealt) * 60 + 600;
         setTimeout(callback, totalTime);
       }
+
+  /**
+   * Deal tiles with the intro cards visible — bones fly from center pile
+   * to each player's card in the intro grid, then remaining go to boneyard.
+   * @param {HTMLElement} grid - The intro grid element with player cards.
+   * @param {Function} callback - Called when dealing is complete.
+   */
+  _animateDealToCards(grid, callback) {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const tileCount = 28;
+    const isSmall = window.innerWidth < 500;
+    const tileW = isSmall ? 60 : 120;
+    const tileH = isSmall ? 30 : 60;
+    const scatter = isSmall ? 0.4 : 0.8;
+    const pileEls = [];
+
+    // Phase 1: Show all tiles in a pile at center (behind the grid, z-index 45)
+    const skin = getSkinColors();
+    for (let i = 0; i < tileCount; i++) {
+      const tile = document.createElement('div');
+      tile.className = 'deal-tile';
+      tile.style.width = tileW + 'px';
+      tile.style.height = tileH + 'px';
+      tile.style.borderRadius = '6px';
+      tile.style.position = 'fixed';
+      tile.style.zIndex = 45; // behind the intro cards (z-index 50)
+      tile.style.background = `linear-gradient(160deg, ${skin.face}, ${skin.faceDark})`;
+      tile.style.border = `1.5px solid ${skin.border}`;
+      tile.style.boxShadow = `0 1px 0 ${skin.depth}, 0 2px 6px rgba(0,0,0,0.4)`;
+      const ox = (Math.random() - 0.5) * 100 * scatter;
+      const oy = (Math.random() - 0.5) * 60 * scatter;
+      const rot = (Math.random() - 0.5) * 80;
+      tile.style.left = (cx - tileW / 2 + ox) + 'px';
+      tile.style.top = (cy - tileH / 2 + oy) + 'px';
+      tile.style.transform = `rotate(${rot}deg)`;
+      tile.style.opacity = '0.8';
+      tile.style.transition = 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      document.body.appendChild(tile);
+      pileEls.push(tile);
+    }
+
+    // Phase 2: Quick shuffle
+    let shuffleCount = 0;
+    const shuffleInterval = setInterval(() => {
+      for (const tile of pileEls) {
+        const ox = (Math.random() - 0.5) * 80 * scatter;
+        const oy = (Math.random() - 0.5) * 50 * scatter;
+        const rot = (Math.random() - 0.5) * 70;
+        tile.style.left = (cx - tileW / 2 + ox) + 'px';
+        tile.style.top = (cy - tileH / 2 + oy) + 'px';
+        tile.style.transform = `rotate(${rot}deg)`;
+      }
+      if (this.sfx) this.sfx.shuffle();
+      shuffleCount++;
+      if (shuffleCount >= 3) clearInterval(shuffleInterval);
+    }, 200);
+
+    // Phase 3: Deal tiles to each player's card position
+    const dealStart = 800;
+    const cards = grid.children;
+
+    // Get the center position of each player's card
+    const cardPositions = [];
+    for (let i = 0; i < this.players.length; i++) {
+      if (cards[i]) {
+        const r = cards[i].getBoundingClientRect();
+        cardPositions.push({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+      } else {
+        cardPositions.push({ x: cx, y: cy });
+      }
+    }
+
+    let dealt = 0;
+    const handSize = this.players.length === 2 ? 7 : 5;
+    for (let round = 0; round < handSize; round++) {
+      for (let pi = 0; pi < this.players.length; pi++) {
+        const tileIdx = dealt;
+        if (tileIdx >= pileEls.length) continue;
+        const delay = dealStart + dealt * 70;
+        dealt++;
+        const targetPos = cardPositions[pi];
+        setTimeout(() => {
+          const tile = pileEls[tileIdx];
+          if (!tile) return;
+          tile.style.left = (targetPos.x - tileW / 2 + (Math.random() - 0.5) * 20) + 'px';
+          tile.style.top = (targetPos.y + (Math.random() - 0.5) * 10) + 'px';
+          tile.style.transform = `rotate(${(Math.random() - 0.5) * 15}deg) scale(0.6)`;
+          tile.style.opacity = '0.3';
+          if (this.sfx) this.sfx._play(350 + Math.random() * 200, 0.03, 'sine', 0.04);
+          // Flash the target card briefly
+          if (cards[pi]) {
+            cards[pi].style.borderColor = `hsla(45,90%,60%,0.6)`;
+            setTimeout(() => {
+              if (cards[pi]) {
+                const c = this.players[pi].color || { h: 0, s: 50, l: 50 };
+                cards[pi].style.borderColor = `hsla(${c.h},${c.s}%,${c.l+15}%,${this.players[pi].isHuman ? '0.5' : '0.25'})`;
+              }
+            }, 200);
+          }
+          setTimeout(() => tile.remove(), 350);
+        }, delay);
+      }
+    }
+
+    // Phase 4: Remaining tiles fly to boneyard
+    const boneyardStart = dealStart + dealt * 70;
+    const boneArea = document.getElementById('boneyard-area');
+    const boneRect = boneArea ? boneArea.getBoundingClientRect() : { left: cx - 70, top: window.innerHeight - 140, width: 140, height: 40 };
+    const boneTargetX = boneRect.left + boneRect.width / 2;
+    const boneTargetY = boneRect.top + boneRect.height / 2;
+
+    for (let i = dealt; i < pileEls.length; i++) {
+      const delay = boneyardStart + (i - dealt) * 50;
+      setTimeout(() => {
+        const tile = pileEls[i];
+        if (!tile) return;
+        tile.style.left = (boneTargetX - tileW / 2 + (Math.random() - 0.5) * 20) + 'px';
+        tile.style.top = (boneTargetY - tileH / 2 + (Math.random() - 0.5) * 8) + 'px';
+        tile.style.transform = `rotate(${(Math.random() - 0.5) * 30}deg) scale(0.2)`;
+        tile.style.opacity = '0.5';
+        if (this.sfx) this.sfx._play(280 + Math.random() * 80, 0.02, 'sine', 0.03);
+        setTimeout(() => tile.remove(), 400);
+      }, delay);
+    }
+
+    const totalTime = boneyardStart + (pileEls.length - dealt) * 50 + 500;
+    setTimeout(callback, totalTime);
+  }
 
   /** Shows a cinematic round announcement with the first player and spinner tile. */
   _showRoundAnnouncement(firstPlayer, spinnerTile, callback) {
