@@ -340,11 +340,12 @@ class Game {
       this._suppressToast = false;
       if (this._spinnerRAF) { cancelAnimationFrame(this._spinnerRAF); this._spinnerRAF = null; }
       if (this.music) this.music.stop();
-      // Clear all overlays
-      ['countdown-overlay', 'count-overlay', 'message-overlay', 'thinking-overlay', 'ragequit-overlay'].forEach(id => {
+      // Clear all overlays (ragequit-overlay only hidden, not emptied — its children have persistent listeners)
+      ['countdown-overlay', 'count-overlay', 'message-overlay', 'thinking-overlay'].forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.classList.add('hidden'); el.innerHTML = ''; }
       });
+      document.getElementById('ragequit-overlay')?.classList.add('hidden');
       this.players = [];
       this.board = null;
       this.placements = [];
@@ -1935,5 +1936,5 @@ class Game {
 }
 
 // --- Start ---
-const game = new Game();
-window.game = game;
+// Game is instantiated at the end of game-animations.js (the last loaded script)
+// to ensure all prototype extensions are applied first.

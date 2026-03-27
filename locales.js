@@ -32,8 +32,8 @@ LOCALES.en = {
   dir: 'ltr',
   names: [
     'Carlos','Maria','James','Aisha','Yuki','Priya','Liam','Sofia','Omar','Elena',
-    'Diego','Fatima','Chen','Amara','Raj','Lucia','Kofi','Ingrid','Mateo','Zara',
-    'Dante','Mei','Nico','Isla','Tariq','Rosa','Sven','Leila','Marco','Anya',
+    'Diego','Fatima','Kira','Amara','Raj','Lucia','Kofi','Ingrid','Mateo','Zara',
+    'Dante','Mei','Nico','Isla','Tariq','Rosa','Sven','Leila','Idris','Anya',
     'Felix','Nadia','Hugo','Cleo','Ravi','Mila','Axel','Dina','Leo','Vera'
   ],
   cities: [
@@ -215,6 +215,17 @@ LOCALES.en = {
       'Quitting now? But you were SO close to... well, something. 🤷',
       'Your opponents are already practicing their victory dances. Don\'t let them. 💃',
     ],
+    // Round intro speech bubbles
+    introHumanFirst: ['Let\'s go! 🎯', 'Ready to dominate 🦴', 'My table. 😎', 'Feeling lucky 🍀'],
+    introAiFirst: ['Bring it on 💪', 'Don\'t blink 👀', 'I came to win 🏆', 'Easy game 😏', 'Let\'s see what you got', 'No mercy today 🔥', 'Watch and learn 🧠'],
+    introHumanCloseToWin: ['Almost there! 🏁', 'One more round... 🤞', 'Victory is close 👑'],
+    introAiCloseToWin: ['GG incoming 😎', 'Can you feel it? 💀', 'Too easy 🥱', 'Wrapping this up 🎁'],
+    introHumanTrailing: ['Comeback time 🔄', 'Not over yet! 💪', 'I\'ve seen worse 😤'],
+    introAiTrailing: ['I\'m not worried 😤', 'Still in this 💪', 'Watch me rally 🔥', 'Lucky streak incoming'],
+    introHumanLeading: ['Keep it up! 📈', 'Feeling good 😊', 'Stay focused 🎯'],
+    introAiLeading: ['Catch me if you can 🏃', 'I like this lead 😏', 'Pressure\'s on you 👀'],
+    introHumanMid: ['Let\'s go 🎲', 'New round, new chance', 'Focus up 🧠'],
+    introAiMid: ['Here we go 🎲', 'My turn to shine ✨', 'Ready 💪'],
   },
   p: {
     z: {
@@ -494,6 +505,17 @@ LOCALES.es = {
       '¿Te vas ahora? Pero estabas TAN cerca de... bueno, algo. 🤷',
       'Tus oponentes ya están practicando su baile de victoria. No los dejes. 💃',
     ],
+    // Round intro speech bubbles
+    introHumanFirst: ['¡Vamos! 🎯', 'A dominar 🦴', 'Mi mesa. 😎', 'Me siento con suerte 🍀'],
+    introAiFirst: ['Atrévete 💪', 'No parpadees 👀', 'Vine a ganar 🏆', 'Juego fácil 😏', 'A ver qué tienes', 'Sin piedad hoy 🔥', 'Mira y aprende 🧠'],
+    introHumanCloseToWin: ['¡Ya casi! 🏁', 'Una ronda más... 🤞', 'La victoria está cerca 👑'],
+    introAiCloseToWin: ['GG en camino 😎', '¿Lo sientes? 💀', 'Muy fácil 🥱', 'Cerrando esto 🎁'],
+    introHumanTrailing: ['¡Hora de remontar! 🔄', '¡Aún no acaba! 💪', 'He visto peores 😤'],
+    introAiTrailing: ['No me preocupo 😤', 'Sigo en esto 💪', 'Mira cómo remonto 🔥', 'Racha de suerte viene'],
+    introHumanLeading: ['¡Sigue así! 📈', 'Me siento bien 😊', 'A concentrarse 🎯'],
+    introAiLeading: ['Atrápame si puedes 🏃', 'Me gusta esta ventaja 😏', 'La presión es tuya 👀'],
+    introHumanMid: ['¡Vamos! 🎲', 'Nueva ronda, nueva oportunidad', 'A enfocarse 🧠'],
+    introAiMid: ['Aquí vamos 🎲', 'Mi turno de brillar ✨', 'Listo 💪'],
   },
   p: {
     z: {
@@ -725,6 +747,17 @@ LOCALES.ar = {
       'تنسحب الآن؟ لكنك كنت قريباً جداً من... حسناً، شيء ما. 🤷',
       'خصومك يتدربون على رقصة النصر. لا تدعهم. 💃',
     ],
+    // Round intro speech bubbles
+    introHumanFirst: ['يلا نبدأ! 🎯', 'جاهز للسيطرة 🦴', 'طاولتي. 😎', 'حاسس بالحظ 🍀'],
+    introAiFirst: ['تعال 💪', 'لا تطرف 👀', 'جيت أفوز 🏆', 'لعبة سهلة 😏', 'ورني شنو عندك', 'بدون رحمة اليوم 🔥', 'شوف وتعلم 🧠'],
+    introHumanCloseToWin: ['قربنا! 🏁', 'جولة وحدة بعد... 🤞', 'الفوز قريب 👑'],
+    introAiCloseToWin: ['GG جاية 😎', 'حاسس فيها؟ 💀', 'سهلة مرة 🥱', 'خلصنا تقريباً 🎁'],
+    introHumanTrailing: ['وقت الرجعة! 🔄', 'ما خلصت بعد! 💪', 'شفت أسوأ 😤'],
+    introAiTrailing: ['مو قلقان 😤', 'باقي في اللعبة 💪', 'شوف كيف أرجع 🔥', 'سلسلة حظ جاية'],
+    introHumanLeading: ['كمل كذا! 📈', 'حاسس بالراحة 😊', 'ركز 🎯'],
+    introAiLeading: ['امسكني لو تقدر 🏃', 'يعجبني التقدم 😏', 'الضغط عليك 👀'],
+    introHumanMid: ['يلا 🎲', 'جولة جديدة، فرصة جديدة', 'ركز 🧠'],
+    introAiMid: ['يلا نبدأ 🎲', 'دوري ألمع ✨', 'جاهز 💪'],
   },
   p: {
     z: {
@@ -956,6 +989,17 @@ LOCALES.zh = {
       '现在退出？但你离……嗯，某个东西很近了。🤷',
       '你的对手已经在练习胜利之舞了。别让他们得逞。💃',
     ],
+    // Round intro speech bubbles
+    introHumanFirst: ['开始吧！🎯', '准备称霸 🦴', '我的主场 😎', '感觉运气不错 🍀'],
+    introAiFirst: ['放马过来 💪', '别眨眼 👀', '我来赢的 🏆', '轻松局 😏', '让我看看你的实力', '今天不留情 🔥', '看好了 🧠'],
+    introHumanCloseToWin: ['快了！🏁', '再一轮... 🤞', '胜利在望 👑'],
+    introAiCloseToWin: ['GG在即 😎', '感觉到了吗？💀', '太简单了 🥱', '收尾了 🎁'],
+    introHumanTrailing: ['逆转时刻！🔄', '还没结束！💪', '见过更糟的 😤'],
+    introAiTrailing: ['不担心 😤', '还在局中 💪', '看我反击 🔥', '好运要来了'],
+    introHumanLeading: ['继续保持！📈', '感觉不错 😊', '集中注意力 🎯'],
+    introAiLeading: ['来追我啊 🏃', '我喜欢这个领先 😏', '压力在你那边 👀'],
+    introHumanMid: ['走起 🎲', '新一轮，新机会', '集中精神 🧠'],
+    introAiMid: ['开始了 🎲', '轮到我发光 ✨', '准备好了 💪'],
   },
   p: {
     z: {

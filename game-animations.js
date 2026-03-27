@@ -796,6 +796,7 @@ Object.assign(Game.prototype, {
     const comments = [];
     const maxScore = Math.max(...this.players.map(p => this.teamMode && this.teams ? this.teams[p.team].score : p.score));
     const target = this.targetScore;
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
     for (const p of this.players) {
       const score = this.teamMode && this.teams ? this.teams[p.team].score : p.score;
@@ -808,41 +809,24 @@ Object.assign(Game.prototype, {
 
       if (roundNum === 1) {
         // First round — intro comments
-        if (p.isHuman) {
-          comment = ['Let\'s go! 🎯', 'Ready to dominate 🦴', 'My table. 😎', 'Feeling lucky 🍀'][Math.floor(Math.random() * 4)];
-        } else {
-          const openers = ['Bring it on 💪', 'Don\'t blink 👀', 'I came to win 🏆', 'Easy game 😏', 'Let\'s see what you got', 'No mercy today 🔥', 'Watch and learn 🧠'];
-          comment = openers[Math.floor(Math.random() * openers.length)];
-        }
+        comment = p.isHuman ? pick(this._t('introHumanFirst')) : pick(this._t('introAiFirst'));
       } else if (closeToWin && isLeading) {
         // About to win
-        if (p.isHuman) {
-          comment = ['Almost there! 🏁', 'One more round... 🤞', 'Victory is close 👑'][Math.floor(Math.random() * 3)];
-        } else {
-          comment = ['GG incoming 😎', 'Can you feel it? 💀', 'Too easy 🥱', 'Wrapping this up 🎁'][Math.floor(Math.random() * 4)];
-        }
+        comment = p.isHuman ? pick(this._t('introHumanCloseToWin')) : pick(this._t('introAiCloseToWin'));
       } else if (isTrailing && gap > 50) {
         // Far behind
-        if (p.isHuman) {
-          comment = ['Comeback time 🔄', 'Not over yet! 💪', 'I\'ve seen worse 😤'][Math.floor(Math.random() * 3)];
-        } else {
-          comment = ['I\'m not worried 😤', 'Still in this 💪', 'Watch me rally 🔥', 'Lucky streak incoming'][Math.floor(Math.random() * 4)];
-        }
+        comment = p.isHuman ? pick(this._t('introHumanTrailing')) : pick(this._t('introAiTrailing'));
       } else if (isLeading && score > 0) {
         // Leading
-        if (p.isHuman) {
-          comment = ['Keep it up! 📈', 'Feeling good 😊', 'Stay focused 🎯'][Math.floor(Math.random() * 3)];
-        } else {
-          comment = ['Catch me if you can 🏃', 'I like this lead 😏', 'Pressure\'s on you 👀'][Math.floor(Math.random() * 3)];
-        }
+        comment = p.isHuman ? pick(this._t('introHumanLeading')) : pick(this._t('introAiLeading'));
       } else if (roundNum > 1) {
         // Mid-game, no strong position
         if (p.isHuman) {
-          comment = ['Let\'s go 🎲', 'New round, new chance', 'Focus up 🧠'][Math.floor(Math.random() * 3)];
+          comment = pick(this._t('introHumanMid'));
         } else {
           // Use the existing phrase system for AI
           const phrase = getPhrase(p, 'opponent');
-          comment = phrase || ['Here we go 🎲', 'My turn to shine ✨', 'Ready 💪'][Math.floor(Math.random() * 3)];
+          comment = phrase || pick(this._t('introAiMid'));
         }
       }
 
@@ -915,3 +899,8 @@ Object.assign(Game.prototype, {
   }
 
 });
+
+// --- Start ---
+// Instantiated here (last loaded script) so all Game.prototype
+// extensions from game-input.js, game-ui.js, and this file are applied.
+window.game = new Game();
