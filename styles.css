@@ -1512,3 +1512,12 @@ body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
 [dir="rtl"] .stat-row { direction: rtl; }
 [dir="rtl"] .speech-bubble { direction: rtl; }
 [dir="rtl"] #zoom-controls { right: auto; left: 10px; }
+
+/* ===== Menu language selector ===== */
+#menu-lang-selector .btn-option {
+  font-size: 1.3rem; padding: 6px 10px; min-width: auto; flex: 0;
+  border-radius: 10px;
+}
+#menu-lang-selector .btn-option.active {
+  box-shadow: 0 2px 12px rgba(232,167,53,0.4);
+}

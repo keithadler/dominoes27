@@ -1002,6 +1002,138 @@ class Game {
     try { if (navigator.vibrate) navigator.vibrate(ms || 15); } catch(e) {}
   }
 
+  _getLang() {
+    return localStorage.getItem('domino_lang') || 'en';
+  }
+
+  _t(key) {
+    const loc = getLocale(this._getLang());
+    return (loc.ui && loc.ui[key]) || (LOCALES.en.ui && LOCALES.en.ui[key]) || key;
+  }
+
+  _applyLocale() {
+    const lang = this._getLang();
+    const u = getLocale(lang).ui || LOCALES.en.ui;
+    document.documentElement.dir = getLocale(lang).dir || 'ltr';
+    document.documentElement.lang = lang;
+
+    // Menu screen labels
+    const setTxt = (sel, txt) => { const el = document.querySelector(sel); if (el) el.textContent = txt; };
+    const setHTML = (sel, html) => { const el = document.querySelector(sel); if (el) el.innerHTML = html; };
+
+    // Menu option labels
+    setTxt('#game-mode + label, [for="game-mode"]', u.gameMode);
+    const labels = document.querySelectorAll('.option-group label');
+    const labelKeys = ['gameMode', 'opponents', 'playTo', 'aiDifficulty', 'gameSpeed'];
+    labels.forEach((lbl, i) => { if (labelKeys[i] && u[labelKeys[i]]) lbl.textContent = u[labelKeys[i]]; });
+
+    // Menu buttons
+    const modeGroup = document.getElementById('game-mode');
+    if (modeGroup) {
+      const btns = modeGroup.querySelectorAll('.btn-option');
+      if (btns[0]) btns[0].textContent = u.ffa || 'Free For All';
+      if (btns[1]) btns[1].textContent = u.teams || '2v2 Teams';
+    }
+    const diffGroup = document.getElementById('ai-difficulty');
+    if (diffGroup) {
+      const btns = diffGroup.querySelectorAll('.btn-option');
+      if (btns[0]) btns[0].textContent = u.easy || '😊 Easy';
+      if (btns[1]) btns[1].textContent = u.mixed || '🎲 Mixed';
+      if (btns[2]) btns[2].textContent = u.hard || '🧠 Hard';
+    }
+    const speedGroup = document.getElementById('game-speed');
+    if (speedGroup) {
+      const btns = speedGroup.querySelectorAll('.btn-option');
+      if (btns[0]) btns[0].textContent = u.fast || '🐇 Fast';
+      if (btns[1]) btns[1].textContent = u.normal || '🎯 Normal';
+      if (btns[2]) btns[2].textContent = u.slow || '🐢 Slow';
+    }
+    const scoreGroup = document.getElementById('target-score');
+    if (scoreGroup) {
+      const customBtn = scoreGroup.querySelector('[data-value="custom"]');
+      if (customBtn) customBtn.textContent = u.custom || 'Custom';
+    }
+
+    // Start/resume buttons
+    setTxt('#start-game', u.startGame || 'Start Game');
+    setTxt('#resume-game', u.resumeGame || '▶ Resume Saved Game');
+
+    // Player name placeholder
+    const nameInput = document.getElementById('player-name-input');
+    if (nameInput) nameInput.placeholder = u.playerName || 'Your Name';
+
+    // Game screen buttons
+    setTxt('#draw-btn', u.draw || 'Draw');
+    setTxt('#pass-btn', u.pass || 'Pass');
+    setTxt('#hint-btn', u.hint || '💡 Hint (-5 pts)');
+    setTxt('#tracker-quick-btn', u.tiles || '🔍 Tiles');
+
+    // Dropdown menu
+    setHTML('#rules-btn', (u.rules || '📖 Rules') + ' <kbd class="dd-key">R</kbd>');
+    setTxt('#tutorial-btn', u.tutorial || '🎓 Tutorial');
+    setHTML('#log-btn', (u.gameLog || '📋 Game Log') + ' <kbd class="dd-key">G</kbd>');
+    setHTML('#tracker-btn', (u.tileTracker || '🔍 Tile Tracker') + ' <kbd class="dd-key">T</kbd>');
+    setHTML('#stats-btn', (u.stats || '📊 Stats & Achievements') + ' <kbd class="dd-key">A</kbd>');
+    setHTML('#prefs-btn', (u.prefs || '🎨 Preferences') + ' <kbd class="dd-key">E</kbd>');
+    setHTML('#shortcuts-btn', (u.shortcuts || '❓ Shortcuts') + ' <kbd class="dd-key">?</kbd>');
+    setTxt('#ragequit-btn', u.rageQuit || '💀 Rage Quit (counts as loss)');
+
+    // Overlay titles and close buttons
+    setTxt('#stats-overlay .stats-panel > h2', u.stats || 'Stats & Achievements');
+    setTxt('#stats-close-btn', u.close || 'Close');
+    setTxt('#prefs-overlay .stats-panel > h2', u.prefs || 'Preferences');
+    setTxt('#prefs-close-btn', u.close || 'Close');
+    setTxt('#log-overlay .log-panel > h2', u.gameLog || 'Game Log');
+    setTxt('#log-close-btn', u.close || 'Close');
+    setTxt('#shortcuts-close-btn', u.close || 'Close');
+    setTxt('#tracker-close-btn', u.close || 'Close');
+    setTxt('#rules-close-btn', '← ' + (u.close || 'Back'));
+
+    // Rules content
+    const rulesContent = document.querySelector('.rules-content');
+    if (rulesContent && RULES[lang]) rulesContent.innerHTML = RULES[lang];
+    const rulesTitle = document.querySelector('#rules-overlay .rules-panel > h2');
+    if (rulesTitle) rulesTitle.textContent = u.rules ? u.rules.replace(/📖\s*/, '') : 'How to Play';
+
+    // End sum label
+    setTxt('.sum-label', u.openEnds || 'Open Ends');
+
+    // Boneyard label
+    const boneLabel = document.getElementById('boneyard-label');
+    if (boneLabel) {
+      const countEl = document.getElementById('boneyard-count');
+      const count = countEl ? countEl.textContent : '0';
+      boneLabel.innerHTML = `🦴 <span id="boneyard-count">${count}</span> ${u.bones || 'bones'}`;
+    }
+
+    // Game over screen
+    setTxt('#gameover-screen .game-title', u.gameOver || 'Game Over');
+    setTxt('#rematch-btn', u.rematch || 'Rematch');
+    setTxt('#play-again', u.newGame || 'New Game');
+    setTxt('#share-log-btn', u.copyLog || '📋 Copy Game Log');
+
+    // Tutorial nav
+    setTxt('#tut-prev', '← ' + (u.close || 'Back'));
+
+    // Menu language selector
+    const langSel = document.getElementById('menu-lang-selector');
+    if (langSel) {
+      langSel.innerHTML = Object.entries(LOCALES).map(([code, loc]) =>
+        `<button class="btn-option${code === lang ? ' active' : ''}" data-lang="${code}" style="flex:0;padding:8px 12px;min-width:auto;">${loc.flag}</button>`
+      ).join('');
+      langSel.querySelectorAll('.btn-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          localStorage.setItem('domino_lang', btn.dataset.lang);
+          PHRASES = _buildPhrases(btn.dataset.lang);
+          this._previewNames = null;
+          this._previewPersonalities = null;
+          this._applyLocale();
+          this._updateRoster();
+        });
+      });
+    }
+  }
+
   _getHeadToHead(name) {
     const s = getGameStats();
     const h2h = s.headToHead || {};
@@ -1376,12 +1508,15 @@ class Game {
 
     // Restore saved speed selection
     const savedSpeed = localStorage.getItem('domino_speed') || 'normal';
-    const speedGroup = document.getElementById('game-speed');
-    if (speedGroup) {
-      speedGroup.querySelectorAll('.btn-option').forEach(b => {
+    const speedGroup2 = document.getElementById('game-speed');
+    if (speedGroup2) {
+      speedGroup2.querySelectorAll('.btn-option').forEach(b => {
         b.classList.toggle('active', b.dataset.value === savedSpeed);
       });
     }
+
+    // Apply locale to all UI text
+    this._applyLocale();
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -1797,7 +1932,7 @@ class Game {
       if (this.currentPlayer === -1) {
         this._updateUI();
         this._renderBoard();
-        this.showMessage('No one has a double!\nReshuffling and redealing...', () => {
+        this.showMessage(this._t('noDouble'), () => {
           this.startRound();
         });
         return;
@@ -2199,7 +2334,7 @@ class Game {
       if (playableTiles.length === 1) {
         const placements = this.board.getValidPlacements(playableTiles[0]);
         if (placements.length === 1) {
-          this._showAutoPlayBanner((getLocale(localStorage.getItem('domino_lang')||'en').ui||{}).autoPlayOnly||'⚡ Auto-playing your only move');
+          this._showAutoPlayBanner(this._t('autoPlayOnly'));
           setTimeout(() => {
             if (this.currentPlayer === player.index && !this.roundOver) {
               this._executePlay(player, playableTiles[0], placements[0]);
@@ -2212,7 +2347,7 @@ class Game {
       this._enableHumanPlay(player);
       // If human can't play and boneyard is empty, auto-pass
       if (playableTiles.length === 0 && this.boneyard.length === 0) {
-        this._showAutoPlayBanner((getLocale(localStorage.getItem('domino_lang')||'en').ui||{}).autoPass||'⚡ No moves available — auto-passing');
+        this._showAutoPlayBanner(this._t('autoPass'));
         setTimeout(() => {
           if (this.currentPlayer === player.index && !this.roundOver) {
             this.pass();
@@ -2432,7 +2567,7 @@ class Game {
       for (const p of placements) playable.push({ tile, placement: p });
     }
     if (playable.length === 1) {
-      this._showAutoPlayBanner((getLocale(localStorage.getItem('domino_lang')||'en').ui||{}).autoPlayOnly||'⚡ Auto-playing your only move');
+      this._showAutoPlayBanner(this._t('autoPlayOnly'));
       setTimeout(() => {
         this._playLock = false;
         this._executePlay(player, playable[0].tile, playable[0].placement);
@@ -4281,11 +4416,10 @@ class Game {
             const lang = el.dataset.lang;
             localStorage.setItem('domino_lang', lang);
             PHRASES = _buildPhrases(lang);
-            // Set RTL if needed
             document.documentElement.dir = getLocale(lang).dir || 'ltr';
-            // Re-roll AI names for new language
             this._previewNames = null;
             this._previewPersonalities = null;
+            this._applyLocale();
             this._updateRoster();
             this._renderPrefs();
           });
