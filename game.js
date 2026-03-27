@@ -1780,6 +1780,12 @@ class Game {
     });
     if (!play) {
       this._hideThinking();
+      this.gameLog.push({
+        turn: this._logTurn++,
+        player: player.name,
+        avatar: player.avatar,
+        action: 'pass'
+      });
       this._nextTurn();
       return;
     }
@@ -2145,10 +2151,10 @@ class Game {
       if (p.branch === 'right' || p.branch === 'first') {
         if (!rightMost || p.x > rightMost.x) rightMost = p;
       }
-      if (p.branch === 'north') {
+      if (p.branch === 'north' || p.branch === 'first') {
         if (!northMost || p.y < northMost.y) northMost = p;
       }
-      if (p.branch === 'south') {
+      if (p.branch === 'south' || p.branch === 'first') {
         if (!southMost || p.y > southMost.y) southMost = p;
       }
     }
