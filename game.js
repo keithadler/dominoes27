@@ -447,87 +447,6 @@ class Game {
     }).catch(() => {});
   }
 
-  /** Replay the game log step by step on the board. */
-  _startReplay() {
-    if (!this.gameLog || this.gameLog.length === 0) return;
-    this.showScreen('game-screen');
-
-    // Reset board visually
-    this.board = new Board();
-    this.placements = [];
-    this._renderBoard();
-    this._updateUI();
-
-    // Hide player hand, arrow, and bottom bar during replay
-    const bottomBar = document.getElementById('bottom-bar');
-    const arrow = document.getElementById('floating-arrow');
-    if (bottomBar) bottomBar.style.display = 'none';
-    if (arrow) arrow.style.display = 'none';
-
-    const plays = this.gameLog.filter(e => e.action === 'play');
-    let idx = 0;
-
-    // Show replay banner
-    const banner = document.createElement('div');
-    banner.id = 'replay-banner';
-    banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:90;background:rgba(90,138,240,0.9);color:#fff;padding:10px 24px;border-radius:12px;font-weight:700;font-size:0.9rem;letter-spacing:1px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
-    banner.textContent = '🔄 REPLAY';
-    document.body.appendChild(banner);
-
-    const replayNext = () => {
-      if (idx >= plays.length) {
-        banner.textContent = '🔄 REPLAY COMPLETE';
-        setTimeout(() => {
-          banner.remove();
-          if (bottomBar) bottomBar.style.display = '';
-          if (arrow) arrow.style.display = '';
-          this.showScreen('gameover-screen');
-        }, 2000);
-        return;
-      }
-      const entry = plays[idx];
-
-      // Check if we crossed a round boundary — reset the board
-      if (idx > 0) {
-        const prevEntry = plays[idx - 1];
-        // Find if there's a round-end between the previous play and this one
-        const prevTurn = prevEntry._turn || 0;
-        const curTurn = entry._turn || 0;
-        const roundEndBetween = this.gameLog.some(e =>
-          e.action === 'round-end' && e.turn > (plays[idx-1].turn || 0) && e.turn < (entry.turn || Infinity)
-        );
-        if (roundEndBetween) {
-          this.board = new Board();
-          this.placements = [];
-          this._renderBoard();
-          banner.textContent = `🔄 NEW ROUND`;
-          idx++; // skip to next after a brief pause
-          setTimeout(replayNext, 1500);
-          return;
-        }
-      }
-      const parts = entry.tile.split('|');
-      const tile = new Tile(parseInt(parts[0]), parseInt(parts[1]));
-      const placement = { end: entry.end };
-      if (entry.end !== 'first') {
-        const ends = this.board.getOpenEnds();
-        const match = ends.find(e => e.end === entry.end && tile.has(e.value));
-        if (match) placement.matchValue = match.value;
-      }
-
-      this.board.placeTile(tile, placement);
-      this._addVisualPlacement(tile, placement);
-      this._renderBoard();
-
-      banner.textContent = `🔄 REPLAY — ${entry.player} ${entry.score > 0 ? '+' + entry.score : ''}  (${idx + 1}/${plays.length})`;
-
-      idx++;
-      setTimeout(replayNext, 1200);
-    };
-
-    setTimeout(replayNext, 800);
-  }
-
   /** Wires up all DOM event listeners (menu buttons, game controls, drag/drop, keyboard, resize). */
   _initUI() {
     // Menu button groups
@@ -553,7 +472,7 @@ class Game {
     document.getElementById('play-again').addEventListener('click', () => this.showScreen('menu-screen'));
     document.getElementById('rematch-btn').addEventListener('click', () => this.startGame(true));
     document.getElementById('share-log-btn').addEventListener('click', () => this._exportGameLog());
-    document.getElementById('replay-btn').addEventListener('click', () => this._startReplay());
+
     document.getElementById('menu-btn').addEventListener('click', () => {
       document.getElementById('game-dropdown').classList.toggle('hidden');
     });
