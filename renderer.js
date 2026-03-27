@@ -1,5 +1,7 @@
 /**
  * @file renderer.js — Canvas-based board renderer for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * Draws the domino board on an HTML canvas with 3D tile effects (bevels,
  * drop shadows, depth edges). Supports zoom/pan, fly-in animations for

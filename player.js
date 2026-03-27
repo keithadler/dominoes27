@@ -1,5 +1,7 @@
 /**
  * @file player.js — Player model for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * Lightweight data class representing a human or AI player.
  * Holds the player's hand, cumulative score, and identity info.

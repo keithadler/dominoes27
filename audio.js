@@ -1,5 +1,7 @@
 /**
  * @file audio.js — Sound effects and dynamic music for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * Two classes:
  *  - {@link SFX} — Short oscillator-based sound effects (tile place, score,

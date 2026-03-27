@@ -1,5 +1,7 @@
 /**
  * @file ai.js — AI opponent logic for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * HOW THE AI WORKS (plain English)
  * ================================

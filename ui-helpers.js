@@ -1,5 +1,7 @@
 /**
  * @file ui-helpers.js — UI utilities, theming, and content systems for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * A grab-bag of presentation-layer helpers:
  *  - Avatar URLs (DiceBear API)

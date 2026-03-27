@@ -1,5 +1,7 @@
 /**
  * @file game.js — Main game controller for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * This is the central orchestrator (~3 800 lines). It wires together every
  * other module and owns the full game lifecycle:

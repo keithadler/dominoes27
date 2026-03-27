@@ -1,5 +1,7 @@
 /**
  * @file locales.js — Localization data and helpers for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * Contains all translatable content for 4 languages (EN, ES, AR, ZH):
  *  - UI strings (100+ keys per language)

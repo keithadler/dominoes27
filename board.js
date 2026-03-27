@@ -1,5 +1,7 @@
 /**
  * @file board.js — Board state for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * Tracks the line of play, open ends, the spinner (first double played),
  * and scoring (multiples of 5 from the sum of open ends).

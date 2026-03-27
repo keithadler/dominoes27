@@ -1,5 +1,7 @@
 /**
  * @file stats.js — Statistics, achievements, and XP system for All Fives Dominoes.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * Persists all data to localStorage. Provides:
  *  - Win/loss records per player name

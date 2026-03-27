@@ -1,5 +1,7 @@
 /**
  * @file tile.js — Domino tile model and set utilities.
+ * @author Keith Adler
+ * @copyright 2026 Keith Adler. MIT License.
  *
  * Defines the {@link Tile} class representing a single domino (two pip
  * values 0–6), plus helpers to create a standard double-6 set and shuffle it.

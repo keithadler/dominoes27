@@ -1,6 +1,8 @@
 {
   "name": "All Fives Dominoes",
   "short_name": "Dominoes",
+  "description": "Free browser domino game with AI opponents, 4 languages, achievements & more. By Keith Adler.",
+  "author": "Keith Adler",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0a2e14",
