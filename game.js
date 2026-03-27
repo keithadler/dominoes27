@@ -914,14 +914,14 @@ function getRecord(name) {
 function getRank(name) {
   const r = getRecord(name);
   const total = r.wins + r.losses;
-  if (total === 0) return 'Newcomer';
+  if (total === 0) return _tUI('newcomer');
   const ratio = r.wins / total;
-  if (total < 3) return 'Rookie';
-  if (ratio >= 0.75) return 'Domino Master';
-  if (ratio >= 0.6) return 'Veteran';
-  if (ratio >= 0.45) return 'Regular';
-  if (ratio >= 0.3) return 'Apprentice';
-  return 'Beginner';
+  if (total < 3) return _tUI('rookie');
+  if (ratio >= 0.75) return _tUI('dominoMaster');
+  if (ratio >= 0.6) return _tUI('veteran');
+  if (ratio >= 0.45) return _tUI('regular');
+  if (ratio >= 0.3) return _tUI('apprentice');
+  return _tUI('beginner');
 }
 
 function seedAIRecord(name, difficulty) {
@@ -1272,7 +1272,7 @@ class Game {
     text += 'Final: ' + this.players.map(p => `${p.name}: ${p.score}`).join(' | ') + '\n';
     navigator.clipboard.writeText(text).then(() => {
       const btn = document.getElementById('share-log-btn');
-      if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = '📋 Copy Game Log', 2000); }
+      if (btn) { btn.textContent = this._t('copied'); setTimeout(() => btn.textContent = this._t('copyLog'), 2000); }
     }).catch(() => {});
   }
 
@@ -1403,7 +1403,7 @@ class Game {
     if (nameInput) {
       nameInput.value = getPlayerName();
       nameInput.addEventListener('change', () => {
-        const name = nameInput.value.trim() || 'Human';
+        const name = nameInput.value.trim() || _tUI('playerName');
         setPlayerName(name);
         nameInput.value = name;
         this._updateRoster();
@@ -1664,7 +1664,7 @@ class Game {
 
     const mode = this._getOption('game-mode');
     const humanSeed = getHumanAvatarSeed();
-    const humanRec = getRecord('Human');
+    const humanRec = getRecord(getPlayerName());
     const difficulties = ['easy', 'medium', 'hard'];
 
     // Generate preview players with assigned difficulties
@@ -1712,7 +1712,7 @@ class Game {
       }
     }
 
-    roster.innerHTML = '<div class="roster-title">Players</div>';
+    roster.innerHTML = `<div class="roster-title">${this._t('players')}</div>`;
     for (let pi = 0; pi < players.length; pi++) {
       const p = players[pi];
       const card = document.createElement('div');
@@ -1723,7 +1723,7 @@ class Game {
         <div class="roster-info">
           <div class="roster-name">${p.name}${teamBadge}</div>
           <div class="roster-rank">${p.rank}${p.city ? ' · ' + p.city : ''}${p.personality ? ' ' + p.personality.icon : ''}</div>
-          <div class="roster-record">${p.record.wins}W - ${p.record.losses}L${p.headToHead ? ' · vs you: ' + p.headToHead : ''}</div>
+          <div class="roster-record">${p.record.wins}W - ${p.record.losses}L${p.headToHead ? ` · ${this._t('vsYou')}: ` + p.headToHead : ''}</div>
         </div>
       `;
       if (!p.isHuman) {
@@ -1836,8 +1836,8 @@ class Game {
       this.players.push(opp2);
 
       this.teams = [
-        { name: 'Your Team', players: [0, 2], score: 0 },
-        { name: 'Opponents', players: [1, 3], score: 0 }
+        { name: this._t('yourTeam'), players: [0, 2], score: 0 },
+        { name: this._t('opponentsTeam'), players: [1, 3], score: 0 }
       ];
     } else {
       const numOpponents = parseInt(this._getOption('opponent-count'));
@@ -2154,7 +2154,7 @@ class Game {
     if (!overlay) { callback(); return; }
     overlay.classList.remove('hidden');
 
-    const whoLabel = firstPlayer.isHuman ? 'You have' : `${firstPlayer.name} has`;
+    const whoLabel = firstPlayer.isHuman ? this._t('youHave') : `${firstPlayer.name} ${this._t('has')}`;
 
     // Build SVG domino tile
     let tileHTML = '';
@@ -2182,12 +2182,12 @@ class Game {
 
     overlay.innerHTML = `
       <div style="text-align:center;animation:announceIn 0.5s ease-out forwards;">
-        <div style="font-size:6rem;font-weight:900;letter-spacing:8px;margin-bottom:20px;background:linear-gradient(180deg,#fff 20%,#f0b840 60%,#c07800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;line-height:1;">ROUND ${this._roundNum}</div>
+        <div style="font-size:6rem;font-weight:900;letter-spacing:8px;margin-bottom:20px;background:linear-gradient(180deg,#fff 20%,#f0b840 60%,#c07800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;line-height:1;">${this._t('round').toUpperCase()} ${this._roundNum}</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px;">
           <img src="${firstPlayer.avatar}" style="width:72px;height:72px;border-radius:50%;border:3px solid rgba(232,167,53,0.6);box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 20px rgba(232,167,53,0.2);">
           ${tileHTML}
         </div>
-        <div style="font-size:1.4rem;font-weight:700;color:rgba(255,255,255,0.9);">${whoLabel} the highest double</div>
+        <div style="font-size:1.4rem;font-weight:700;color:rgba(255,255,255,0.9);">${whoLabel} ${this._t('highestDouble')}</div>
       </div>
     `;
     if (this.sfx) this.sfx._play(660, 0.2, 'sine', 0.1);
@@ -2302,7 +2302,7 @@ class Game {
         if (canPlayCount <= 1) {
           const warn = document.createElement('div');
           warn.className = 'block-warning';
-          warn.textContent = '⚠️ Game may block soon!';
+          warn.textContent = this._t('mayBlock');
           document.body.appendChild(warn);
           setTimeout(() => warn.remove(), 2500);
         }
@@ -2323,7 +2323,7 @@ class Game {
         if (canScore) {
           const flash = document.createElement('div');
           flash.className = 'score-opp-flash';
-          flash.textContent = '💰 You can score!';
+          flash.textContent = this._t('canScore');
           document.body.appendChild(flash);
           setTimeout(() => flash.remove(), 1800);
         }
@@ -2363,7 +2363,7 @@ class Game {
     el.classList.remove('hidden');
 
     const isTeammate = this.teamMode && player.team === this.players[0].team;
-    const label = isTeammate ? '🤝 Teammate' : '';
+    const label = isTeammate ? `🤝 ${this._t('teammate')}` : '';
 
     el.innerHTML = `
       <div class="think-card">
@@ -2371,7 +2371,7 @@ class Game {
         <div class="think-info">
           <div class="think-name">${player.name} ${label ? '<span style="font-size:0.7rem;opacity:0.6;">' + label + '</span>' : ''}</div>
           ${player.city ? '<div style="font-size:0.7rem;opacity:0.4;">' + player.city + '</div>' : ''}
-          <div class="think-label">Thinking <span class="thinking-dots-lg"><span></span><span></span><span></span></span></div>
+          <div class="think-label">${this._t('thinking')} <span class="thinking-dots-lg"><span></span><span></span><span></span></span></div>
         </div>
       </div>
     `;
@@ -3201,7 +3201,7 @@ class Game {
       } else {
         if (this._isGameWon()) this._endGame();
         else {
-          this.showMessage(`${winnerLabel} dominoes! No bones left to count.`, () => this.startRound());
+          this.showMessage(`${winnerLabel} ${this._t('noBonesToCount')}`, () => this.startRound());
         }
       }
     };
@@ -3264,11 +3264,11 @@ class Game {
       action: 'round-end', round: this._roundNum,
       player: winnerLabel,
       avatar: '',
-      detail: `Blocked! ${winnerLabel} wins round. +${bonusCalc.bonus} for ${bonusCalc.recipient}`,
+      detail: `${this._t('blocked')}! ${winnerLabel} ${this._t('blocked_wins')}. +${bonusCalc.bonus} ${this._t('for_')} ${bonusCalc.recipient}`,
       scores: logScores
     });
 
-    this._showBoneCounting(`Blocked! ${winnerLabel} wins`, countPlayers, bonusCalc, () => {
+    this._showBoneCounting(`${this._t('blocked')}! ${winnerLabel} ${this._t('blocked_wins')}`, countPlayers, bonusCalc, () => {
       if (this._isGameWon()) this._endGame();
       else this.startRound();
     });
@@ -3281,7 +3281,7 @@ class Game {
 
     const titleEl = document.createElement('div');
     titleEl.className = 'count-title';
-    titleEl.textContent = title + ' — Counting Bones';
+    titleEl.textContent = title + ' — ' + this._t('countingBonesTitle');
     overlay.appendChild(titleEl);
 
     let totalPips = 0;
@@ -3299,8 +3299,8 @@ class Game {
       if (this.teamMode && this.teams) {
         const isTeammate = p.team === this.players[0].team;
         teamTag = isTeammate
-          ? ' <span style="color:#4aaf6c;font-size:0.75rem;font-weight:700;">🤝 TEAMMATE</span>'
-          : ' <span style="color:#e04a3a;font-size:0.75rem;font-weight:700;">⚔️ Opps</span>';
+          ? ` <span style="color:#4aaf6c;font-size:0.75rem;font-weight:700;">🤝 ${this._t('teammate')}</span>`
+          : ` <span style="color:#e04a3a;font-size:0.75rem;font-weight:700;">⚔️ ${this._t('opps')}</span>`;
       }
 
       row.innerHTML = `
@@ -3344,16 +3344,16 @@ class Game {
       const totalEl = document.createElement('div');
       totalEl.className = 'count-total';
       if (bonusCalc.bonus > 0) {
-        totalEl.innerHTML = `${totalPips} pips → <span class="ct-bonus">+${bonusCalc.bonus}</span> for ${bonusCalc.recipient}`;
+        totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+${bonusCalc.bonus}</span> ${this._t('for_')} ${bonusCalc.recipient}`;
       } else {
-        totalEl.innerHTML = `${totalPips} pips → <span class="ct-bonus">+0</span> bonus`;
+        totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+0</span> ${this._t('bonus')}`;
       }
       overlay.appendChild(totalEl);
 
       if (this.sfx && bonusCalc.bonus > 0) this.sfx.score();
 
       // Stars based on bonus amount — only for human/human's team
-      const humanTeamWon = bonusCalc.recipient === 'Your Team' ||
+      const humanTeamWon = bonusCalc.recipient === this._t('yourTeam') ||
         (this.players[0] && bonusCalc.recipient === this.players[0].name);
       if (humanTeamWon && bonusCalc.bonus > 0) {
         trackStat('roundScore', bonusCalc.bonus);
@@ -3382,7 +3382,7 @@ class Game {
         const btn = document.createElement('button');
         btn.className = 'btn-start';
         btn.style.marginTop = '16px';
-        btn.textContent = 'Continue';
+        btn.textContent = this._t('continue_btn');
         btn.addEventListener('click', () => {
           overlay.classList.add('hidden');
           callback();
@@ -3443,7 +3443,7 @@ class Game {
           `<img src="${this.players[i].avatar}" style="width:44px;height:44px;border-radius:50%;vertical-align:middle;margin-right:6px;">`
         ).join('');
         const members = team.players.map(i => this.players[i].name).join(' & ');
-        row.innerHTML = `<span>${avatars}${isWin ? '👑 ' : ''}${team.name} (${members})</span><span>${team.score} pts</span>`;
+        row.innerHTML = `<span>${avatars}${isWin ? '👑 ' : ''}${team.name} (${members})</span><span>${team.score} ${this._t('pts')}</span>`;
         container.appendChild(row);
       }
     } else {
@@ -3454,7 +3454,7 @@ class Game {
         row.className = 'final-score-row' + (p === winner ? ' winner' : '');
         const rec = getRecord(p.name);
         const rank = getRank(p.name);
-        row.innerHTML = `<span><img src="${p.avatar}" style="width:44px;height:44px;border-radius:50%;vertical-align:middle;margin-right:10px;">${p === winner ? '👑 ' : ''}${p.name} <span style="opacity:0.5;font-size:0.8rem">${rank}</span></span><span>${p.score} pts</span>`;
+        row.innerHTML = `<span><img src="${p.avatar}" style="width:44px;height:44px;border-radius:50%;vertical-align:middle;margin-right:10px;">${p === winner ? '👑 ' : ''}${p.name} <span style="opacity:0.5;font-size:0.8rem">${rank}</span></span><span>${p.score} ${this._t('pts')}</span>`;
         container.appendChild(row);
       }
     }
@@ -3511,21 +3511,21 @@ class Game {
     // Round timeline
     let timelineHTML = '';
     if (this._roundHistory && this._roundHistory.length > 0) {
-      timelineHTML = '<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Round Recap</div>';
+      timelineHTML = `<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">${this._t('roundRecap')}</div>`;
       for (const rh of this._roundHistory) {
-        const bestStr = rh.bestPlay ? `Best: ${rh.bestPlay.player} +${rh.bestPlay.score}` : '';
-        const blockedTag = rh.blocked ? '<span style="color:#e04a3a;font-size:0.7rem;font-weight:700;">BLOCKED</span> ' : '';
+        const bestStr = rh.bestPlay ? `${this._t('best')}: ${rh.bestPlay.player} +${rh.bestPlay.score}` : '';
+        const blockedTag = rh.blocked ? `<span style="color:#e04a3a;font-size:0.7rem;font-weight:700;">${this._t('blocked').toUpperCase()}</span> ` : '';
         timelineHTML += `<div class="timeline-row">
           <span class="timeline-round">R${rh.round}</span>
           <div class="timeline-scores">
-            <span class="timeline-score">${blockedTag}Won by <span style="color:#f0b840;">${rh.winner}</span></span>
-            ${rh.bonus > 0 ? `<span class="timeline-score">+${rh.bonus} bonus</span>` : ''}
+            <span class="timeline-score">${blockedTag}${this._t('wonBy')} <span style="color:#f0b840;">${rh.winner}</span></span>
+            ${rh.bonus > 0 ? `<span class="timeline-score">+${rh.bonus} ${this._t('bonus')}</span>` : ''}
             ${bestStr ? `<span class="timeline-score" style="opacity:0.6;">${bestStr}</span>` : ''}
           </div>
         </div>`;
       }
     } else if (this._roundScores && this._roundScores.length > 1) {
-      timelineHTML = '<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Round Timeline</div>';
+      timelineHTML = `<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">${this._t('roundTimeline')}</div>`;
       let prevScores = {};
       for (const rs of this._roundScores) {
         const diffs = {};
@@ -3544,13 +3544,13 @@ class Game {
 
     analysisDiv.innerHTML = `
       ${timelineHTML}
-      <div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;margin-top:12px;">Your Performance</div>
-      <div class="analysis-row"><span>Tiles Played</span><span class="analysis-value">${analysis.plays}</span></div>
-      <div class="analysis-row"><span>Tiles Drawn</span><span class="analysis-value">${analysis.draws}</span></div>
-      <div class="analysis-row"><span>Scoring Plays</span><span class="analysis-value">${analysis.scoringPlays}</span></div>
-      <div class="analysis-row"><span>Total Points Scored</span><span class="analysis-value">${analysis.totalScored}</span></div>
-      <div class="analysis-row"><span>Best Single Play</span><span class="analysis-value">+${analysis.bestPlay}</span></div>
-      <div class="analysis-row"><span>Avg Points/Play</span><span class="analysis-value">${analysis.avgScore}</span></div>
+      <div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;margin-top:12px;">${this._t('yourPerformance')}</div>
+      <div class="analysis-row"><span>${this._t('tilesPlayed')}</span><span class="analysis-value">${analysis.plays}</span></div>
+      <div class="analysis-row"><span>${this._t('tilesDrawn')}</span><span class="analysis-value">${analysis.draws}</span></div>
+      <div class="analysis-row"><span>${this._t('scoringPlays')}</span><span class="analysis-value">${analysis.scoringPlays}</span></div>
+      <div class="analysis-row"><span>${this._t('totalPointsScored')}</span><span class="analysis-value">${analysis.totalScored}</span></div>
+      <div class="analysis-row"><span>${this._t('bestSinglePlay')}</span><span class="analysis-value">+${analysis.bestPlay}</span></div>
+      <div class="analysis-row"><span>${this._t('avgPointsPlay')}</span><span class="analysis-value">${analysis.avgScore}</span></div>
     `;
     container.appendChild(analysisDiv);
 
@@ -3561,10 +3561,10 @@ class Game {
       const winnerName = this.teamMode
         ? (this.teams[0].score >= this.teams[1].score ? this.teams[0].name : this.teams[1].name)
         : this.players.reduce((a, b) => a.score > b.score ? a : b).name;
-      const msg = humanWon ? '🏆 You Win!' : `${winnerName} Wins!`;
+      const msg = humanWon ? this._t('youWin') : `${winnerName} ${this._t('wins')}!`;
       overlay.innerHTML = `
         <div style="text-align:center;animation:announceIn 0.5s ease-out forwards;">
-          <div style="font-size:4rem;font-weight:900;letter-spacing:4px;background:linear-gradient(180deg,#fff 20%,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;">GAME OVER</div>
+          <div style="font-size:4rem;font-weight:900;letter-spacing:4px;background:linear-gradient(180deg,#fff 20%,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;">${this._t('gameOver')}</div>
           <div style="font-size:1.8rem;font-weight:800;color:#f0b840;margin-bottom:4px;">${msg}</div>
         </div>
       `;
@@ -3691,7 +3691,7 @@ class Game {
     // Score bar at top
     const scoreBar = document.getElementById('score-bar-content');
     if (scoreBar) {
-      const roundLabel = this._roundNum ? `<span style="font-weight:900;font-size:1.3rem;background:linear-gradient(180deg,#ffe080,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;">Round ${this._roundNum}</span>` : '';
+      const roundLabel = this._roundNum ? `<span style="font-weight:900;font-size:1.3rem;background:linear-gradient(180deg,#ffe080,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;">${this._t('round')} ${this._roundNum}</span>` : '';
       if (this.teamMode && this.teams) {
         scoreBar.innerHTML = `
           ${roundLabel}
@@ -3704,7 +3704,7 @@ class Game {
             <span class="sb-team-name">🔴 ${this.teams[1].name}</span>
             <span class="sb-team-score">${this.teams[1].score}</span>
           </div>
-          <span class="sb-target">Playing to ${this.targetScore}</span>
+          <span class="sb-target">${this._t('playingTo')} ${this.targetScore}</span>
         `;
       } else {
         let html = roundLabel;
@@ -3715,7 +3715,7 @@ class Game {
             <span class="sb-ps-score">${p.score}</span>
           </div>`;
         }
-        html += `<span class="sb-target">Playing to ${this.targetScore}</span>`;
+        html += `<span class="sb-target">${this._t('playingTo')} ${this.targetScore}</span>`;
         scoreBar.innerHTML = html;
       }
     }
@@ -3734,7 +3734,7 @@ class Game {
       scoreEl.textContent = '';
     } else {
       breakdownEl.textContent = this.board.getEndSumBreakdown();
-      scoreEl.textContent = endScore > 0 ? `Scores ${endScore}!` : 'No score';
+      scoreEl.textContent = endScore > 0 ? `${this._t('scores')} ${endScore}!` : this._t('noScore');
       scoreEl.style.color = endScore > 0 ? '#4aaf6c' : 'rgba(255,255,255,0.4)';
     }
 
@@ -3754,7 +3754,7 @@ class Game {
         ).join('');
         lastTileEl.innerHTML = `
           <div style="text-align:center;">
-            <div style="font-size:0.55rem;opacity:0.4;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px;">Last Played</div>
+            <div style="font-size:0.55rem;opacity:0.4;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px;">${this._t('lastPlayed')}</div>
             <svg width="44" height="80" viewBox="0 0 44 80" style="filter:drop-shadow(0 0 8px rgba(232,167,53,0.5));">
               <rect x="1" y="1" width="42" height="78" rx="6" fill="url(#ltg)" stroke="#e8a735" stroke-width="2"/>
               <defs><linearGradient id="ltg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lpSkin.face}"/><stop offset="1" stop-color="${lpSkin.faceDark}"/></linearGradient></defs>
@@ -3782,7 +3782,7 @@ class Game {
       const lastPlayerIdx = this._lastPlayedBy;
       const lp = lastPlayerIdx !== undefined ? this.players[lastPlayerIdx] : null;
       if (lp) {
-        const label = lp.isHuman ? 'You played' : `${lp.name} played`;
+        const label = lp.isHuman ? this._t('youPlayed') : `${lp.name} ${this._t('played')}`;
         turnLeft.innerHTML = `
           <img class="turn-avatar" src="${lp.avatar}" alt="${lp.name}">
           <div class="turn-name">${label}</div>
@@ -3987,7 +3987,7 @@ class Game {
             input.focus();
             input.select();
             const finish = () => {
-              const newName = input.value.trim() || 'Human';
+              const newName = input.value.trim() || _tUI('playerName');
               setPlayerName(newName);
               if (this.players && this.players[0]) this.players[0].name = newName;
               this._updateUI();
@@ -4082,7 +4082,7 @@ class Game {
       if (isTurn) {
         const think = document.createElement('div');
         think.className = 'opp-thinking';
-        think.innerHTML = 'Thinking<span class="thinking-dots"><span></span><span></span><span></span></span>';
+        think.innerHTML = `${this._t('thinking')}<span class="thinking-dots"><span></span><span></span><span></span></span>`;
         el.appendChild(think);
       }
 
@@ -4164,23 +4164,23 @@ class Game {
 
     container.innerHTML = `
       <div class="stat-section">
-        <div class="stat-section-title">Overall</div>
-        <div class="stat-row"><span class="stat-label">Games Played</span><span class="stat-value">${s.gamesPlayed || 0}</span></div>
-        <div class="stat-row"><span class="stat-label">Wins / Losses</span><span class="stat-value">${rec.wins}W ${rec.losses}L</span></div>
-        <div class="stat-row"><span class="stat-label">Win Rate</span><span class="stat-value">${winRate}%</span></div>
-        <div class="stat-row"><span class="stat-label">Best Win Streak</span><span class="stat-value">${s.bestStreak || 0}</span></div>
-        <div class="stat-row"><span class="stat-label">Total Points Scored</span><span class="stat-value">${s.totalScore || 0}</span></div>
-        <div class="stat-row"><span class="stat-label">Highest Single Play</span><span class="stat-value">${s.highestPlayScore || 0}</span></div>
-        <div class="stat-row"><span class="stat-label">Highest Round Bonus</span><span class="stat-value">${s.highestRoundScore || 0}</span></div>
+        <div class="stat-section-title">${this._t('overall')}</div>
+        <div class="stat-row"><span class="stat-label">${this._t('gamesPlayed')}</span><span class="stat-value">${s.gamesPlayed || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">${this._t('winsLosses')}</span><span class="stat-value">${rec.wins}W ${rec.losses}L</span></div>
+        <div class="stat-row"><span class="stat-label">${this._t('winRate')}</span><span class="stat-value">${winRate}%</span></div>
+        <div class="stat-row"><span class="stat-label">${this._t('bestStreak')}</span><span class="stat-value">${s.bestStreak || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">${this._t('totalScored')}</span><span class="stat-value">${s.totalScore || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">${this._t('highestPlay')}</span><span class="stat-value">${s.highestPlayScore || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">${this._t('highestBonus')}</span><span class="stat-value">${s.highestRoundScore || 0}</span></div>
       </div>
       <div class="stat-section">
-        <div class="stat-section-title">Lifetime</div>
-        <div class="stat-row"><span class="stat-label">Total Tiles Played</span><span class="stat-value">${s.totalTilesPlayed || 0}</span></div>
-        <div class="stat-row"><span class="stat-label">Total Draws</span><span class="stat-value">${s.totalDraws || 0}</span></div>
-        <div class="stat-row"><span class="stat-label">Total Passes</span><span class="stat-value">${s.totalPasses || 0}</span></div>
+        <div class="stat-section-title">${this._t('lifetime')}</div>
+        <div class="stat-row"><span class="stat-label">${this._t('totalTiles')}</span><span class="stat-value">${s.totalTilesPlayed || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">${this._t('totalDraws')}</span><span class="stat-value">${s.totalDraws || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">${this._t('totalPasses')}</span><span class="stat-value">${s.totalPasses || 0}</span></div>
       </div>
       <div class="stat-section">
-        <div class="stat-section-title">Achievements (${unlocked.length}/${ACHIEVEMENTS.length})</div>
+        <div class="stat-section-title">${this._t('achievements')} (${unlocked.length}/${ACHIEVEMENTS.length})</div>
         ${ACHIEVEMENTS.map(a => {
           const isUnlocked = unlocked.includes(a.id);
           return `<div class="achievement-row ${isUnlocked ? 'unlocked' : 'locked'}">
@@ -4304,7 +4304,7 @@ class Game {
       const nameInput = document.getElementById('pref-name-input');
       if (nameInput) {
         nameInput.addEventListener('change', () => {
-          const name = nameInput.value.trim() || 'Human';
+          const name = nameInput.value.trim() || _tUI('playerName');
           setPlayerName(name);
           if (this.players && this.players[0]) this.players[0].name = name;
           this._updateUI();
@@ -4475,7 +4475,7 @@ class Game {
   // --- Post-Game Analysis ---
   _getAnalysis() {
     if (!this.gameLog) return {};
-    const pName = this.players[0] ? this.players[0].name : 'Human';
+    const pName = this.players[0] ? this.players[0].name : _tUI('playerName');
     const myPlays = this.gameLog.filter(e => e.player === pName && e.action === 'play');
     const myDraws = this.gameLog.filter(e => e.player === pName && e.action === 'draw');
     const myScores = myPlays.filter(e => e.score > 0);
@@ -4554,13 +4554,13 @@ class Game {
 
       let detail = '';
       if (entry.action === 'play') {
-        detail = `played ${makeTileHTML(entry.tile)} on ${entry.end}`;
+        detail = `${this._t('played')} ${makeTileHTML(entry.tile)} on ${entry.end}`;
         if (entry.score > 0) detail += ` <span class="log-score">+${entry.score}</span>`;
         if (entry.moveTime) detail += ` <span class="move-timer">${entry.moveTime}s</span>`;
       } else if (entry.action === 'draw') {
-        detail = '<span class="log-action">drew from boneyard</span>';
+        detail = `<span class="log-action">${this._t('draw')}</span>`;
       } else if (entry.action === 'pass') {
-        detail = '<span class="log-action">passed</span>';
+        detail = `<span class="log-action">${this._t('pass')}</span>`;
       }
 
       // Running scores
@@ -4747,7 +4747,7 @@ function getSeasonTheme() {
 
 // --- Custom Player Name ---
 function getPlayerName() {
-  return localStorage.getItem('domino_player_name') || 'Human';
+  return localStorage.getItem('domino_player_name') || _tUI('playerName');
 }
 // --- Tutorial System ---
 function tutTileSVG(a, b, w, h, highlight) {
@@ -4767,58 +4767,58 @@ function tutTileSVG(a, b, w, h, highlight) {
 
 const TUTORIAL_STEPS = [
   {
-    title: '👋 Welcome!',
-    body: 'This is <strong>All Fives</strong> — the domino game where math meets strategy. Make the open ends add up to <strong>multiples of 5</strong> to score. Simple to learn, tricky to master.',
+    get title() { return _tUI('tutWelcomeTitle'); },
+    get body() { return _tUI('tutWelcomeBody'); },
     visual: () => `<div class="tut-visual">${tutTileSVG(5,5,60,108,true)} ${tutTileSVG(6,4,60,108)} ${tutTileSVG(3,2,60,108)} ${tutTileSVG(1,0,60,108)}</div>`
   },
   {
-    title: '🦴 28 Bones',
-    body: 'Every combo from <strong>0|0</strong> to <strong>6|6</strong>. You get 5 tiles (or 7 in a 2-player game). The rest sit in the <strong>boneyard</strong> face-down.',
-    visual: () => `<div class="tut-visual">${tutTileSVG(0,0,44,80)} ${tutTileSVG(1,2,44,80)} ${tutTileSVG(3,5,44,80)} ${tutTileSVG(6,6,44,80)} <span style="opacity:0.4;font-size:0.9rem;">...28 total</span></div>`
+    get title() { return _tUI('tut28Title'); },
+    get body() { return _tUI('tut28Body'); },
+    visual: () => `<div class="tut-visual">${tutTileSVG(0,0,44,80)} ${tutTileSVG(1,2,44,80)} ${tutTileSVG(3,5,44,80)} ${tutTileSVG(6,6,44,80)} <span style="opacity:0.4;font-size:0.9rem;">${_tUI('tut28Visual')}</span></div>`
   },
   {
-    title: '🏁 First Move',
-    body: 'Whoever holds the <strong>highest double</strong> plays it first. This tile becomes the <strong>spinner</strong> — the center of everything.',
-    visual: () => `<div class="tut-visual">${tutTileSVG(6,6,70,126,true)}</div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">6|6 goes first — it's the boss tile</div>`
+    get title() { return _tUI('tutFirstTitle'); },
+    get body() { return _tUI('tutFirstBody'); },
+    visual: () => `<div class="tut-visual">${tutTileSVG(6,6,70,126,true)}</div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">${_tUI('tutFirstVisual')}</div>`
   },
   {
-    title: '🎮 Your Turn',
-    body: 'Match a tile to any <strong>open end</strong> on the board. The matching numbers connect. No match? Tap <strong>Draw</strong> to grab from the boneyard.',
+    get title() { return _tUI('tutTurnTitle'); },
+    get body() { return _tUI('tutTurnBody'); },
     visual: () => `<div class="tut-visual">
       ${tutTileSVG(6,3,50,90)} <span class="tut-plus">→</span> ${tutTileSVG(6,6,50,90,true)} <span class="tut-plus">←</span> ${tutTileSVG(6,1,50,90)}
-    </div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">Both tiles match the 6</div>`
+    </div><div style="text-align:center;opacity:0.5;font-size:0.85rem;">${_tUI('tutTurnVisual')}</div>`
   },
   {
-    title: '💰 Ka-ching!',
-    body: 'After you play, the game adds up <strong>all open ends</strong>. Divisible by 5? <strong>You score that many points.</strong> This is the whole game right here.',
+    get title() { return _tUI('tutScoreTitle'); },
+    get body() { return _tUI('tutScoreBody'); },
     visual: () => `<div class="tut-highlight">
-      <div style="text-align:center;opacity:0.6;font-size:0.85rem;">Open ends: 3 + 1 + 6 = 10</div>
-      <div class="tut-score-example">+10 points! 🔥</div>
+      <div style="text-align:center;opacity:0.6;font-size:0.85rem;">${_tUI('tutScoreVisual')}</div>
+      <div class="tut-score-example">${_tUI('tutScoreExample')}</div>
     </div>`
   },
   {
-    title: '🎲 Doubles = Double Trouble',
-    body: 'A double at an open end counts <strong>BOTH halves</strong>. So 4|4 = 8 toward the sum, not 4. Doubles are your best friends for scoring.',
+    get title() { return _tUI('tutDoubleTitle'); },
+    get body() { return _tUI('tutDoubleBody'); },
     visual: () => `<div class="tut-visual">${tutTileSVG(4,4,50,90,true)}</div>
-    <div class="tut-highlight"><div style="text-align:center;">This counts as <strong>4 + 4 = 8</strong> 🤯</div></div>`
+    <div class="tut-highlight"><div style="text-align:center;">${_tUI('tutDoubleVisual')}</div></div>`
   },
   {
-    title: '⭐ The Spinner Opens Up',
-    body: 'Once tiles are on both left and right of the spinner, the <strong>north and south</strong> arms unlock. Now you have <strong>4 open ends</strong> — way more scoring combos.',
+    get title() { return _tUI('tutSpinnerTitle'); },
+    get body() { return _tUI('tutSpinnerBody'); },
     visual: () => `<div class="tut-visual" style="flex-direction:column;gap:4px;">
       <div>${tutTileSVG(5,5,40,72)}</div>
       <div style="display:flex;align-items:center;gap:4px;">${tutTileSVG(3,5,40,72)} ${tutTileSVG(5,5,40,72,true)} ${tutTileSVG(5,2,40,72)}</div>
       <div>${tutTileSVG(5,1,40,72)}</div>
-    </div><div style="text-align:center;opacity:0.5;font-size:0.8rem;">4 directions = 4x the fun</div>`
+    </div><div style="text-align:center;opacity:0.5;font-size:0.8rem;">${_tUI('tutSpinnerVisual')}</div>`
   },
   {
-    title: '🏆 Round Over!',
-    body: 'Play your last tile and yell <strong>"Domino!"</strong> (the game does it for you). You get <strong>bonus points</strong> from everyone else\'s leftover pips. If nobody can move, lowest pips wins.',
-    visual: () => `<div class="tut-highlight"><div style="text-align:center;">Opponent has ${tutTileSVG(3,6,36,64)} ${tutTileSVG(2,2,36,64)} left<br><span style="opacity:0.6;font-size:0.85rem;">= 13 pips → rounded to <strong>+15 bonus!</strong></span></div></div>`
+    get title() { return _tUI('tutRoundTitle'); },
+    get body() { return _tUI('tutRoundBody'); },
+    visual: () => `<div class="tut-highlight"><div style="text-align:center;">Opponent has ${tutTileSVG(3,6,36,64)} ${tutTileSVG(2,2,36,64)} ${_tUI('tutRoundVisual')}<br><span style="opacity:0.6;font-size:0.85rem;">${_tUI('tutRoundBonus')}</span></div></div>`
   },
   {
-    title: '🚀 You\'re Ready!',
-    body: 'First to the <strong>target score</strong> wins. Use <strong>💡 Hint</strong> if you\'re stuck (costs 5 pts). Press <strong>?</strong> anytime for keyboard shortcuts. Now go dominate!',
+    get title() { return _tUI('tutReadyTitle'); },
+    get body() { return _tUI('tutReadyBody'); },
     visual: () => `<div style="text-align:center;font-size:3.5rem;margin:16px 0;">🏆🦴🔥</div>`
   }
 ];
@@ -4835,7 +4835,7 @@ function showTutorial(onClose) {
     const s = TUTORIAL_STEPS[step];
     content.innerHTML = `
       <div class="tut-title">${s.title}</div>
-      <div class="tut-subtitle">Step ${step + 1} of ${TUTORIAL_STEPS.length}</div>
+      <div class="tut-subtitle">${_tUI('step')} ${step + 1} ${_tUI('stepOf')} ${TUTORIAL_STEPS.length}</div>
       ${s.visual ? s.visual() : ''}
       <div class="tut-body">${s.body}</div>
     `;
@@ -4843,7 +4843,7 @@ function showTutorial(onClose) {
       `<div class="tut-dot ${i === step ? 'active' : ''}"></div>`
     ).join('');
     prevBtn.disabled = step === 0;
-    nextBtn.textContent = step === TUTORIAL_STEPS.length - 1 ? 'Start Playing!' : 'Next →';
+    nextBtn.textContent = step === TUTORIAL_STEPS.length - 1 ? _tUI('startPlaying') : _tUI('next');
   }
 
   prevBtn.onclick = () => { if (step > 0) { step--; render(); } };
@@ -4863,15 +4863,15 @@ function showTutorial(onClose) {
 
 // --- AI Personalities ---
 const AI_PERSONALITIES = [
-  { id: 'aggressive', name: 'Aggressive', desc: 'Plays heavy tiles first, targets scoring', icon: '🔥',
+  { id: 'aggressive', get name() { return _tUI('aggressive'); }, desc: 'Plays heavy tiles first, targets scoring', icon: '🔥',
     tweaks: { preferHeavy: 3, preferScore: 2, preferBlock: 0 } },
-  { id: 'defensive', name: 'Defensive', desc: 'Keeps options open, avoids risk', icon: '🛡️',
+  { id: 'defensive', get name() { return _tUI('defensive'); }, desc: 'Keeps options open, avoids risk', icon: '🛡️',
     tweaks: { preferHeavy: -1, preferScore: 1, preferBlock: 2 } },
-  { id: 'chaotic', name: 'Chaotic', desc: 'Unpredictable, random choices', icon: '🎲',
+  { id: 'chaotic', get name() { return _tUI('chaotic'); }, desc: 'Unpredictable, random choices', icon: '🎲',
     tweaks: { preferHeavy: 0, preferScore: 0, preferBlock: 0, chaos: 5 } },
-  { id: 'calculated', name: 'Calculated', desc: 'Maximizes future options', icon: '🧠',
+  { id: 'calculated', get name() { return _tUI('calculated'); }, desc: 'Maximizes future options', icon: '🧠',
     tweaks: { preferHeavy: 0, preferScore: 1.5, preferBlock: 1, futureWeight: 3 } },
-  { id: 'bully', name: 'Bully', desc: 'Targets the leader, plays to block', icon: '😈',
+  { id: 'bully', get name() { return _tUI('bully'); }, desc: 'Targets the leader, plays to block', icon: '😈',
     tweaks: { preferHeavy: 1, preferScore: 1, preferBlock: 4 } },
 ];
 
@@ -5026,7 +5026,7 @@ class MusicEngine {
 }
 
 function setPlayerName(name) {
-  localStorage.setItem('domino_player_name', name || 'Human');
+  localStorage.setItem('domino_player_name', name || _tUI('playerName'));
 }
 
 // --- Game Stats ---
@@ -5051,23 +5051,23 @@ function trackStat(key, value) {
 
 // --- Achievements ---
 const ACHIEVEMENTS = [
-  { id: 'first_win', icon: '🏆', name: 'First Victory', desc: 'Win your first game' },
-  { id: 'five_star', icon: '⭐', name: '5-Star Round', desc: 'Get 25+ bonus in a round' },
-  { id: 'shutout', icon: '🚫', name: 'Shutout', desc: 'Win with opponent scoring 0' },
-  { id: 'streak_3', icon: '🔥', name: 'On Fire', desc: 'Win 3 games in a row' },
-  { id: 'streak_5', icon: '💎', name: 'Unstoppable', desc: 'Win 5 games in a row' },
-  { id: 'score_20', icon: '💰', name: 'Big Score', desc: 'Score 20+ in a single play' },
-  { id: 'score_25', icon: '🎯', name: 'Perfect Play', desc: 'Score 25+ in a single play' },
-  { id: 'games_10', icon: '🎮', name: 'Regular', desc: 'Play 10 games' },
-  { id: 'games_50', icon: '👑', name: 'Domino Master', desc: 'Play 50 games' },
-  { id: 'domino_win', icon: '🦴', name: 'Clean Sweep', desc: 'Go out with 0 tiles left' },
-  { id: 'no_hint_win', icon: '🧠', name: 'No Help Needed', desc: 'Win without using a hint' },
-  { id: 'score_3_row', icon: '🔥', name: 'Hat Trick', desc: 'Score 3 times in a row' },
-  { id: 'comeback_win', icon: '🔄', name: 'Comeback Kid', desc: 'Win after trailing by 50+' },
-  { id: 'blocked_win', icon: '🧱', name: 'Roadblock', desc: 'Win a blocked round' },
-  { id: 'speed_demon', icon: '⚡', name: 'Speed Demon', desc: 'Win a game on Fast speed' },
-  { id: 'tiles_500', icon: '🎲', name: 'Tile Veteran', desc: 'Play 500 tiles total' },
-  { id: 'streak_10', icon: '🌟', name: 'Legendary', desc: 'Win 10 games in a row' },
+  { id: 'first_win', icon: '🏆', get name() { return _tUI('achFirstVictory'); }, get desc() { return _tUI('achFirstVictoryDesc'); } },
+  { id: 'five_star', icon: '⭐', get name() { return _tUI('achFiveStar'); }, get desc() { return _tUI('achFiveStarDesc'); } },
+  { id: 'shutout', icon: '🚫', get name() { return _tUI('achShutout'); }, get desc() { return _tUI('achShutoutDesc'); } },
+  { id: 'streak_3', icon: '🔥', get name() { return _tUI('achOnFire'); }, get desc() { return _tUI('achOnFireDesc'); } },
+  { id: 'streak_5', icon: '💎', get name() { return _tUI('achUnstoppable'); }, get desc() { return _tUI('achUnstoppableDesc'); } },
+  { id: 'score_20', icon: '💰', get name() { return _tUI('achBigScore'); }, get desc() { return _tUI('achBigScoreDesc'); } },
+  { id: 'score_25', icon: '🎯', get name() { return _tUI('achPerfectPlay'); }, get desc() { return _tUI('achPerfectPlayDesc'); } },
+  { id: 'games_10', icon: '🎮', get name() { return _tUI('achRegular'); }, get desc() { return _tUI('achRegularDesc'); } },
+  { id: 'games_50', icon: '👑', get name() { return _tUI('achDominoMaster'); }, get desc() { return _tUI('achDominoMasterDesc'); } },
+  { id: 'domino_win', icon: '🦴', get name() { return _tUI('achCleanSweep'); }, get desc() { return _tUI('achCleanSweepDesc'); } },
+  { id: 'no_hint_win', icon: '🧠', get name() { return _tUI('achNoHelp'); }, get desc() { return _tUI('achNoHelpDesc'); } },
+  { id: 'score_3_row', icon: '🔥', get name() { return _tUI('achHatTrick'); }, get desc() { return _tUI('achHatTrickDesc'); } },
+  { id: 'comeback_win', icon: '🔄', get name() { return _tUI('achComebackKid'); }, get desc() { return _tUI('achComebackKidDesc'); } },
+  { id: 'blocked_win', icon: '🧱', get name() { return _tUI('achRoadblock'); }, get desc() { return _tUI('achRoadblockDesc'); } },
+  { id: 'speed_demon', icon: '⚡', get name() { return _tUI('achSpeedDemon'); }, get desc() { return _tUI('achSpeedDemonDesc'); } },
+  { id: 'tiles_500', icon: '🎲', get name() { return _tUI('achTileVeteran'); }, get desc() { return _tUI('achTileVeteranDesc'); } },
+  { id: 'streak_10', icon: '🌟', get name() { return _tUI('achLegendary'); }, get desc() { return _tUI('achLegendaryDesc'); } },
 ];
 function getUnlockedAchievements() {
   try { return JSON.parse(localStorage.getItem('domino_achievements') || '[]'); } catch(e) { return []; }
@@ -5102,7 +5102,7 @@ function showAchievementPopup(id) {
   if (!ach) return;
   const el = document.createElement('div');
   el.className = 'achievement-popup';
-  el.innerHTML = `<span class="ach-icon">${ach.icon}</span><div><div class="ach-label">Achievement Unlocked</div><div class="ach-text">${ach.name}</div></div>`;
+  el.innerHTML = `<span class="ach-icon">${ach.icon}</span><div><div class="ach-label">${_tUI('achievementUnlocked')}</div><div class="ach-text">${ach.name}</div></div>`;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 4000);
 }
