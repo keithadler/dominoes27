@@ -3354,6 +3354,28 @@ class Game {
     // Turn toast notification — suppress during countdown/announcement
     if (this._suppressToast) return this._renderHand();
 
+    // Show turn indicator toast
+    const turnIndicator = document.getElementById('turn-indicator');
+    if (turnIndicator && this.players && this.players.length > 0) {
+      const cp = this.players[this.currentPlayer];
+      if (cp) {
+        const isHumanTurn = cp.isHuman;
+        const label = isHumanTurn ? this._t('yourTurn') : `<span>${escHTML(cp.name)}</span>'s ${this._t('turn')}`;
+        turnIndicator.innerHTML = `
+          <img class="toast-avatar" src="${cp.avatar}" alt="${escHTML(cp.name)}">
+          <div class="toast-text">${label}</div>
+        `;
+        turnIndicator.classList.remove('fading');
+        turnIndicator.classList.add('visible');
+        // Auto-hide after a delay
+        clearTimeout(this._toastTimeout);
+        this._toastTimeout = setTimeout(() => {
+          turnIndicator.classList.remove('visible');
+          turnIndicator.classList.add('fading');
+        }, 2000);
+      }
+    }
+
     // Hand (show current human player's hand)
     this._renderHand();
 
