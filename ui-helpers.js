@@ -422,7 +422,8 @@ function spawnParticles(x, y, count, type) {
     const dist = 40 + Math.random() * 80;
     const dx = Math.cos(angle) * dist;
     const dy = Math.sin(angle) * dist;
-    p.style.transition = `all ${0.6 + Math.random() * 0.6}s ease-out`;
+    const duration = 0.6 + Math.random() * 0.6;
+    p.style.transition = `all ${duration}s ease-out`;
     if (type === 'particle-confetti') {
       p.style.background = ['#f0b840','#e04a3a','#4aaf6c','#5a8af0','#a855f7','#ff6b9d'][Math.floor(Math.random()*6)];
       p.style.width = (6 + Math.random() * 8) + 'px';
@@ -435,7 +436,8 @@ function spawnParticles(x, y, count, type) {
       p.style.top = (y + dy) + 'px';
       p.style.opacity = '0';
     });
-    setTimeout(() => p.remove(), 1500);
+    // Guaranteed cleanup even if CSS transition doesn't fire (e.g. prefers-reduced-motion)
+    setTimeout(() => { if (p.parentNode) p.remove(); }, (duration + 0.5) * 1000);
   }
 }
 /**

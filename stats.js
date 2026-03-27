@@ -288,14 +288,26 @@ function exportGameData() {
 
 /**
  * Import game data from a JSON string, overwriting existing data.
+ * Only allows known domino_ keys to prevent injection.
  * @param {string} json - JSON blob from exportGameData().
  * @returns {boolean} True if import succeeded.
  */
 function importGameData(json) {
+  const ALLOWED_KEYS = new Set([
+    'domino_stats', 'domino_game_stats', 'domino_achievements', 'domino_xp',
+    'domino_player_name', 'domino_human_avatar', 'domino_lang', 'domino_lang_chosen',
+    'domino_theme', 'domino_speed', 'domino_music', 'domino_muted',
+    'domino_table_theme', 'domino_tile_skin', 'domino_tutorial_done',
+    'domino_trash_talk', 'domino_colorblind', 'domino_last_played',
+    'domino_saved_game'
+  ]);
   try {
     const data = JSON.parse(json);
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) return false;
     for (const [key, value] of Object.entries(data)) {
-      if (key.startsWith('domino_')) localStorage.setItem(key, value);
+      if (ALLOWED_KEYS.has(key) && typeof value === 'string') {
+        localStorage.setItem(key, value);
+      }
     }
     return true;
   } catch(e) { return false; }

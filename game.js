@@ -24,6 +24,18 @@
  * @dependency locales.js    (i18n: _t, _tUI, getLocale, detectBrowserLang)
  */
 
+/**
+ * Escape HTML special characters to prevent XSS when interpolating
+ * user-controlled strings into innerHTML.
+ * @param {string} str
+ * @returns {string}
+ */
+function escHTML(str) {
+  const el = document.createElement('span');
+  el.textContent = str;
+  return el.innerHTML;
+}
+
 class Game {
   constructor() {
     this.players = [];
@@ -576,7 +588,11 @@ class Game {
     if (nameInput) {
       nameInput.value = getPlayerName();
       nameInput.addEventListener('change', () => {
-        const name = nameInput.value.trim() || _tUI('playerName');
+        const raw = nameInput.value.trim() || _tUI('playerName');
+        // Strip any HTML tags from the name
+        const temp = document.createElement('div');
+        temp.textContent = raw;
+        const name = temp.textContent.slice(0, 12);
         setPlayerName(name);
         nameInput.value = name;
         this._updateRoster();
@@ -946,11 +962,11 @@ class Game {
       card.className = 'roster-card' + (p.isHuman ? ' human' : '');
       const teamBadge = p.team === 'teammate' ? ' 🤝' : p.team === 'opponent' ? ' ⚔️' : '';
       card.innerHTML = `
-        <img class="roster-avatar" src="${p.avatar}" alt="${p.name}">
+        <img class="roster-avatar" src="${p.avatar}" alt="${escHTML(p.name)}">
         <div class="roster-info">
-          <div class="roster-name">${p.name}${teamBadge}</div>
-          <div class="roster-rank">${p.rank}${p.city ? ' · ' + p.city : ''}${p.personality ? ' ' + p.personality.icon : ''}</div>
-          <div class="roster-record">${p.record.wins}W - ${p.record.losses}L${p.headToHead ? ` · ${this._t('vsYou')}: ` + p.headToHead : ''}</div>
+          <div class="roster-name">${escHTML(p.name)}${teamBadge}</div>
+          <div class="roster-rank">${escHTML(p.rank)}${p.city ? ' · ' + escHTML(p.city) : ''}${p.personality ? ' ' + p.personality.icon : ''}</div>
+          <div class="roster-record">${p.record.wins}W - ${p.record.losses}L${p.headToHead ? ` · ${this._t('vsYou')}: ` + escHTML(p.headToHead) : ''}</div>
         </div>
       `;
       if (!p.isHuman) {
@@ -1026,10 +1042,11 @@ class Game {
     const diffs = this._previewDiffs || names.map(() => difficulties[Math.floor(Math.random() * 3)]);
 
     // Override diffs based on AI difficulty setting
-    const resolvedDiffs = diffs.map(() => {
+    const resolvedDiffs = diffs.map((_, i) => {
       if (diffSetting === 'easy') return 'easy';
       if (diffSetting === 'hard') return 'hard';
-      return difficulties[Math.floor(Math.random() * 3)]; // mixed
+      // mixed: distribute evenly across difficulties
+      return difficulties[i % difficulties.length];
     });
 
     this.players = [];
@@ -1108,7 +1125,7 @@ class Game {
       { h: 280, name: 'purple' },  // purple
       { h: 30, name: 'orange' },   // orange
     ];
-    const shuffledColors = oppColors.sort(() => Math.random() - 0.5);
+    const shuffledColors = shuffle([...oppColors]);
     let colorIdx = 0;
     for (const p of this.players) {
       if (p.isHuman) {
@@ -1149,6 +1166,11 @@ class Game {
       this._playLock = false;
       if (this._spinnerRAF) { cancelAnimationFrame(this._spinnerRAF); this._spinnerRAF = null; }
       this.gameLog = this.gameLog || [];
+      // Cap game log to prevent unbounded memory growth in long games
+      const MAX_LOG_ENTRIES = 500;
+      if (this.gameLog.length > MAX_LOG_ENTRIES) {
+        this.gameLog = this.gameLog.slice(-MAX_LOG_ENTRIES);
+      }
       this._logTurn = (this.gameLog.length > 0 ? this.gameLog[this.gameLog.length - 1].turn + 1 : 1);
 
       const tiles = shuffle(createSet());
@@ -1210,7 +1232,7 @@ class Game {
         const av = document.createElement('div');
         av.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;transform:scale(0.5) translateY(30px);transition:all 0.6s cubic-bezier(0.34,1.56,0.64,1);';
         av.innerHTML = `<img src="${p.avatar}" style="width:120px;height:120px;border-radius:50%;border:4px solid rgba(232,167,53,0.6);box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 30px rgba(232,167,53,0.2);">
-          <span style="font-weight:900;font-size:1.2rem;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.7);letter-spacing:1px;">${p.name}</span>`;
+          <span style="font-weight:900;font-size:1.2rem;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.7);letter-spacing:1px;">${escHTML(p.name)}</span>`;
         introEl.appendChild(av);
       }
       document.body.appendChild(introEl);
@@ -1386,7 +1408,7 @@ class Game {
     if (!overlay) { callback(); return; }
     overlay.classList.remove('hidden');
 
-    const whoLabel = firstPlayer.isHuman ? this._t('youHave') : `${firstPlayer.name} ${this._t('has')}`;
+    const whoLabel = firstPlayer.isHuman ? this._t('youHave') : `${escHTML(firstPlayer.name)} ${this._t('has')}`;
 
     // Build SVG domino tile with glow animation
     let tileHTML = '';
@@ -1420,7 +1442,7 @@ class Game {
         <div class="ra-number">${this._roundNum}</div>
         <div class="ra-divider"></div>
         <div class="ra-player">
-          <img class="ra-avatar" src="${firstPlayer.avatar}" alt="${firstPlayer.name}">
+          <img class="ra-avatar" src="${firstPlayer.avatar}" alt="${escHTML(firstPlayer.name)}">
           ${tileHTML}
         </div>
         <div class="ra-who">${whoLabel} ${this._t('highestDouble')}</div>
@@ -1562,7 +1584,7 @@ class Game {
         for (const t of player.hand) {
           const placements = this.board.getValidPlacements(t);
           for (const p of placements) {
-            const sim = new AI('easy')._cloneBoard(this.board);
+            const sim = Board.clone(this.board);
             sim.placeTile(t, p);
             if (sim.getScore() > 0) { canScore = true; break; }
           }
@@ -1615,10 +1637,10 @@ class Game {
 
     el.innerHTML = `
       <div class="think-card">
-        <img class="think-avatar" src="${player.avatar}" alt="${player.name}">
+        <img class="think-avatar" src="${player.avatar}" alt="${escHTML(player.name)}">
         <div class="think-info">
-          <div class="think-name">${player.name} ${label ? '<span style="font-size:0.7rem;opacity:0.6;">' + label + '</span>' : ''}</div>
-          ${player.city ? '<div style="font-size:0.7rem;opacity:0.4;">' + player.city + '</div>' : ''}
+          <div class="think-name">${escHTML(player.name)} ${label ? '<span style="font-size:0.7rem;opacity:0.6;">' + label + '</span>' : ''}</div>
+          ${player.city ? '<div style="font-size:0.7rem;opacity:0.4;">' + escHTML(player.city) + '</div>' : ''}
           <div class="think-label">${this._t('thinking')} <span class="thinking-dots-lg"><span></span><span></span><span></span></span></div>
         </div>
       </div>
@@ -1769,6 +1791,7 @@ class Game {
     // Deduct 5 points
     if (this.teamMode && this.teams) {
       this.teams[player.team].score -= 5;
+      if (this.teams[player.team].score < 0) this.teams[player.team].score = 0;
     }
     player.score -= 5;
     if (player.score < 0) player.score = 0;
@@ -2097,7 +2120,7 @@ class Game {
       for (const t of player.hand) {
         const pls = this.board.getValidPlacements(t);
         for (const pl of pls) {
-          const sim = new AI('easy')._cloneBoard(this.board);
+          const sim = Board.clone(this.board);
           sim.placeTile(t, pl);
           _bestPossibleScore = Math.max(_bestPossibleScore, sim.getScore());
         }
@@ -2619,9 +2642,9 @@ class Game {
       }
 
       row.innerHTML = `
-        <img class="count-avatar" src="${p.avatar}" alt="${p.name}">
+        <img class="count-avatar" src="${p.avatar}" alt="${escHTML(p.name)}">
         <div class="count-info">
-          <div class="count-name">${p.name}${teamTag}</div>
+          <div class="count-name">${escHTML(p.name)}${teamTag}</div>
           <div class="count-tiles" id="count-tiles-${p.index}"></div>
         </div>
         <div class="count-pips" id="count-pips-${p.index}">0</div>
@@ -2659,7 +2682,7 @@ class Game {
       const totalEl = document.createElement('div');
       totalEl.className = 'count-total';
       if (bonusCalc.bonus > 0) {
-        totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+${bonusCalc.bonus}</span> ${this._t('for_')} ${bonusCalc.recipient}`;
+        totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+${bonusCalc.bonus}</span> ${this._t('for_')} ${escHTML(bonusCalc.recipient)}`;
       } else {
         totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+0</span> ${this._t('bonus')}`;
       }
@@ -2758,8 +2781,8 @@ class Game {
         const avatars = team.players.map(i =>
           `<img src="${this.players[i].avatar}" style="width:44px;height:44px;border-radius:50%;vertical-align:middle;margin-right:6px;">`
         ).join('');
-        const members = team.players.map(i => this.players[i].name).join(' & ');
-        row.innerHTML = `<span>${avatars}${isWin ? '👑 ' : ''}${team.name} (${members})</span><span>${team.score} ${this._t('pts')}</span>`;
+        const members = team.players.map(i => escHTML(this.players[i].name)).join(' &amp; ');
+        row.innerHTML = `<span>${avatars}${isWin ? '👑 ' : ''}${escHTML(team.name)} (${members})</span><span>${team.score} ${this._t('pts')}</span>`;
         container.appendChild(row);
       }
     } else {
@@ -2770,7 +2793,7 @@ class Game {
         row.className = 'final-score-row' + (p === winner ? ' winner' : '');
         const rec = getRecord(p.name);
         const rank = getRank(p.name);
-        row.innerHTML = `<span><img src="${p.avatar}" style="width:44px;height:44px;border-radius:50%;vertical-align:middle;margin-right:10px;">${p === winner ? '👑 ' : ''}${p.name} <span style="opacity:0.5;font-size:0.8rem">${rank}</span></span><span>${p.score} ${this._t('pts')}</span>`;
+        row.innerHTML = `<span><img src="${p.avatar}" style="width:44px;height:44px;border-radius:50%;vertical-align:middle;margin-right:10px;">${p === winner ? '👑 ' : ''}${escHTML(p.name)} <span style="opacity:0.5;font-size:0.8rem">${escHTML(rank)}</span></span><span>${p.score} ${this._t('pts')}</span>`;
         container.appendChild(row);
       }
     }
@@ -2829,12 +2852,12 @@ class Game {
     if (this._roundHistory && this._roundHistory.length > 0) {
       timelineHTML = `<div style="font-size:0.7rem;opacity:0.35;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">${this._t('roundRecap')}</div>`;
       for (const rh of this._roundHistory) {
-        const bestStr = rh.bestPlay ? `${this._t('best')}: ${rh.bestPlay.player} +${rh.bestPlay.score}` : '';
+        const bestStr = rh.bestPlay ? `${this._t('best')}: ${escHTML(rh.bestPlay.player)} +${rh.bestPlay.score}` : '';
         const blockedTag = rh.blocked ? `<span style="color:#e04a3a;font-size:0.7rem;font-weight:700;">${this._t('blocked').toUpperCase()}</span> ` : '';
         timelineHTML += `<div class="timeline-row">
           <span class="timeline-round">R${rh.round}</span>
           <div class="timeline-scores">
-            <span class="timeline-score">${blockedTag}${this._t('wonBy')} <span style="color:#f0b840;">${rh.winner}</span></span>
+            <span class="timeline-score">${blockedTag}${this._t('wonBy')} <span style="color:#f0b840;">${escHTML(rh.winner)}</span></span>
             ${rh.bonus > 0 ? `<span class="timeline-score">+${rh.bonus} ${this._t('bonus')}</span>` : ''}
             ${bestStr ? `<span class="timeline-score" style="opacity:0.6;">${bestStr}</span>` : ''}
           </div>
@@ -2894,7 +2917,7 @@ class Game {
       const winnerName = this.teamMode
         ? (this.teams[0].score >= this.teams[1].score ? this.teams[0].name : this.teams[1].name)
         : this.players.reduce((a, b) => a.score > b.score ? a : b).name;
-      const msg = humanWon ? this._t('youWin') : `${winnerName} ${this._t('wins')}!`;
+      const msg = humanWon ? this._t('youWin') : `${escHTML(winnerName)} ${this._t('wins')}!`;
       const bgGrad = humanWon
         ? 'linear-gradient(180deg,#fff 20%,#f0b840)'
         : 'linear-gradient(180deg,#fff 20%,#e04a3a)';
@@ -2929,7 +2952,7 @@ class Game {
     else { size = '4rem'; duration = 2500; }
 
     popup.style.fontSize = size;
-    popup.innerHTML = `<span class="score-label">${player.name}</span>+${score}`;
+    popup.innerHTML = `<span class="score-label">${escHTML(player.name)}</span>+${score}`;
     popup.style.left = '50%';
     popup.style.top = '45%';
     document.body.appendChild(popup);
@@ -3068,7 +3091,7 @@ class Game {
         for (const p of this.players) {
           const isCurrent = p.index === this.currentPlayer;
           html += `<div class="sb-player-score" style="${isCurrent ? 'border-color:rgba(232,167,53,0.4);background:rgba(232,167,53,0.1);' : ''}">
-            <span class="sb-ps-name">${p.name}</span>
+            <span class="sb-ps-name">${escHTML(p.name)}</span>
             <span class="sb-ps-score">${p.score}</span>
           </div>`;
         }
@@ -3176,9 +3199,9 @@ class Game {
       const lastPlayerIdx = this._lastPlayedBy;
       const lp = lastPlayerIdx !== undefined ? this.players[lastPlayerIdx] : null;
       if (lp) {
-        const label = lp.isHuman ? this._t('youPlayed') : `${lp.name} ${this._t('played')}`;
+        const label = lp.isHuman ? this._t('youPlayed') : `${escHTML(lp.name)} ${this._t('played')}`;
         turnLeft.innerHTML = `
-          <img class="turn-avatar" src="${lp.avatar}" alt="${lp.name}">
+          <img class="turn-avatar" src="${lp.avatar}" alt="${escHTML(lp.name)}">
           <div class="turn-name">${label}</div>
         `;
       }
@@ -3437,9 +3460,9 @@ class Game {
       label.className = 'opp-label' + (isTurn ? ' active-turn' : '');
       const score = this.teamMode && this.teams ? this.teams[player.team].score : player.score;
       label.innerHTML = `
-        <img class="opp-avatar" src="${player.avatar}" alt="${player.name}" style="border-color:${avatarBorder};">
+        <img class="opp-avatar" src="${player.avatar}" alt="${escHTML(player.name)}" style="border-color:${avatarBorder};">
         <div class="opp-info">
-          <span class="opp-name${isTurn ? ' active-turn' : ''}" style="${!isTurn ? 'color:hsla(' + c.h + ',' + c.s + '%,' + (c.l + 30) + '%,0.9);' : ''}">${teamIcon}${player.name}</span>
+          <span class="opp-name${isTurn ? ' active-turn' : ''}" style="${!isTurn ? 'color:hsla(' + c.h + ',' + c.s + '%,' + (c.l + 30) + '%,0.9);' : ''}">${teamIcon}${escHTML(player.name)}</span>
           ${teamLabel}
           <span class="opp-record">${rec.wins}W ${rec.losses}L</span>
           ${player.personality ? '<span class="personality-badge">' + player.personality.icon + ' ' + _tUI(player.personality.name) + '</span>' : ''}
@@ -3958,13 +3981,13 @@ class Game {
         let scoresHtml = '';
         if (entry.scores) {
           scoresHtml = Object.entries(entry.scores).map(([name, s]) =>
-            `<span style="margin-right:8px;">${name}: <span style="color:#f0b840;font-weight:800;">${s}</span></span>`
+            `<span style="margin-right:8px;">${escHTML(name)}: <span style="color:#f0b840;font-weight:800;">${s}</span></span>`
           ).join('');
         }
         div.innerHTML = `
           <span class="log-num">—</span>
           <div style="flex:1;">
-            <div style="font-weight:700;color:#f0b840;margin-bottom:4px;">🏁 Round ${entry.round || '?'} — ${entry.detail}</div>
+            <div style="font-weight:700;color:#f0b840;margin-bottom:4px;">🏁 Round ${entry.round || '?'} — ${escHTML(entry.detail)}</div>
             <div style="font-size:0.75rem;opacity:0.6;">${scoresHtml}</div>
           </div>
         `;
@@ -3992,14 +4015,14 @@ class Game {
       let scoresHtml = '';
       if (entry.scores) {
         scoresHtml = '<div style="font-size:0.7rem;opacity:0.4;margin-top:2px;">' +
-          Object.entries(entry.scores).map(([name, s]) => `${name}:${s}`).join(' · ') +
+          Object.entries(entry.scores).map(([name, s]) => `${escHTML(name)}:${s}`).join(' · ') +
           '</div>';
       }
 
       div.innerHTML = `
         <span class="log-num">${entry.turn}</span>
-        <img class="log-avatar" src="${entry.avatar}" alt="${entry.player}">
-        <div><span class="log-name">${entry.player}</span> ${detail}${scoresHtml}</div>
+        <img class="log-avatar" src="${entry.avatar}" alt="${escHTML(entry.player)}">
+        <div><span class="log-name">${escHTML(entry.player)}</span> ${detail}${scoresHtml}</div>
       `;
       container.appendChild(div);
     }
@@ -4029,7 +4052,7 @@ class Game {
             let predLabel = p.end.toUpperCase();
             const activeTile = this._hoverTile || this.selectedTile;
             if (activeTile) {
-              const sim = new AI('easy')._cloneBoard(this.board);
+              const sim = Board.clone(this.board);
               sim.placeTile(activeTile, p);
               const predScore = sim.getScore();
               predLabel = predScore > 0 ? `${p.end.toUpperCase()}\n+${predScore}` : p.end.toUpperCase();

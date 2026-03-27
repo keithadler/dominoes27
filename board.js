@@ -48,6 +48,32 @@ class Board {
     this.placed = [];
   }
 
+  /**
+   * Create a shallow clone of a board (game state only, no visual data).
+   * Useful for AI simulation without mutating the real board.
+   * @param {Board} board
+   * @returns {Board}
+   */
+  static clone(board) {
+    const b = new Board();
+    b.tiles = [...board.tiles];
+    b.spinner = board.spinner;
+    b.spinnerIndex = board.spinnerIndex;
+    b.leftEnd = board.leftEnd;
+    b.leftIsDouble = board.leftIsDouble;
+    b.rightEnd = board.rightEnd;
+    b.rightIsDouble = board.rightIsDouble;
+    b.spinnerNorth = board.spinnerNorth;
+    b.spinnerNorthIsDouble = board.spinnerNorthIsDouble;
+    b.spinnerSouth = board.spinnerSouth;
+    b.spinnerSouthIsDouble = board.spinnerSouthIsDouble;
+    b.spinnerNorthOpen = board.spinnerNorthOpen;
+    b.spinnerSouthOpen = board.spinnerSouthOpen;
+    b.hasLeftOfSpinner = board.hasLeftOfSpinner;
+    b.hasRightOfSpinner = board.hasRightOfSpinner;
+    return b;
+  }
+
   /** @returns {boolean} True when no tiles have been played yet. */
   get isEmpty() { return this.tiles.length === 0; }
 

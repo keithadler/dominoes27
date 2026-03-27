@@ -1,4 +1,4 @@
-# 🁣 All Fives Dominoes
+git push# 🁣 All Fives Dominoes
 
 A feature-rich, zero-dependency browser domino game. Pure HTML/CSS/JS — no build step, no server, no frameworks.
 

@@ -22,7 +22,7 @@ class SFX {
   constructor() {
     /** @type {AudioContext|null} */
     this.ctx = null;
-    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { console.warn('SFX: AudioContext unavailable', e); }
   }
 
   /**
@@ -111,7 +111,7 @@ class MusicEngine {
   /** Initialize the AudioContext (lazy, called on first start). */
   init() {
     if (this.ctx) return;
-    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { console.warn('MusicEngine: AudioContext unavailable', e); }
   }
   /** Start playback (no-op if already playing or disabled). */
   start() {
@@ -125,7 +125,7 @@ class MusicEngine {
   /** Stop playback and clean up oscillator nodes. */
   stop() {
     this.playing = false;
-    this._nodes.forEach(n => { try { n.stop(); } catch(e) {} });
+    this._nodes.forEach(n => { try { n.disconnect(); n.stop(); } catch(e) {} });
     this._nodes = [];
   }
   /**
@@ -214,7 +214,12 @@ class MusicEngine {
         this._nodes.push(melOsc);
       }
 
-      this._nodes = this._nodes.slice(-30);
+      // Clean up old nodes — disconnect before dropping references
+      const keep = this._nodes.slice(-30);
+      for (const n of this._nodes) {
+        if (!keep.includes(n)) { try { n.disconnect(); } catch(e) {} }
+      }
+      this._nodes = keep;
       const tempo = 2800 - this.intensity * 600;
       setTimeout(() => this._loop(), tempo);
     }

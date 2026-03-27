@@ -285,23 +285,7 @@ class AI {
 
   /** @private */
   _cloneBoard(board) {
-    const b = new Board();
-    b.tiles = [...board.tiles];
-    b.spinner = board.spinner;
-    b.spinnerIndex = board.spinnerIndex;
-    b.leftEnd = board.leftEnd;
-    b.leftIsDouble = board.leftIsDouble;
-    b.rightEnd = board.rightEnd;
-    b.rightIsDouble = board.rightIsDouble;
-    b.spinnerNorth = board.spinnerNorth;
-    b.spinnerNorthIsDouble = board.spinnerNorthIsDouble;
-    b.spinnerSouth = board.spinnerSouth;
-    b.spinnerSouthIsDouble = board.spinnerSouthIsDouble;
-    b.spinnerNorthOpen = board.spinnerNorthOpen;
-    b.spinnerSouthOpen = board.spinnerSouthOpen;
-    b.hasLeftOfSpinner = board.hasLeftOfSpinner;
-    b.hasRightOfSpinner = board.hasRightOfSpinner;
-    return b;
+    return Board.clone(board);
   }
 
   // ---------------------------------------------------------------------------
