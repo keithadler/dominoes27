@@ -800,25 +800,6 @@ function getLocale(lang) {
 }
 
 function getLocalePhrase(lang, gen, category, tier) {
-
-// Standalone UI translation helper (for code outside Game class)
-function _tUI(key) {
-  const lang = localStorage.getItem('domino_lang') || detectBrowserLang();
-  const loc = getLocale(lang);
-  return (loc.ui && loc.ui[key]) || (LOCALES.en.ui && LOCALES.en.ui[key]) || key;
-}
-
-// Detect browser language and map to supported locale
-function detectBrowserLang() {
-  const supported = Object.keys(LOCALES); // ['en','es','ar','zh']
-  const langs = navigator.languages || [navigator.language || 'en'];
-  for (const raw of langs) {
-    const code = raw.toLowerCase().split('-')[0];
-    if (supported.includes(code)) return code;
-  }
-  return 'en';
-}
-
   const loc = getLocale(lang);
   // Map category/gen to compact keys
   const catMap = { opponent: 'o', teammate: 't', draw: 'd', domino: 'w' };
@@ -832,6 +813,24 @@ function detectBrowserLang() {
   const enPool = LOCALES.en.p[g] && LOCALES.en.p[g][c] && LOCALES.en.p[g][c][tierIdx];
   if (enPool && enPool.length > 0) return enPool[Math.floor(Math.random() * enPool.length)];
   return '';
+}
+
+// Standalone UI translation helper (for code outside Game class)
+function _tUI(key) {
+  const lang = localStorage.getItem('domino_lang') || detectBrowserLang();
+  const loc = getLocale(lang);
+  return (loc.ui && loc.ui[key]) || (LOCALES.en.ui && LOCALES.en.ui[key]) || key;
+}
+
+// Detect browser language and map to supported locale
+function detectBrowserLang() {
+  const supported = Object.keys(LOCALES);
+  const langs = navigator.languages || [navigator.language || 'en'];
+  for (const raw of langs) {
+    const code = raw.toLowerCase().split('-')[0];
+    if (supported.includes(code)) return code;
+  }
+  return 'en';
 }
 
 
