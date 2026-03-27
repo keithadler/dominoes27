@@ -239,6 +239,7 @@ class Game {
     }
   }
 
+  /** Shows a first-visit language picker overlay; calls onDone when user selects. */
   _showLangPicker(onDone) {
     const overlay = document.getElementById('countdown-overlay');
     if (!overlay) { onDone(); return; }
@@ -312,6 +313,7 @@ class Game {
     saveGameStats(s);
   }
 
+  /** Serializes full game state (players, board, scores, round) to localStorage. */
   _saveGameState() {
     if (!this.players || this.players.length === 0 || this.gameOver) return;
     const state = {
@@ -354,6 +356,7 @@ class Game {
     localStorage.setItem('domino_saved_game', JSON.stringify(state));
   }
 
+  /** Restores game state from localStorage. Returns false if no saved game exists. */
   _loadGameState() {
     const raw = localStorage.getItem('domino_saved_game');
     if (!raw) return false;
@@ -396,6 +399,7 @@ class Game {
     localStorage.removeItem('domino_saved_game');
   }
 
+  /** Loads saved state from localStorage and resumes play (re-inits renderer, UI, and turn loop). */
   _resumeGame() {
     if (!this._loadGameState()) return;
     this.renderer = new Renderer(document.getElementById('board-canvas'));
@@ -437,6 +441,7 @@ class Game {
     }).catch(() => {});
   }
 
+  /** Wires up all DOM event listeners (menu buttons, game controls, drag/drop, keyboard, resize). */
   _initUI() {
     // Menu button groups
     document.querySelectorAll('.btn-group').forEach(group => {
@@ -971,11 +976,13 @@ class Game {
     return active ? active.dataset.value : null;
   }
 
+  /** Switches visible screen (menu, game, or gameover) by toggling the 'active' class. */
   showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
+  /** Sets up players, teams, AI personalities, and starts a new game. Pass truthy rematch to reuse current opponents. */
   startGame(rematch) {
     const mode = this._getOption('game-mode') || 'ffa';
     const scoreOpt = this._getOption('target-score') || '200';
@@ -1125,6 +1132,7 @@ class Game {
     this.startRound();
   }
 
+  /** Shuffles tiles, deals hands, runs deal animation with countdown, then starts play. */
   startRound() {
       this.board = new Board();
       this.placements = [];
@@ -1478,6 +1486,7 @@ class Game {
     return -1;
   }
 
+  /** Main turn dispatcher: checks for round/game end, then routes to AI or human play. */
   _doTurn() {
     if (this.roundOver || this.gameOver) return;
 
@@ -1632,6 +1641,7 @@ class Game {
     if (el) el.classList.add('hidden');
   }
 
+  /** Executes an AI player's turn — draws if needed, passes if stuck, otherwise plays best move with thinking delay. */
   _aiTurn(player) {
     if (this.roundOver) return;
 
@@ -1683,6 +1693,7 @@ class Game {
     this._executePlay(player, play.tile, play.placement);
   }
 
+  /** Enables/disables draw, pass, and hint buttons based on the human player's hand and boneyard state. */
   _enableHumanPlay(player) {
     const canPlay = player.hand.some(t => this.board.canPlay(t));
     const drawBtn = document.getElementById('draw-btn');
@@ -1714,6 +1725,7 @@ class Game {
     }
   }
 
+  /** Runs minimax to find the best move and highlights it. Costs 5 points from the player/team score. */
   useHint() {
     const player = this.players[0];
     if (!player.isHuman || this.currentPlayer !== 0) return;
@@ -1761,6 +1773,7 @@ class Game {
     document.getElementById('hint-btn').disabled = true;
   }
 
+  /** Human draws a tile from the boneyard, animates it into hand, and auto-plays if only one valid move exists. */
   drawFromBoneyard() {
     const player = this.players[this.currentPlayer];
     if (!player.isHuman || this.boneyard.length === 0 || this._playLock) return;
@@ -2036,6 +2049,7 @@ class Game {
     }
   }
 
+  /** Core play execution: places tile on board, updates score, triggers animations, combos, and trash talk. */
   _executePlay(player, tile, placement) {
     this._hideThinking();
     // Guard: only the current player can execute, and prevent concurrent plays
@@ -2346,6 +2360,7 @@ class Game {
     this._doTurn();
   }
 
+  /** Handles round end: counts remaining pips, calculates bonus, records round history, checks for game end. */
   _endRound(winner) {
     this.roundOver = true;
 
@@ -2651,6 +2666,7 @@ class Game {
     return this.players.some(p => p.score >= this.targetScore);
   }
 
+  /** Game over: records win/loss stats, shows post-game analysis screen, triggers confetti for wins. */
   _endGame() {
     this.gameOver = true;
     if (this.sfx) this.sfx.win();
@@ -2938,6 +2954,7 @@ class Game {
     }
   }
 
+  /** Refreshes scoreboard, end-sum display, boneyard count, turn indicator, and player hand rendering. */
   _updateUI() {
     // Score bar at top
     const scoreBar = document.getElementById('score-bar-content');

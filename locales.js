@@ -1,10 +1,25 @@
-// ============================================================
-// ALL FIVES DOMINOES — Localization
-// ============================================================
-// Phrases stored as compact arrays: [category][generation][tier] = [strings]
-// Categories: o=opponent, t=teammate, d=draw, w=domino(win)
-// Generations: z=gen_z, m=millennial, x=gen_x, b=boomer
-// Tiers: 0=low, 1=mid, 2=high
+/**
+ * @file locales.js — Localization data and helpers for All Fives Dominoes.
+ *
+ * Contains all translatable content for 4 languages (EN, ES, AR, ZH):
+ *  - UI strings (100+ keys per language)
+ *  - AI trash-talk phrases organized by generation × category × tier
+ *  - Player names and city pools per locale
+ *  - Game rules HTML per language
+ *
+ * Phrase storage format: LOCALES.xx.p[generation][category][tier] = string[]
+ *  - Categories: o=opponent, t=teammate, d=draw, w=domino(win)
+ *  - Generations: z=gen_z, m=millennial, x=gen_x, b=boomer
+ *  - Tiers: 0=low (losing), 1=mid (even), 2=high (winning)
+ *
+ * Also exports helper functions:
+ *  - getLocale(lang) — Get locale object by code
+ *  - getLocalePhrase(lang, gen, category, tier) — Get a random phrase
+ *  - _tUI(key) — Standalone UI string translator (for code outside Game class)
+ *  - detectBrowserLang() — Auto-detect browser language from navigator.languages
+ *
+ * No external dependencies.
+ */
 
 const LOCALES = {};
 
