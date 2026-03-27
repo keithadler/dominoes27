@@ -47,10 +47,11 @@ class SFX {
     osc.start();
     osc.stop(this.ctx.currentTime + duration);
   }
-  /** Play tile-placement sound (quick percussive tap). */
+  /** Play tile-placement sound with random pitch variation. */
   place() {
-    this._play(400, 0.06, 'square', 0.06);
-    setTimeout(() => this._play(600, 0.08, 'sine', 0.08), 30);
+    const pitchVar = 0.9 + Math.random() * 0.3; // 0.9–1.2x
+    this._play(400 * pitchVar, 0.06, 'square', 0.06);
+    setTimeout(() => this._play(600 * pitchVar, 0.08, 'sine', 0.08), 20 + Math.random() * 20);
   }
   /** Play scoring sound (ascending arpeggio). */
   score() {
@@ -71,6 +72,20 @@ class SFX {
     [523, 659, 784, 1047, 1319, 1568].forEach((f, i) =>
       setTimeout(() => this._play(f, 0.35, 'sine', 0.12), i * 120)
     );
+  }
+  /** Play loss sound (descending minor). */
+  lose() {
+    [440, 392, 330, 262].forEach((f, i) =>
+      setTimeout(() => this._play(f, 0.3, 'sine', 0.1), i * 200)
+    );
+  }
+  /** Play dramatic last-tile domino sound. */
+  domino() {
+    this._play(330, 0.1, 'square', 0.08);
+    setTimeout(() => this._play(440, 0.1, 'square', 0.08), 80);
+    setTimeout(() => this._play(660, 0.15, 'sine', 0.12), 160);
+    setTimeout(() => this._play(880, 0.2, 'sine', 0.15), 280);
+    setTimeout(() => this._play(1320, 0.4, 'sine', 0.12), 420);
   }
 }
 

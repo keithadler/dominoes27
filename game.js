@@ -2807,7 +2807,6 @@ class Game {
   /** Game over: records win/loss stats, shows post-game analysis screen, triggers confetti for wins. */
   _endGame() {
     this.gameOver = true;
-    if (this.sfx) this.sfx.win();
     if (this.music) this.music.setIntensity(1); // Full intensity for game end
 
     // Record wins/losses
@@ -2977,10 +2976,17 @@ class Game {
         ? (this.teams[0].score >= this.teams[1].score ? this.teams[0].name : this.teams[1].name)
         : this.players.reduce((a, b) => a.score > b.score ? a : b).name;
       const msg = humanWon ? this._t('youWin') : `${winnerName} ${this._t('wins')}!`;
+      const bgGrad = humanWon
+        ? 'linear-gradient(180deg,#fff 20%,#f0b840)'
+        : 'linear-gradient(180deg,#fff 20%,#e04a3a)';
+      const msgColor = humanWon ? '#f0b840' : '#e04a3a';
+      const emoji = humanWon ? '🏆' : '💀';
+      if (this.sfx) { humanWon ? this.sfx.win() : this.sfx.lose(); }
       overlay.innerHTML = `
         <div style="text-align:center;animation:announceIn 0.5s ease-out forwards;">
-          <div style="font-size:4rem;font-weight:900;letter-spacing:4px;background:linear-gradient(180deg,#fff 20%,#f0b840);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;">${this._t('gameOver')}</div>
-          <div style="font-size:1.8rem;font-weight:800;color:#f0b840;margin-bottom:4px;">${msg}</div>
+          <div style="font-size:5rem;margin-bottom:8px;">${emoji}</div>
+          <div style="font-size:4rem;font-weight:900;letter-spacing:4px;background:${bgGrad};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;">${this._t('gameOver')}</div>
+          <div style="font-size:1.8rem;font-weight:800;color:${msgColor};margin-bottom:4px;">${msg}</div>
         </div>
       `;
       setTimeout(() => {
@@ -3160,7 +3166,11 @@ class Game {
       }
     }
 
-    // End sum display
+    // End sum display — hide until after first play of the round
+    const endSumPanel = document.getElementById('end-sum-display');
+    if (endSumPanel) {
+      endSumPanel.style.visibility = this.board.tiles.length <= 1 ? 'hidden' : '';
+    }
     const endSum = this.board.getEndSum();
     const endScore = this.board.getScore();
     const sumEl = document.getElementById('end-sum-value');

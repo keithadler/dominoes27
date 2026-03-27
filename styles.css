@@ -238,6 +238,8 @@ body::after {
   backdrop-filter: blur(6px);
   border-radius: 0;
   margin: 0;
+  position: relative; z-index: 5;
+  pointer-events: auto;
 }
 #human-info .human-avatar {
   width: 48px; height: 48px; border-radius: 50%;
@@ -366,7 +368,7 @@ body::after {
 }
 
 /* 11. Card entrance animation */
-#player-hand { display: flex; justify-content: center; gap: 10px; padding: 0 24px; flex-wrap: wrap; overflow-y: visible; max-height: 150px; min-height: 80px; position: relative; z-index: 4; margin-bottom: -46px; }
+#player-hand { display: flex; justify-content: center; gap: 10px; padding: 0 24px; flex-wrap: wrap; overflow-y: visible; max-height: 150px; min-height: 80px; position: relative; z-index: 6; margin-bottom: -46px; }
 
 /* 3/4/5/6/18. 3D Hand Tiles with gloss, perspective tilt, playable pulse */
 .hand-tile {
