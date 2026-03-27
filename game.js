@@ -1705,9 +1705,12 @@ class Game {
       drawBtn.disabled = true;
       passBtn.style.display = 'none';
       const pts = this.teamMode && this.teams ? this.teams[player.team].score : player.score;
-      // Count playable tiles (not total moves)
-      const playableTiles = player.hand.filter(t => this.board.canPlay(t));
-      hintBtn.disabled = pts < 5;
+      // Count total possible plays (tile + placement combos)
+      let totalPlays = 0;
+      for (const t of player.hand) {
+        totalPlays += this.board.getValidPlacements(t).length;
+      }
+      hintBtn.disabled = pts < 5 || totalPlays <= 1;
     }
   }
 
