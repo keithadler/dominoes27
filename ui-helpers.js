@@ -456,23 +456,19 @@ function spawnConfetti() {
  */
 function applyTimeOfDayFX() {
   const hour = new Date().getHours();
-  let ambientColor, ambientOpacity;
+  let ambientColor;
   if (hour >= 6 && hour < 10) {
-    // Morning — warm golden
-    ambientColor = 'rgba(255, 200, 100, 0.06)';
-    ambientOpacity = 0.06;
+    // Morning — warm golden glow
+    ambientColor = 'rgba(255, 180, 60, 0.12)';
   } else if (hour >= 10 && hour < 17) {
-    // Daytime — neutral
-    ambientColor = 'rgba(255, 255, 255, 0.02)';
-    ambientOpacity = 0.02;
+    // Daytime — bright warm light
+    ambientColor = 'rgba(255, 240, 200, 0.08)';
   } else if (hour >= 17 && hour < 20) {
-    // Sunset — warm orange
-    ambientColor = 'rgba(255, 140, 50, 0.08)';
-    ambientOpacity = 0.08;
+    // Sunset — rich orange
+    ambientColor = 'rgba(255, 100, 30, 0.15)';
   } else {
-    // Night — cool blue
-    ambientColor = 'rgba(60, 80, 180, 0.08)';
-    ambientOpacity = 0.08;
+    // Night — cool blue moonlight
+    ambientColor = 'rgba(40, 60, 200, 0.14)';
   }
   let fx = document.getElementById('time-fx');
   if (!fx) {
@@ -481,7 +477,7 @@ function applyTimeOfDayFX() {
     fx.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:0;transition:background 60s linear;';
     document.body.appendChild(fx);
   }
-  fx.style.background = `radial-gradient(ellipse at 50% 30%, ${ambientColor}, transparent 70%)`;
+  fx.style.background = `radial-gradient(ellipse at 50% 20%, ${ambientColor}, transparent 60%)`;
 }
 applyTimeOfDayFX();
 setInterval(applyTimeOfDayFX, 300000); // Update every 5 minutes
