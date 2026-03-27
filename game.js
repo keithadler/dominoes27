@@ -2530,10 +2530,10 @@ class Game {
         if (idx !== winner.index) partnerPips += this.players[idx].handPips;
       }
       const bonus = Math.round((oppPips - partnerPips) / 5) * 5;
-      // Only show the LOSING team's bones
-      countPlayers = loseTeam.players.map(i => this.players[i]).filter(p => p.hand.length > 0);
+      // Show ALL players with remaining tiles so the subtraction is visible
+      countPlayers = this.players.filter(p => p.index !== winner.index && p.hand.length > 0);
       winnerLabel = winner.name;
-      bonusCalc = { bonus: Math.max(0, bonus), recipient: winTeam.name };
+      bonusCalc = { bonus: Math.max(0, bonus), recipient: winTeam.name, oppPips, partnerPips };
       if (bonus > 0) winTeam.score += bonus;
     } else {
       let bonusPips = 0;
@@ -2757,9 +2757,21 @@ class Game {
       const totalEl = document.createElement('div');
       totalEl.className = 'count-total';
       if (bonusCalc.bonus > 0) {
-        totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+${bonusCalc.bonus}</span> ${this._t('for_')} ${escHTML(bonusCalc.recipient)}`;
+        if (bonusCalc.oppPips !== undefined && bonusCalc.partnerPips !== undefined) {
+          // Team mode: show the subtraction breakdown
+          const breakdownText = bonusCalc.partnerPips > 0
+            ? `${bonusCalc.oppPips} − ${bonusCalc.partnerPips} = ${bonusCalc.oppPips - bonusCalc.partnerPips} ${this._t('pips')}`
+            : `${bonusCalc.oppPips} ${this._t('pips')}`;
+          totalEl.innerHTML = `${breakdownText} → <span class="ct-bonus">+${bonusCalc.bonus}</span> ${this._t('for_')} ${escHTML(bonusCalc.recipient)}`;
+        } else {
+          totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+${bonusCalc.bonus}</span> ${this._t('for_')} ${escHTML(bonusCalc.recipient)}`;
+        }
       } else {
-        totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+0</span> ${this._t('bonus')}`;
+        if (bonusCalc.oppPips !== undefined && bonusCalc.partnerPips !== undefined && bonusCalc.partnerPips >= bonusCalc.oppPips) {
+          totalEl.innerHTML = `${bonusCalc.oppPips} − ${bonusCalc.partnerPips} ${this._t('pips')} → <span class="ct-bonus">+0</span> ${this._t('bonus')}`;
+        } else {
+          totalEl.innerHTML = `${totalPips} ${this._t('pips')} → <span class="ct-bonus">+0</span> ${this._t('bonus')}`;
+        }
       }
       overlay.appendChild(totalEl);
 
