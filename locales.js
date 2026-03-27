@@ -190,7 +190,7 @@ LOCALES.en = {
     resetStats: '🗑️ Reset All Stats',
     resetConfirm: 'This will erase all stats, achievements, and XP. Are you sure?',
     gameTitle: 'ALL FIVES',
-    gameSubtitle: 'DOMINOES',
+    gameSubtitle: 'DOMINOES 27',
   },
   p: {
     z: {
@@ -446,8 +446,8 @@ LOCALES.es = {
     tableRed: 'Rojo Casino', tablePurple: 'Púrpura Real', tableWood: 'Madera',
     resetStats: '🗑️ Borrar Estadísticas',
     resetConfirm: 'Esto borrará todas las estadísticas, logros y XP. ¿Estás seguro?',
-    gameTitle: 'ALL FIVES',
-    gameSubtitle: 'DOMINÓ',
+    gameTitle: 'TODOS LOS CINCOS',
+    gameSubtitle: 'DOMINÓ 27',
   },
   p: {
     z: {
@@ -655,8 +655,8 @@ LOCALES.ar = {
     tableRed: 'أحمر كازينو', tablePurple: 'بنفسجي ملكي', tableWood: 'خشبي',
     resetStats: '🗑️ مسح الإحصائيات',
     resetConfirm: 'سيتم مسح جميع الإحصائيات والإنجازات والخبرة. هل أنت متأكد؟',
-    gameTitle: 'ALL FIVES',
-    gameSubtitle: 'دومينو',
+    gameTitle: 'كل الخمسات',
+    gameSubtitle: 'دومينو ٢٧',
   },
   p: {
     z: {
@@ -864,8 +864,8 @@ LOCALES.zh = {
     tableRed: '赌场红', tablePurple: '皇家紫', tableWood: '木质',
     resetStats: '🗑️ 重置所有数据',
     resetConfirm: '这将清除所有统计、成就和经验值。确定吗？',
-    gameTitle: 'ALL FIVES',
-    gameSubtitle: '多米诺骨牌',
+    gameTitle: '全五点',
+    gameSubtitle: '多米诺 27',
   },
   p: {
     z: {
