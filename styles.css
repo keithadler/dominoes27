@@ -289,16 +289,12 @@ body::after {
 }
 #board-canvas { display: block; }
 
-/* 14. Boneyard with wood texture */
+/* 14. Boneyard — compact inline in control bar */
 #boneyard-area {
-  display: flex; align-items: center; gap: 16px;
-  padding: 8px 20px; flex-shrink: 0;
-  background: linear-gradient(0deg, rgba(60,30,10,0.25), rgba(40,20,5,0.15));
-  border-top: 2px solid rgba(90,60,20,0.2);
-  min-height: 52px; justify-content: center;
-  position: relative; overflow: visible;
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
 }
-#boneyard-tiles { position: relative; width: 140px; height: 40px; }
+#boneyard-tiles { position: relative; width: 60px; height: 24px; }
 #boneyard-label {
   font-size: 0.85rem; white-space: nowrap; flex-shrink: 0; font-weight: 800; letter-spacing: 0.5px;
   display: flex; align-items: center; gap: 6px;
@@ -346,6 +342,8 @@ body::after {
   background: linear-gradient(0deg, rgba(0,0,0,0.5), rgba(0,0,0,0.25));
   border-top: 2px solid rgba(90,60,20,0.15);
 }
+/* Hand tiles come first (above controls) */
+#player-hand { order: -1; }
 .btn-draw, .btn-pass { padding: 10px 24px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; letter-spacing: 0.5px; position: relative; overflow: hidden; }
 .btn-draw { background: linear-gradient(145deg, #4aaf6c, #2d8a4e); color: #fff; box-shadow: 0 4px 14px rgba(45,138,78,0.35); }
 .btn-draw:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }

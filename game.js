@@ -4068,7 +4068,7 @@ class Game {
               const sim = new AI('easy')._cloneBoard(this.board);
               sim.placeTile(activeTile, p);
               const predScore = sim.getScore();
-              predLabel = predScore > 0 ? `+${predScore}` : p.end.toUpperCase();
+              predLabel = predScore > 0 ? `${p.end.toUpperCase()}\n+${predScore}` : p.end.toUpperCase();
               if (predScore > 0) {
                 ctx.fillStyle = 'rgba(74, 175, 108, 0.35)';
                 ctx.strokeStyle = '#4aaf6c';
@@ -4111,7 +4111,15 @@ class Game {
             ctx.font = 'bold 14px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(predLabel, pos.x, pos.y);
+            const lines = predLabel.split('\n');
+            if (lines.length > 1) {
+              ctx.font = 'bold 11px sans-serif';
+              ctx.fillText(lines[0], pos.x, pos.y - 8);
+              ctx.font = 'bold 16px sans-serif';
+              ctx.fillText(lines[1], pos.x, pos.y + 8);
+            } else {
+              ctx.fillText(predLabel, pos.x, pos.y);
+            }
             ctx.restore();
           }
         }
