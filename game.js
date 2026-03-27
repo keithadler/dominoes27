@@ -103,11 +103,11 @@ class Game {
   }
 
   /**
-   * Trigger a short haptic vibration (mobile devices only).
-   * @param {number} [ms=15] - Vibration duration in milliseconds.
+   * Trigger haptic feedback with pattern support.
+   * @param {number|number[]} pattern - Duration in ms, or array for vibration pattern.
    */
-  _haptic(ms) {
-    try { if (navigator.vibrate) navigator.vibrate(ms || 15); } catch(e) {}
+  _haptic(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern || 15); } catch(e) {}
   }
 
   /**
@@ -1370,7 +1370,7 @@ class Game {
             tile.style.top = (cy - tileH / 2 + oy) + 'px';
             tile.style.transform = `rotate(${rot}deg)`;
           }
-          if (this.sfx) this.sfx._play(200 + Math.random() * 100, 0.06, 'square', 0.04);
+          if (this.sfx) this.sfx.shuffle();
           shuffleCount++;
           if (shuffleCount >= 4) clearInterval(shuffleInterval);
         }, 250);
@@ -1759,6 +1759,7 @@ class Game {
         // AI must pass — show dialogue and pause
         this._hideThinking();
         this._showSpeechBubble(player, this._t('aiPass'));
+        if (this.sfx) this.sfx.blocked();
         this.gameLog.push({
           turn: this._logTurn++,
           player: player.name,
@@ -2074,6 +2075,10 @@ class Game {
       if (this._dragGhost) {
         this._dragGhost.style.left = (cx - el.offsetWidth / 2) + 'px';
         this._dragGhost.style.top = (cy - el.offsetHeight / 2) + 'px';
+        // Subtle drag trail particles
+        if (Math.random() > 0.6) {
+          spawnParticles(cx, cy, 1, 'particle-gold');
+        }
       }
     };
 
@@ -2196,6 +2201,12 @@ class Game {
     this._lastPlayedBy = player.index;
     this._addVisualPlacement(tile, placement);
 
+    // Trigger impact nudge on nearby tiles
+    if (this.renderer && this.placements.length > 0) {
+      const last = this.placements[this.placements.length - 1];
+      this.renderer.triggerImpact(last.x, last.y);
+    }
+
     const score = this.board.getScore();
     const scored = score > 0;
 
@@ -2224,8 +2235,14 @@ class Game {
         this.teams[player.team].score += score;
       }
       this._showScorePopup(score, player);
-      if (this.sfx) this.sfx.score();
-      this._haptic(30);
+      if (this.sfx) {
+        if (score >= 15) this.sfx.scoreBig();
+        else this.sfx.score();
+      }
+      // Haptic pattern scales with score
+      if (score >= 20) this._haptic([30, 50, 60]);
+      else if (score >= 10) this._haptic([20, 30, 40]);
+      else this._haptic(30);
       // Combo tracking for human player
       if (player.isHuman) {
         this._humanCombo++;
@@ -2233,19 +2250,23 @@ class Game {
           this._showComboPopup(this._humanCombo);
         }
       }
-      // Screen shake on big scores
-      if (score >= 20) {
+      // Screen shake on big scores — intensity scales with points
+      if (score >= 15) {
         const boardArea = document.getElementById('board-area');
         if (boardArea) {
-          boardArea.classList.remove('board-shake');
+          const shakeClass = score >= 25 ? 'board-shake-heavy' : 'board-shake';
+          boardArea.classList.remove('board-shake', 'board-shake-heavy');
           void boardArea.offsetWidth;
-          boardArea.classList.add('board-shake');
-          setTimeout(() => boardArea.classList.remove('board-shake'), 500);
+          boardArea.classList.add(shakeClass);
+          setTimeout(() => boardArea.classList.remove(shakeClass), 600);
         }
       }
     } else {
-      if (this.sfx) this.sfx.place();
-      this._haptic(15);
+      if (this.sfx) {
+        if (tile.isDouble) this.sfx.placeDouble();
+        else this.sfx.place();
+      }
+      this._haptic(tile.isDouble ? [15, 20, 25] : 15);
       if (player.isHuman) {
         this._humanCombo = 0;
       }
@@ -3046,6 +3067,12 @@ class Game {
     document.body.appendChild(popup);
     setTimeout(() => popup.remove(), duration);
 
+    // Golden vignette flash
+    const vignette = document.createElement('div');
+    vignette.className = 'score-vignette' + (score >= 15 ? ' big' : '');
+    document.body.appendChild(vignette);
+    setTimeout(() => vignette.remove(), 800);
+
     // Flash the player's score item
     const scoreItems = document.querySelectorAll('.score-item');
     if (scoreItems[player.index]) {
@@ -3073,6 +3100,14 @@ class Game {
       this._updateXPBar();
       if (score >= 20) { if (unlockAchievement('score_20')) showAchievementPopup('score_20'); }
       if (score >= 25) { if (unlockAchievement('score_25')) showAchievementPopup('score_25'); }
+    } else {
+      // Particles from opponent's position too
+      const pos = this._getPlayerPosition(player.index);
+      const panel = document.getElementById('opponent-' + pos);
+      if (panel) {
+        const r = panel.getBoundingClientRect();
+        spawnParticles(r.left + r.width / 2, r.top + r.height / 2, 8 + score, 'particle-gold');
+      }
     }
   }
 
@@ -3406,10 +3441,11 @@ class Game {
       human.hand.sort((a, b) => a.pips - b.pips);
 
       const isMyTurn = this.currentPlayer === 0 && human.isHuman;
+      let tileIdx = 0;
       for (const tile of human.hand) {
         const playable = isMyTurn && !this._suppressToast && this.board.canPlay(tile) && !this.board.isEmpty;
         const matchCount = playable ? this.board.getValidPlacements(tile).length : 0;
-        this.renderer.drawHandTile(
+        const el = this.renderer.drawHandTile(
           container, tile, playable,
           (t, el) => this._onTileClick(t, el),
           isMyTurn ? (t) => this._onTileHover(t) : null,
@@ -3417,6 +3453,9 @@ class Game {
           matchCount,
           isMyTurn ? (t, el, x, y) => this._onDragStart(t, el, x, y) : null
         );
+        // Stagger entrance animation
+        el.style.animationDelay = `${tileIdx * 0.05}s`;
+        tileIdx++;
       }
 
       if (!isMyTurn) {

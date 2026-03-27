@@ -483,3 +483,71 @@ function applyTimeOfDayFX() {
 }
 applyTimeOfDayFX();
 setInterval(applyTimeOfDayFX, 300000); // Update every 5 minutes
+
+// ---------------------------------------------------------------------------
+// Ambient Dust Motes
+// ---------------------------------------------------------------------------
+
+/**
+ * Spawn floating dust motes over the game table for atmosphere.
+ * Creates a canvas overlay with slowly drifting particles.
+ */
+function initAmbientDust() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'dust-canvas';
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.4;';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const motes = [];
+  const MOTE_COUNT = 20;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < MOTE_COUNT; i++) {
+    motes.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      size: 1 + Math.random() * 2.5,
+      speedX: (Math.random() - 0.5) * 0.3,
+      speedY: -0.1 - Math.random() * 0.2,
+      opacity: 0.2 + Math.random() * 0.4,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  let _dustRAF;
+  function animate() {
+    // Only animate when game screen is active
+    const gameScreen = document.getElementById('game-screen');
+    if (!gameScreen || !gameScreen.classList.contains('active')) {
+      _dustRAF = requestAnimationFrame(animate);
+      return;
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const t = performance.now() * 0.001;
+    for (const m of motes) {
+      m.x += m.speedX + Math.sin(t + m.phase) * 0.15;
+      m.y += m.speedY;
+      // Wrap around
+      if (m.y < -10) { m.y = canvas.height + 10; m.x = Math.random() * canvas.width; }
+      if (m.x < -10) m.x = canvas.width + 10;
+      if (m.x > canvas.width + 10) m.x = -10;
+      const flicker = 0.7 + 0.3 * Math.sin(t * 2 + m.phase);
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 240, 200, ${m.opacity * flicker})`;
+      ctx.fill();
+    }
+    _dustRAF = requestAnimationFrame(animate);
+  }
+  // Respect reduced motion
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    animate();
+  }
+}
+initAmbientDust();

@@ -47,45 +47,167 @@ class SFX {
     osc.start();
     osc.stop(this.ctx.currentTime + duration);
   }
-  /** Play tile-placement sound with random pitch variation. */
+
+  /**
+   * Play a noise burst (white noise through a bandpass filter) for percussive impact.
+   * @param {number} freq     - Center frequency of the bandpass filter.
+   * @param {number} duration - Duration in seconds.
+   * @param {number} [vol=0.1] - Peak volume.
+   * @private
+   */
+  _noise(freq, duration, vol = 0.1) {
+    if (!this.ctx || (window.game && window.game._soundMuted)) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    const ctx = this.ctx;
+    const bufferSize = ctx.sampleRate * duration;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = freq;
+    filter.Q.value = 1.5;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+    src.stop(ctx.currentTime + duration);
+  }
+
+  /** Play tile-placement sound — layered thud + clack + table resonance. */
   place() {
-    const pitchVar = 0.9 + Math.random() * 0.3; // 0.9–1.2x
-    this._play(400 * pitchVar, 0.06, 'square', 0.06);
-    setTimeout(() => this._play(600 * pitchVar, 0.08, 'sine', 0.08), 20 + Math.random() * 20);
+    const pitchVar = 0.9 + Math.random() * 0.2;
+    // Impact thud (low)
+    this._play(120 * pitchVar, 0.08, 'sine', 0.12);
+    // Clack (mid, sharp)
+    this._noise(2000 * pitchVar, 0.04, 0.06);
+    // Table resonance (warm tail)
+    setTimeout(() => this._play(200 * pitchVar, 0.12, 'sine', 0.04), 15);
+    // Subtle high click
+    setTimeout(() => this._noise(4000, 0.02, 0.03), 5);
   }
-  /** Play scoring sound (ascending arpeggio). */
+
+  /** Play a heavier slam for doubles — deeper thud, louder impact. */
+  placeDouble() {
+    const pitchVar = 0.85 + Math.random() * 0.15;
+    // Deep slam
+    this._play(80 * pitchVar, 0.12, 'sine', 0.18);
+    this._play(90 * pitchVar, 0.1, 'triangle', 0.08);
+    // Heavy clack
+    this._noise(1500, 0.06, 0.1);
+    // Table rattle
+    setTimeout(() => {
+      this._play(160 * pitchVar, 0.15, 'sine', 0.06);
+      this._noise(800, 0.08, 0.03);
+    }, 20);
+    // Resonant tail
+    setTimeout(() => this._play(100, 0.2, 'sine', 0.03), 40);
+  }
+
+  /** Play scoring sound — ascending arpeggio with shimmer. */
   score() {
-    this._play(523, 0.2, 'sine', 0.15);
-    setTimeout(() => this._play(659, 0.2, 'sine', 0.15), 120);
-    setTimeout(() => this._play(784, 0.25, 'sine', 0.15), 240);
-    setTimeout(() => this._play(1047, 0.3, 'sine', 0.12), 360);
+    this._play(523, 0.2, 'sine', 0.12);
+    this._play(523, 0.15, 'triangle', 0.04);
+    setTimeout(() => this._play(659, 0.2, 'sine', 0.12), 100);
+    setTimeout(() => this._play(784, 0.25, 'sine', 0.12), 200);
+    setTimeout(() => {
+      this._play(1047, 0.35, 'sine', 0.1);
+      this._play(1047, 0.2, 'triangle', 0.04);
+    }, 320);
   }
-  /** Play boneyard draw sound (sad descending tone). */
+
+  /** Play big score sound (15+) — richer arpeggio with harmonic shimmer. */
+  scoreBig() {
+    const notes = [523, 659, 784, 1047, 1319];
+    notes.forEach((f, i) => {
+      setTimeout(() => {
+        this._play(f, 0.3, 'sine', 0.12);
+        this._play(f * 2, 0.2, 'sine', 0.03); // octave shimmer
+      }, i * 90);
+    });
+    // Sparkle tail
+    setTimeout(() => {
+      this._play(2093, 0.4, 'sine', 0.04);
+      this._play(2637, 0.3, 'sine', 0.02);
+    }, 500);
+  }
+
+  /** Play boneyard draw sound — bone scrape + reluctant pickup. */
   draw() {
-    // Sad descending tone for boneyard draw
-    this._play(400, 0.15, 'sine', 0.1);
-    setTimeout(() => this._play(320, 0.15, 'sine', 0.1), 120);
-    setTimeout(() => this._play(260, 0.25, 'sine', 0.08), 240);
+    this._noise(1200, 0.08, 0.06); // scrape
+    this._play(300, 0.1, 'sine', 0.06);
+    setTimeout(() => {
+      this._play(250, 0.12, 'sine', 0.05);
+      this._noise(800, 0.05, 0.03);
+    }, 80);
+    setTimeout(() => this._play(200, 0.15, 'sine', 0.04), 160);
   }
-  /** Play win fanfare (ascending six-note flourish). */
+
+  /** Play shuffle/scramble sound — bones rattling on felt. */
+  shuffle() {
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        this._noise(1000 + Math.random() * 2000, 0.04, 0.04);
+        this._play(100 + Math.random() * 100, 0.05, 'sine', 0.03);
+      }, i * 60 + Math.random() * 30);
+    }
+  }
+
+  /** Play win fanfare — triumphant ascending flourish with harmonics. */
   win() {
-    [523, 659, 784, 1047, 1319, 1568].forEach((f, i) =>
-      setTimeout(() => this._play(f, 0.35, 'sine', 0.12), i * 120)
-    );
+    const fanfare = [523, 659, 784, 1047, 1319, 1568];
+    fanfare.forEach((f, i) => {
+      setTimeout(() => {
+        this._play(f, 0.4, 'sine', 0.1);
+        this._play(f * 1.5, 0.3, 'sine', 0.03); // fifth harmonic
+        if (i === fanfare.length - 1) {
+          // Final chord sustain
+          this._play(f, 0.8, 'sine', 0.08);
+          this._play(f * 0.75, 0.8, 'sine', 0.05);
+          this._play(f * 0.5, 0.8, 'sine', 0.04);
+        }
+      }, i * 110);
+    });
   }
-  /** Play loss sound (descending minor). */
+
+  /** Play loss sound — descending minor with muted feel. */
   lose() {
     [440, 392, 330, 262].forEach((f, i) =>
-      setTimeout(() => this._play(f, 0.3, 'sine', 0.1), i * 200)
+      setTimeout(() => {
+        this._play(f, 0.35, 'sine', 0.08);
+        this._play(f * 0.5, 0.3, 'sine', 0.03);
+      }, i * 220)
     );
   }
-  /** Play dramatic last-tile domino sound. */
+
+  /** Play dramatic last-tile domino sound — building impact. */
   domino() {
-    this._play(330, 0.1, 'square', 0.08);
-    setTimeout(() => this._play(440, 0.1, 'square', 0.08), 80);
-    setTimeout(() => this._play(660, 0.15, 'sine', 0.12), 160);
-    setTimeout(() => this._play(880, 0.2, 'sine', 0.15), 280);
-    setTimeout(() => this._play(1320, 0.4, 'sine', 0.12), 420);
+    this._play(220, 0.08, 'sine', 0.1);
+    this._noise(1000, 0.04, 0.06);
+    setTimeout(() => { this._play(330, 0.08, 'sine', 0.1); this._noise(1500, 0.04, 0.05); }, 80);
+    setTimeout(() => { this._play(440, 0.1, 'sine', 0.12); this._noise(2000, 0.04, 0.04); }, 170);
+    setTimeout(() => { this._play(660, 0.15, 'sine', 0.14); }, 280);
+    setTimeout(() => {
+      this._play(880, 0.25, 'sine', 0.12);
+      this._play(1320, 0.4, 'sine', 0.08);
+      this._play(440, 0.3, 'sine', 0.06);
+    }, 400);
+  }
+
+  /** Play a subtle tick for UI interactions. */
+  tick() {
+    this._noise(3000, 0.02, 0.03);
+  }
+
+  /** Play a blocked/pass sound — dull thud. */
+  blocked() {
+    this._play(100, 0.15, 'sine', 0.08);
+    this._noise(400, 0.06, 0.04);
   }
 }
 

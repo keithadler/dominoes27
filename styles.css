@@ -516,9 +516,45 @@ body::after {
 /* Score popup */
 .score-popup { position: fixed; pointer-events: none; z-index: 50; font-size: 4.5rem; font-weight: 900; letter-spacing: 3px; color: #fff; text-shadow: 0 0 15px #f0b840, 0 0 30px #f0b840, 0 0 60px rgba(232,167,53,0.5), 0 6px 12px rgba(0,0,0,0.7), 3px 3px 0 #a06000; animation: scoreBlast 2.5s ease-out forwards; }
 .score-popup .score-label { display: block; font-size: 1.3rem; letter-spacing: 5px; text-transform: uppercase; opacity: 0.85; text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+/* Score ring burst — expands outward behind the number */
+.score-popup::before {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 3px solid rgba(232,167,53,0.6);
+  transform: translate(-50%, -50%) scale(0);
+  animation: scoreRing 0.8s ease-out 0.1s forwards;
+  pointer-events: none;
+}
+.score-popup::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  transform: translate(-50%, -50%) scale(0);
+  animation: scoreRing 0.6s ease-out 0.25s forwards;
+  pointer-events: none;
+}
+@keyframes scoreRing {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(15); opacity: 0; }
+}
 @keyframes scoreBlast { 0% { opacity: 0; transform: translate(-50%,-50%) scale(0.2) rotate(-8deg); } 12% { opacity: 1; transform: translate(-50%,-50%) scale(1.5) rotate(3deg); } 22% { transform: translate(-50%,-50%) scale(0.95) rotate(-1deg); } 30% { transform: translate(-50%,-50%) scale(1.05) rotate(0); } 75% { opacity: 1; transform: translate(-50%,-50%) scale(1) translateY(-20px); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(1.3) translateY(-90px); } }
 @keyframes scoreFlash { 0% { background: rgba(232,167,53,0.5); transform: scale(1.06); } 100% { background: transparent; transform: scale(1); } }
 .score-item.score-flash { animation: scoreFlash 0.8s ease-out; }
+
+/* Score vignette flash — golden edge pulse on scoring */
+.score-vignette {
+  position: fixed; inset: 0; pointer-events: none; z-index: 49;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(232,167,53,0.3) 100%);
+  animation: vignetteFlash 0.6s ease-out forwards;
+}
+.score-vignette.big {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(232,167,53,0.5) 100%);
+  animation: vignetteFlash 0.8s ease-out forwards;
+}
+@keyframes vignetteFlash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
 
 /* Floating turn arrow */
 #floating-arrow { position: fixed; z-index: 8; pointer-events: none; width: 180px; height: 180px; opacity: 0.45; transition: top 0.6s cubic-bezier(0.34,1.56,0.64,1), left 0.6s cubic-bezier(0.34,1.56,0.64,1), transform 0.6s cubic-bezier(0.34,1.56,0.64,1); filter: drop-shadow(0 0 10px rgba(232,167,53,0.4)); }
@@ -1659,9 +1695,20 @@ body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
   70% { transform: translate(-1px, 2px); }
   80% { transform: translate(1px, -1px); }
 }
-.board-shake {
-  animation: boardShake 0.5s ease-out;
+.board-shake { animation: boardShake 0.5s ease-out; }
+@keyframes boardShakeHeavy {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  8% { transform: translate(-6px, 3px) rotate(-0.5deg); }
+  16% { transform: translate(6px, -4px) rotate(0.5deg); }
+  24% { transform: translate(-5px, -3px) rotate(-0.3deg); }
+  32% { transform: translate(4px, 4px) rotate(0.3deg); }
+  40% { transform: translate(-3px, 2px) rotate(-0.2deg); }
+  50% { transform: translate(3px, -2px) rotate(0.1deg); }
+  60% { transform: translate(-2px, 1px); }
+  70% { transform: translate(1px, -1px); }
+  80% { transform: translate(-1px, 1px); }
 }
+.board-shake-heavy { animation: boardShakeHeavy 0.6s ease-out; }
 
 /* ===== Combo popup ===== */
 .combo-popup {

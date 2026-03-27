@@ -33,6 +33,16 @@ class Renderer {
     this.userZoom = 1;
     this.userPanX = 0;
     this.userPanY = 0;
+    /** @type {number} Timestamp of last tile impact for nudge effect. */
+    this._impactTime = 0;
+    /** @type {{x: number, y: number}} Position of last impact. */
+    this._impactPos = { x: 0, y: 0 };
+  }
+
+  /** Trigger a tile impact nudge effect at the given board position. */
+  triggerImpact(x, y) {
+    this._impactTime = performance.now();
+    this._impactPos = { x, y };
   }
 
   /** Resize the canvas to fill its parent container. */
@@ -167,8 +177,22 @@ class Renderer {
     const r = 7 * spinnerScale;
     const depth = 4 * spinnerScale;
 
+    // Impact nudge — tiles near the impact point shift slightly and settle
+    let nudgeX = 0, nudgeY = 0;
+    const elapsed = performance.now() - this._impactTime;
+    if (elapsed < 400 && !isLast) {
+      const dist = Math.hypot(x - this._impactPos.x, y - this._impactPos.y);
+      if (dist < 300 && dist > 10) {
+        const strength = Math.max(0, 1 - dist / 300) * Math.max(0, 1 - elapsed / 400);
+        const angle = Math.atan2(y - this._impactPos.y, x - this._impactPos.x);
+        const nudgeMag = strength * 3;
+        nudgeX = Math.cos(angle) * nudgeMag;
+        nudgeY = Math.sin(angle) * nudgeMag;
+      }
+    }
+
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(x + nudgeX, y + nudgeY);
 
     const skin = getSkinColors();
 
