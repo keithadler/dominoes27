@@ -4135,7 +4135,7 @@ class Game {
           <span class="opp-name${isTurn ? ' active-turn' : ''}" style="${!isTurn ? 'color:hsla(' + c.h + ',' + c.s + '%,' + (c.l + 30) + '%,0.9);' : ''}">${teamIcon}${player.name}</span>
           ${teamLabel}
           <span class="opp-record">${rec.wins}W ${rec.losses}L</span>
-          ${player.personality ? '<span class="personality-badge">' + player.personality.icon + ' ' + player.personality.name + '</span>' : ''}
+          ${player.personality ? '<span class="personality-badge">' + player.personality.icon + ' ' + _tUI(player.personality.name) + '</span>' : ''}
         </div>
       `;
       el.appendChild(label);
@@ -4248,8 +4248,8 @@ class Game {
           return `<div class="achievement-row ${isUnlocked ? 'unlocked' : 'locked'}">
             <span class="achievement-icon">${a.icon}</span>
             <div class="achievement-info">
-              <div class="achievement-name">${a.name}</div>
-              <div class="achievement-desc">${a.desc}</div>
+              <div class="achievement-name">${_tUI(a.name)}</div>
+              <div class="achievement-desc">${_tUI(a.desc)}</div>
             </div>
           </div>`;
         }).join('')}
@@ -4925,15 +4925,15 @@ function showTutorial(onClose) {
 
 // --- AI Personalities ---
 const AI_PERSONALITIES = [
-  { id: 'aggressive', get name() { return _tUI('aggressive'); }, desc: 'Plays heavy tiles first, targets scoring', icon: '🔥',
+  { id: 'aggressive', name: 'aggressive', desc: 'Plays heavy tiles first, targets scoring', icon: '🔥',
     tweaks: { preferHeavy: 3, preferScore: 2, preferBlock: 0 } },
-  { id: 'defensive', get name() { return _tUI('defensive'); }, desc: 'Keeps options open, avoids risk', icon: '🛡️',
+  { id: 'defensive', name: 'defensive', desc: 'Keeps options open, avoids risk', icon: '🛡️',
     tweaks: { preferHeavy: -1, preferScore: 1, preferBlock: 2 } },
-  { id: 'chaotic', get name() { return _tUI('chaotic'); }, desc: 'Unpredictable, random choices', icon: '🎲',
+  { id: 'chaotic', name: 'chaotic', desc: 'Unpredictable, random choices', icon: '🎲',
     tweaks: { preferHeavy: 0, preferScore: 0, preferBlock: 0, chaos: 5 } },
-  { id: 'calculated', get name() { return _tUI('calculated'); }, desc: 'Maximizes future options', icon: '🧠',
+  { id: 'calculated', name: 'calculated', desc: 'Maximizes future options', icon: '🧠',
     tweaks: { preferHeavy: 0, preferScore: 1.5, preferBlock: 1, futureWeight: 3 } },
-  { id: 'bully', get name() { return _tUI('bully'); }, desc: 'Targets the leader, plays to block', icon: '😈',
+  { id: 'bully', name: 'bully', desc: 'Targets the leader, plays to block', icon: '😈',
     tweaks: { preferHeavy: 1, preferScore: 1, preferBlock: 4 } },
 ];
 
@@ -5113,23 +5113,23 @@ function trackStat(key, value) {
 
 // --- Achievements ---
 const ACHIEVEMENTS = [
-  { id: 'first_win', icon: '🏆', get name() { return _tUI('achFirstVictory'); }, get desc() { return _tUI('achFirstVictoryDesc'); } },
-  { id: 'five_star', icon: '⭐', get name() { return _tUI('achFiveStar'); }, get desc() { return _tUI('achFiveStarDesc'); } },
-  { id: 'shutout', icon: '🚫', get name() { return _tUI('achShutout'); }, get desc() { return _tUI('achShutoutDesc'); } },
-  { id: 'streak_3', icon: '🔥', get name() { return _tUI('achOnFire'); }, get desc() { return _tUI('achOnFireDesc'); } },
-  { id: 'streak_5', icon: '💎', get name() { return _tUI('achUnstoppable'); }, get desc() { return _tUI('achUnstoppableDesc'); } },
-  { id: 'score_20', icon: '💰', get name() { return _tUI('achBigScore'); }, get desc() { return _tUI('achBigScoreDesc'); } },
-  { id: 'score_25', icon: '🎯', get name() { return _tUI('achPerfectPlay'); }, get desc() { return _tUI('achPerfectPlayDesc'); } },
-  { id: 'games_10', icon: '🎮', get name() { return _tUI('achRegular'); }, get desc() { return _tUI('achRegularDesc'); } },
-  { id: 'games_50', icon: '👑', get name() { return _tUI('achDominoMaster'); }, get desc() { return _tUI('achDominoMasterDesc'); } },
-  { id: 'domino_win', icon: '🦴', get name() { return _tUI('achCleanSweep'); }, get desc() { return _tUI('achCleanSweepDesc'); } },
-  { id: 'no_hint_win', icon: '🧠', get name() { return _tUI('achNoHelp'); }, get desc() { return _tUI('achNoHelpDesc'); } },
-  { id: 'score_3_row', icon: '🔥', get name() { return _tUI('achHatTrick'); }, get desc() { return _tUI('achHatTrickDesc'); } },
-  { id: 'comeback_win', icon: '🔄', get name() { return _tUI('achComebackKid'); }, get desc() { return _tUI('achComebackKidDesc'); } },
-  { id: 'blocked_win', icon: '🧱', get name() { return _tUI('achRoadblock'); }, get desc() { return _tUI('achRoadblockDesc'); } },
-  { id: 'speed_demon', icon: '⚡', get name() { return _tUI('achSpeedDemon'); }, get desc() { return _tUI('achSpeedDemonDesc'); } },
-  { id: 'tiles_500', icon: '🎲', get name() { return _tUI('achTileVeteran'); }, get desc() { return _tUI('achTileVeteranDesc'); } },
-  { id: 'streak_10', icon: '🌟', get name() { return _tUI('achLegendary'); }, get desc() { return _tUI('achLegendaryDesc'); } },
+  { id: 'first_win', icon: '🏆', name: 'achFirstVictory', desc: 'achFirstVictoryDesc' },
+  { id: 'five_star', icon: '⭐', name: 'achFiveStar', desc: 'achFiveStarDesc' },
+  { id: 'shutout', icon: '🚫', name: 'achShutout', desc: 'achShutoutDesc' },
+  { id: 'streak_3', icon: '🔥', name: 'achOnFire', desc: 'achOnFireDesc' },
+  { id: 'streak_5', icon: '💎', name: 'achUnstoppable', desc: 'achUnstoppableDesc' },
+  { id: 'score_20', icon: '💰', name: 'achBigScore', desc: 'achBigScoreDesc' },
+  { id: 'score_25', icon: '🎯', name: 'achPerfectPlay', desc: 'achPerfectPlayDesc' },
+  { id: 'games_10', icon: '🎮', name: 'achRegular', desc: 'achRegularDesc' },
+  { id: 'games_50', icon: '👑', name: 'achDominoMaster', desc: 'achDominoMasterDesc' },
+  { id: 'domino_win', icon: '🦴', name: 'achCleanSweep', desc: 'achCleanSweepDesc' },
+  { id: 'no_hint_win', icon: '🧠', name: 'achNoHelp', desc: 'achNoHelpDesc' },
+  { id: 'score_3_row', icon: '🔥', name: 'achHatTrick', desc: 'achHatTrickDesc' },
+  { id: 'comeback_win', icon: '🔄', name: 'achComebackKid', desc: 'achComebackKidDesc' },
+  { id: 'blocked_win', icon: '🧱', name: 'achRoadblock', desc: 'achRoadblockDesc' },
+  { id: 'speed_demon', icon: '⚡', name: 'achSpeedDemon', desc: 'achSpeedDemonDesc' },
+  { id: 'tiles_500', icon: '🎲', name: 'achTileVeteran', desc: 'achTileVeteranDesc' },
+  { id: 'streak_10', icon: '🌟', name: 'achLegendary', desc: 'achLegendaryDesc' },
 ];
 function getUnlockedAchievements() {
   try { return JSON.parse(localStorage.getItem('domino_achievements') || '[]'); } catch(e) { return []; }
@@ -5164,7 +5164,7 @@ function showAchievementPopup(id) {
   if (!ach) return;
   const el = document.createElement('div');
   el.className = 'achievement-popup';
-  el.innerHTML = `<span class="ach-icon">${ach.icon}</span><div><div class="ach-label">${_tUI('achievementUnlocked')}</div><div class="ach-text">${ach.name}</div></div>`;
+  el.innerHTML = `<span class="ach-icon">${ach.icon}</span><div><div class="ach-label">${_tUI('achievementUnlocked')}</div><div class="ach-text">${_tUI(ach.name)}</div></div>`;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 4000);
 }
