@@ -658,10 +658,13 @@ body::after {
   .roster-card .roster-avatar { width: 40px; height: 40px; }
   #score-bar { gap: 6px; padding: 4px 8px; font-size: 0.8rem; }
   .sb-team-score, .sb-ps-score { font-size: 0.95rem; }
-  #end-sum-display { top: 50px; right: 8px; padding: 6px 12px; }
-  #end-sum-display .sum-value { font-size: 1.2rem; }
-  #end-sum-left .turn-avatar { width: 32px; height: 32px; }
-  #end-sum-left .turn-name { font-size: 0.65rem; max-width: 60px; }
+  #end-sum-display { top: 50px; right: 8px; padding: 6px 10px; gap: 8px; }
+  #end-sum-display .sum-value { font-size: 1.1rem; }
+  #end-sum-left .turn-avatar { width: 28px; height: 28px; }
+  #end-sum-left .turn-name { font-size: 0.6rem; max-width: 55px; }
+  #end-sum-left { min-width: 40px; }
+  #end-sum-breakdown { font-size: 0.65rem; }
+  #end-sum-score { font-size: 0.6rem; }
   .think-card { padding: 12px 20px; gap: 10px; }
   .think-card .think-avatar { width: 36px; height: 36px; }
   .think-card .think-name { font-size: 0.85rem; }
@@ -1110,46 +1113,56 @@ body::after {
 
 /* Phone-specific (< 480px) */
 @media (max-width: 480px) {
-  .opponent-hand.left, .opponent-hand.right { width: 44px; padding: 2px 2px; }
-  .opponent-hand.top { min-height: 44px; padding: 3px 6px; }
-  .opp-avatar { width: 28px; height: 28px; border-width: 2px; }
-  .opp-name { font-size: 0.6rem; }
-  .opp-score { font-size: 0.85rem; }
+  .opponent-hand.left, .opponent-hand.right { width: 40px; padding: 2px 1px; }
+  .opponent-hand.top { min-height: 40px; padding: 3px 6px; }
+  .opp-avatar { width: 24px; height: 24px; border-width: 2px; }
+  .opp-name { font-size: 0.55rem; }
+  .opp-score { font-size: 0.75rem; }
   .opp-record { display: none; }
   .personality-badge { display: none; }
-  .face-down { width: 16px; height: 8px; border-radius: 2px; }
-  .face-down.vertical { width: 8px; height: 16px; }
+  .face-down { width: 14px; height: 7px; border-radius: 2px; }
+  .face-down.vertical { width: 7px; height: 14px; }
   .face-down::before, .face-down::after { display: none; }
-  .hand-tile { width: 42px; height: 84px; border-radius: 6px; }
-  .hand-tile .half svg { width: 34px; height: 34px; }
-  #player-hand { gap: 5px; padding: 6px 8px 10px; max-height: 120px; min-height: 70px; }
-  #human-info { gap: 6px; padding: 4px 6px; flex-wrap: wrap; }
-  #human-info .human-avatar { width: 28px; height: 28px; }
-  #human-info .human-name { font-size: 0.7rem; }
-  #human-info .human-score { font-size: 0.9rem; }
+  .hand-tile { width: 46px; height: 92px; border-radius: 7px; }
+  .hand-tile .half svg { width: 36px; height: 36px; }
+  #player-hand { gap: 6px; padding: 8px 10px 6px; max-height: 130px; min-height: 80px; margin-bottom: -40px; }
+  #human-info { gap: 6px; padding: 4px 8px; flex-wrap: nowrap; overflow-x: auto; }
+  #human-info .human-avatar { width: 24px; height: 24px; }
+  #human-info .human-name { font-size: 0.65rem; }
+  #human-info .human-score { font-size: 0.85rem; }
   #human-info .human-record { display: none; }
-  .btn-draw, .btn-pass, .btn-hint { padding: 5px 8px; font-size: 0.65rem; border-radius: 6px; }
-  #boneyard-area { min-height: 28px; padding: 2px 6px; }
-  #boneyard-tiles { width: 50px; height: 18px; }
-  .bone-tile { width: 12px; height: 6px; }
+  .btn-draw, .btn-pass, .btn-hint { padding: 6px 10px; font-size: 0.7rem; border-radius: 7px; white-space: nowrap; }
+  #boneyard-area { min-height: 24px; padding: 2px 4px; }
+  #boneyard-tiles { width: 40px; height: 16px; }
+  .bone-tile { width: 10px; height: 5px; }
   #boneyard-label { font-size: 0.6rem; }
-  #floating-arrow { width: 40px; height: 40px; }
-  #floating-arrow::after { border-left-width: 20px; border-right-width: 20px; border-top-width: 34px; }
-  #floating-arrow.point-up::after { border-bottom-width: 34px; }
-  #floating-arrow.point-left::after { border-top-width: 20px; border-bottom-width: 20px; border-right-width: 34px; }
-  #floating-arrow.point-right::after { border-top-width: 20px; border-bottom-width: 20px; border-left-width: 34px; }
+  #floating-arrow { display: none; }
   .score-popup { font-size: 2rem; }
   .score-popup .score-label { font-size: 0.7rem; }
-  #score-bar { gap: 4px; padding: 4px 6px; font-size: 0.75rem; }
-  .sb-team-score, .sb-ps-score { font-size: 0.85rem; }
-  .sb-team, .sb-player-score { padding: 3px 6px; border-radius: 6px; }
-  .sb-target { font-size: 0.55rem; }
-  .sb-vs { font-size: 0.7rem; }
-  #end-sum-display { padding: 6px 8px; top: auto; bottom: 180px; right: 4px; gap: 6px; border-radius: 10px; }
-  #end-sum-display .sum-value { font-size: 1rem; }
-  #end-sum-left .turn-avatar { width: 24px; height: 24px; }
-  #end-sum-left .turn-name { font-size: 0.6rem; }
-  #end-sum-left { min-width: 50px; gap: 2px; }
+
+  /* Score bar — compact single row */
+  #score-bar { gap: 4px; padding: 3px 6px; font-size: 0.7rem; }
+  #score-bar-content { gap: 4px; }
+  .sb-team-score, .sb-ps-score { font-size: 0.8rem; }
+  .sb-team, .sb-player-score { padding: 2px 6px; border-radius: 6px; gap: 4px; }
+  .sb-ps-name { max-width: 48px; font-size: 0.65rem; }
+  .sb-team-name { max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.65rem; }
+  .sb-target { font-size: 0.5rem; }
+  .sb-vs { font-size: 0.6rem; }
+
+  /* End sum — compact, hide the avatar/last-played section on phones */
+  #end-sum-display { 
+    padding: 4px 8px; top: auto; bottom: 170px; right: 4px; 
+    gap: 4px; border-radius: 8px; font-size: 0.7rem;
+    max-width: 120px;
+  }
+  #end-sum-display .sum-value { font-size: 0.9rem; }
+  #end-sum-display .sum-label { font-size: 0.45rem; letter-spacing: 1px; }
+  #end-sum-left { display: none; }
+  #last-played-tile { display: none; }
+  #end-sum-breakdown { font-size: 0.6rem; }
+  #end-sum-score { font-size: 0.6rem; }
+
   .menu-container { padding: 20px 16px; border-radius: 16px; }
   .game-title { font-size: 1.8rem; letter-spacing: 3px; }
   .subtitle { font-size: 0.85rem; letter-spacing: 5px; margin-bottom: 16px; }
@@ -1518,6 +1531,13 @@ body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
   .roster-card .roster-record { font-size: 0.6rem; }
   .roster-reroll { width: 28px; height: 28px; font-size: 0.85rem; }
   .count-player { min-width: auto; flex-wrap: wrap; }
+  .hand-tile { width: 40px; height: 80px; }
+  .hand-tile .half svg { width: 32px; height: 32px; }
+  #player-hand { gap: 4px; }
+  .opponent-hand.left, .opponent-hand.right { width: 36px; }
+  .opp-avatar { width: 20px; height: 20px; }
+  .opp-name { font-size: 0.5rem; }
+  #end-sum-display { max-width: 100px; padding: 3px 6px; }
 }
 
 /* Boneyard count badge responsive */
@@ -1551,14 +1571,14 @@ body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
 #score-bar-content { overflow: hidden; }
 .sb-ps-name { max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 480px) {
-  .sb-ps-name { max-width: 40px; font-size: 0.7rem; }
-  .sb-team-name { max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.7rem; }
+  .sb-ps-name { max-width: 36px; font-size: 0.6rem; }
+  .sb-team-name { max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.6rem; }
 }
 
 /* Zoom controls mobile */
 @media (max-width: 480px) {
-  #zoom-controls { bottom: 130px; right: 6px; }
-  .zoom-btn { width: 28px; height: 28px; font-size: 0.9rem; border-radius: 6px; }
+  #zoom-controls { bottom: 140px; right: 4px; }
+  .zoom-btn { width: 26px; height: 26px; font-size: 0.85rem; border-radius: 5px; }
 }
 
 /* Ensure overlays are scrollable on small screens */
