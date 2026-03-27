@@ -391,9 +391,9 @@ body::after {
 .hand-tile .half { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; }
 .hand-tile .divider { width: 78%; height: 2px; background: linear-gradient(90deg, transparent, #b0a880, #908060, #b0a880, transparent); border-radius: 1px; }
 
-/* Turn toast notification — left justified near top */
+/* Turn toast notification — left justified near bottom */
 #turn-indicator {
-  position: fixed; top: 50px; left: 16px;
+  position: fixed; bottom: 160px; left: 16px;
   display: flex; align-items: center; gap: 10px;
   padding: 10px 24px 10px 14px;
   background: linear-gradient(145deg, rgba(20,20,20,0.9), rgba(10,10,10,0.95));
@@ -411,7 +411,7 @@ body::after {
 }
 #turn-indicator.fading {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(10px);
   transition: opacity 0.5s ease-in, transform 0.5s ease-in;
 }
 #turn-indicator .toast-avatar {
@@ -1507,7 +1507,7 @@ body[data-theme="light"] .zoom-btn:hover { background: rgba(255,255,255,0.8); }
 [dir="rtl"] .dd-item { text-align: right; }
 [dir="rtl"] .dd-key { float: left; margin-left: 0; margin-right: 12px; }
 [dir="rtl"] #end-sum-display { right: auto; left: 14px; }
-[dir="rtl"] #turn-indicator { left: auto; right: 16px; }
+[dir="rtl"] #turn-indicator { left: auto; right: 16px; bottom: 160px; }
 [dir="rtl"] .log-entry { direction: rtl; }
 [dir="rtl"] .stat-row { direction: rtl; }
 [dir="rtl"] .speech-bubble { direction: rtl; }
