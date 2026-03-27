@@ -1853,7 +1853,8 @@ class Game {
     }
 
     // Use the preview names/seeds from the roster
-    const names = this._previewNames || pickRandomNames(4);
+    const _fallbackPicked = !this._previewNames ? pickRandomNames(4) : null;
+    const names = this._previewNames || _fallbackPicked.map(p => p.name);
     const seeds = this._previewSeeds || names.map((n, i) => n + '-' + i);
     const diffs = this._previewDiffs || names.map(() => difficulties[Math.floor(Math.random() * 3)]);
 
