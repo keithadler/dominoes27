@@ -223,18 +223,35 @@ class AI {
     // When a player draws from the boneyard, it means they couldn't match
     // any of the open end values at that moment. We record this so we can
     // later leave those values open to block them.
+    //
+    // IMPORTANT: If the player later PLAYS on a value they drew on, they
+    // must have drawn a tile with that value. So we invalidate that intel.
     if (ctx.gameLog) {
+      // First pass: record all draw events
+      const drawIntel = new Map(); // value → Set of player indices
       for (const entry of ctx.gameLog) {
         if (entry.action === 'draw' && entry._openValues) {
           const playerIdx = ctx.players ? ctx.players.findIndex(p => p.name === entry.player) : -1;
           if (playerIdx >= 0) {
             for (const val of entry._openValues) {
-              if (!intel.opponentCantPlay.has(val)) intel.opponentCantPlay.set(val, new Set());
-              intel.opponentCantPlay.get(val).add(playerIdx);
+              if (!drawIntel.has(val)) drawIntel.set(val, new Set());
+              drawIntel.get(val).add(playerIdx);
+            }
+          }
+        }
+        // Second pass: invalidate when a player plays on a value they drew on
+        if (entry.action === 'play' && entry.end !== 'first') {
+          const playerIdx = ctx.players ? ctx.players.findIndex(p => p.name === entry.player) : -1;
+          if (playerIdx >= 0) {
+            // This player successfully played — they have tiles for this end value
+            // Remove them from the "can't play" set for all values at that end
+            for (const [val, players] of drawIntel) {
+              players.delete(playerIdx);
             }
           }
         }
       }
+      intel.opponentCantPlay = drawIntel;
     }
 
     return intel;
@@ -270,14 +287,17 @@ class AI {
    * outweigh minor preferences (like keeping value diversity).
    *
    * SCORING BREAKDOWN (approximate weights):
-   *   - Immediate scoring opportunity:  up to ~30 points (via scorePressure)
-   *   - Blocking opponents:             up to ~12 points (3 per blocked opponent)
-   *   - Future playability:             up to ~10 points (1.5 per future play)
-   *   - Opponent hand blocking:         up to ~8 points  (4 per changed end value)
-   *   - Pip dumping (late game):        up to ~5 points
-   *   - Value diversity (early game):   up to ~5 points
-   *   - Double preference:              ~2 points
-   *   - Personality chaos:              ±5 points (random, chaotic AI only)
+   *   - Going out (domino):              25 points (instant win for the round)
+   *   - Immediate scoring opportunity:   up to ~30 points (via scorePressure)
+   *   - Blocking opponents:              up to ~12 points (3 per blocked opponent)
+   *   - Future playability:              up to ~10 points (1.5 per future play)
+   *   - Future scoring setup:            up to ~8 points  (0.3× per potential score)
+   *   - Opponent hand blocking:          up to ~8 points  (4 per changed end value)
+   *   - Pip dumping (late game):         up to ~5 points  (always, not just non-scoring)
+   *   - Value diversity (early game):    up to ~5 points
+   *   - Team value protection:           penalty for closing teammate-friendly ends
+   *   - Double preference:               ~2 points
+   *   - Personality chaos:               ±5 points (random, chaotic AI only)
    *
    * @param {{tile: Tile, placement: object}} play - The move to evaluate.
    * @param {Tile[]}  hand        - Full hand (before this play).
@@ -292,6 +312,12 @@ class AI {
     const tile = play.tile;
     const tw = personality ? personality.tweaks : {};
 
+    // ----- SIMULATE THE BOARD AFTER THIS PLAY (cached, used by multiple factors) -----
+    const sim = this._cloneBoard(board);
+    sim.placeTile(tile, play.placement);
+    const openVals = sim.getOpenValues();
+    const immediate = sim.getScore();
+
     // ----- BASE HEURISTICS -----
 
     // Prefer playing doubles early — they're harder to play later because
@@ -302,13 +328,13 @@ class AI {
     // our pip count in case the round ends in a block.
     score += tile.pips * (0.3 + (tw.preferHeavy || 0) * 0.15);
 
+    // ----- GOING OUT BONUS -----
+    // If this play empties our hand, that's a domino — huge bonus.
+    const remaining = hand.filter(t => !t.equals(tile));
+    if (remaining.length === 0) score += 25;
+
     // ----- FUTURE PLAYABILITY -----
     // After this play, how many of our remaining tiles can we still play?
-    // Simulate the board after our play and check each remaining tile.
-    const remaining = hand.filter(t => !t.equals(tile));
-    const sim = this._cloneBoard(board);
-    sim.placeTile(tile, play.placement);
-    const openVals = sim.getOpenValues();
     const futurePlayable = remaining.filter(t => openVals.some(v => t.has(v)));
 
     // Each future playable tile is worth 1.5 points
@@ -317,6 +343,22 @@ class AI {
     // PENALTY: if this play leaves us with NO future plays, that's very bad
     // (we'd have to draw from the boneyard next turn)
     if (remaining.length > 0 && futurePlayable.length === 0) score -= 5;
+
+    // ----- FUTURE SCORING POTENTIAL -----
+    // Check if any of our remaining playable tiles would score on the new board.
+    // This rewards plays that SET UP scoring opportunities for our next turn.
+    for (const ft of futurePlayable) {
+      const futurePlacements = sim.getValidPlacements(ft);
+      for (const fp of futurePlacements) {
+        const futureSim = this._cloneBoard(sim);
+        futureSim.placeTile(ft, fp);
+        const futureScore = futureSim.getScore();
+        if (futureScore > 0) {
+          score += futureScore * 0.3; // 30% credit for potential next-turn scores
+          break; // only count best scoring option per tile
+        }
+      }
+    }
 
     // Personality chaos factor — random noise for unpredictable AI
     if (tw.chaos) score += (Math.random() - 0.5) * tw.chaos * 2;
@@ -341,7 +383,9 @@ class AI {
     // In 2v2 mode, prefer leaving end values that our teammate might have.
     // We estimate this by counting how many UNSEEN tiles contain each
     // open value. More unseen = higher chance our teammate has one.
+    // Also PENALIZE closing off values the teammate might need.
     if (intel.teamMode) {
+      const oldOpenVals = board.getOpenValues();
       for (const val of openVals) {
         let unseen = 0;
         for (let other = 0; other <= 6; other++) {
@@ -350,27 +394,35 @@ class AI {
         }
         score += unseen * 0.5;  // 0.5 points per unseen matching tile
       }
+      // Penalize removing values that were open and had many unseen tiles
+      for (const oldVal of oldOpenVals) {
+        if (!openVals.includes(oldVal)) {
+          // This value was open but our play closed it off
+          let unseenOld = 0;
+          for (let other = 0; other <= 6; other++) {
+            const key = `${Math.min(oldVal, other)}-${Math.max(oldVal, other)}`;
+            if (!intel.knownTiles.has(key)) unseenOld++;
+          }
+          if (unseenOld > 3) score -= unseenOld * 0.3; // penalty for closing a popular value
+        }
+      }
     }
 
     // ----- FACTOR #5: ENDGAME PIP MANAGEMENT -----
     // Late in the round (>50% of tiles played), prioritize getting rid
     // of heavy tiles. If the round ends in a block, we lose points equal
     // to our remaining pips. So dump the big ones first.
-    // Exception: don't penalize scoring plays (they're always good).
+    // This bonus stacks with scoring — a heavy tile that also scores is ideal.
     if (intel.roundProgress > 0.5) {
-      const immediate = this._simulateScore(play, board);
-      if (immediate === 0) {
-        // Weight increases as round progresses: 0.3 at 50% → 1.0 at 100%
-        const pipWeight = 0.3 + intel.roundProgress * 0.7;
-        score += tile.pips * pipWeight * 0.4;
-      }
+      // Weight increases as round progresses: 0.3 at 50% → 1.0 at 100%
+      const pipWeight = 0.3 + intel.roundProgress * 0.7;
+      score += tile.pips * pipWeight * 0.4;
     }
 
     // ----- FACTOR #6: SCORE-AWARE PLAY -----
     // When we're BEHIND (scorePressure > 0), weight immediate scoring higher.
     // When we're AHEAD (scorePressure < 0), prefer safe plays with options.
     if (intel.scorePressure > 0) {
-      const immediate = this._simulateScore(play, board);
       score += immediate * intel.scorePressure * 2;
     }
     if (intel.scorePressure < 0) {
