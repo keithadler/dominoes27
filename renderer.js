@@ -159,7 +159,7 @@ class Renderer {
   _drawPlacedTile(p, isLast) {
     const ctx = this.ctx;
     const { tile, x, y, horizontal } = p;
-    const spinnerScale = p.isSpinner ? 1.4 : 1;
+    const spinnerScale = p.isSpinner ? 1.4 : (tile && tile.isDouble ? 1.15 : 1);
     const w = (horizontal ? this.tileH : this.tileW) * spinnerScale;
     const h = (horizontal ? this.tileW : this.tileH) * spinnerScale;
     const r = 7 * spinnerScale;

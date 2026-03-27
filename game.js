@@ -3188,10 +3188,21 @@ class Game {
       const progress = Math.min(1, maxScore / this.targetScore);
       const boardArea = document.getElementById('board-area');
       if (boardArea) {
-        // Subtle red tint as game gets close to ending
-        boardArea.style.boxShadow = progress > 0.7
-          ? `inset 0 0 ${60 + progress * 80}px rgba(232, 80, 40, ${(progress - 0.7) * 0.3})`
-          : 'none';
+        if (progress > 0.8) {
+          // Final stretch — intense red/orange pulsing glow
+          const intensity = (progress - 0.8) * 5; // 0→1
+          boardArea.style.boxShadow = `inset 0 0 ${80 + intensity * 60}px rgba(232, 60, 30, ${0.15 + intensity * 0.2}), inset 0 0 ${20 + intensity * 40}px rgba(255, 80, 40, ${0.1 + intensity * 0.15})`;
+        } else if (progress > 0.5) {
+          // Heating up — warm amber glow
+          const intensity = (progress - 0.5) * 3.3; // 0→1
+          boardArea.style.boxShadow = `inset 0 0 ${40 + intensity * 50}px rgba(232, 167, 53, ${0.05 + intensity * 0.1})`;
+        } else if (progress > 0.25) {
+          // Early game — subtle green energy
+          const intensity = (progress - 0.25) * 4; // 0→1
+          boardArea.style.boxShadow = `inset 0 0 ${30 + intensity * 30}px rgba(74, 175, 108, ${0.03 + intensity * 0.05})`;
+        } else {
+          boardArea.style.boxShadow = '';
+        }
       }
     }
 
