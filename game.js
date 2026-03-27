@@ -458,6 +458,12 @@ class Game {
     this._renderBoard();
     this._updateUI();
 
+    // Hide player hand, arrow, and bottom bar during replay
+    const bottomBar = document.getElementById('bottom-bar');
+    const arrow = document.getElementById('floating-arrow');
+    if (bottomBar) bottomBar.style.display = 'none';
+    if (arrow) arrow.style.display = 'none';
+
     const plays = this.gameLog.filter(e => e.action === 'play');
     let idx = 0;
 
@@ -471,10 +477,35 @@ class Game {
     const replayNext = () => {
       if (idx >= plays.length) {
         banner.textContent = '🔄 REPLAY COMPLETE';
-        setTimeout(() => { banner.remove(); this.showScreen('gameover-screen'); }, 2000);
+        setTimeout(() => {
+          banner.remove();
+          if (bottomBar) bottomBar.style.display = '';
+          if (arrow) arrow.style.display = '';
+          this.showScreen('gameover-screen');
+        }, 2000);
         return;
       }
       const entry = plays[idx];
+
+      // Check if we crossed a round boundary — reset the board
+      if (idx > 0) {
+        const prevEntry = plays[idx - 1];
+        // Find if there's a round-end between the previous play and this one
+        const prevTurn = prevEntry._turn || 0;
+        const curTurn = entry._turn || 0;
+        const roundEndBetween = this.gameLog.some(e =>
+          e.action === 'round-end' && e.turn > (plays[idx-1].turn || 0) && e.turn < (entry.turn || Infinity)
+        );
+        if (roundEndBetween) {
+          this.board = new Board();
+          this.placements = [];
+          this._renderBoard();
+          banner.textContent = `🔄 NEW ROUND`;
+          idx++; // skip to next after a brief pause
+          setTimeout(replayNext, 1500);
+          return;
+        }
+      }
       const parts = entry.tile.split('|');
       const tile = new Tile(parseInt(parts[0]), parseInt(parts[1]));
       const placement = { end: entry.end };
@@ -2777,6 +2808,7 @@ class Game {
   _endGame() {
     this.gameOver = true;
     if (this.sfx) this.sfx.win();
+    if (this.music) this.music.setIntensity(1); // Full intensity for game end
 
     // Record wins/losses
     if (this.teamMode && this.teams) {
@@ -3180,8 +3212,9 @@ class Game {
     // Update music intensity based on score closeness
     if (this.music && this.players) {
       const maxScore = Math.max(...this.players.map(p => p.score));
-      const intensity = Math.min(1, maxScore / this.targetScore);
-      this.music.setIntensity(intensity);
+      const rawIntensity = Math.min(1, maxScore / this.targetScore);
+      // Cap at 0.4 during gameplay — full intensity only at game end
+      this.music.setIntensity(rawIntensity * 0.4);
     }
 
     // Reactive board theme — felt color shifts as game gets intense
