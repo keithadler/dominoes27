@@ -233,7 +233,7 @@ body::after {
 /* Human info bar — single row with controls */
 #human-info {
   display: flex; align-items: center; justify-content: center; gap: 14px;
-  padding: 8px 16px;
+  padding: 4px 16px;
   background: linear-gradient(0deg, rgba(0,0,0,0.1), transparent);
 }
 #human-info .human-avatar {
@@ -339,8 +339,8 @@ body::after {
 /* Bottom bar */
 #bottom-bar {
   flex-shrink: 0; display: flex; flex-direction: column;
-  background: linear-gradient(0deg, rgba(0,0,0,0.5), rgba(0,0,0,0.25));
-  border-top: 2px solid rgba(90,60,20,0.15);
+  background: linear-gradient(0deg, rgba(0,0,0,0.35), transparent);
+  border-top: none;
 }
 /* Hand tiles come first (above controls) */
 #player-hand { order: -1; }
@@ -364,7 +364,7 @@ body::after {
 }
 
 /* 11. Card entrance animation */
-#player-hand { display: flex; justify-content: center; gap: 10px; padding: 12px 24px 16px; flex-wrap: wrap; overflow-y: auto; max-height: 170px; min-height: 100px; }
+#player-hand { display: flex; justify-content: center; gap: 10px; padding: 0 24px; flex-wrap: wrap; overflow-y: visible; max-height: 140px; min-height: 80px; margin-bottom: -20px; position: relative; z-index: 3; }
 
 /* 3/4/5/6/18. 3D Hand Tiles with gloss, perspective tilt, playable pulse */
 .hand-tile {
