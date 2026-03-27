@@ -171,6 +171,24 @@ class Game {
     setTxt('#log-close-btn', u.close || 'Close');
     setTxt('#shortcuts-close-btn', u.close || 'Close');
     setTxt('#tracker-close-btn', u.close || 'Close');
+
+    // Keyboard shortcuts panel
+    setTxt('#sc-title', u.keyboardShortcuts || 'Keyboard Shortcuts');
+    setTxt('#sc-select', u.scSelectTile || 'Select playable tile by position');
+    setTxt('#sc-left', u.scPlaceLeft || 'Place on Left end');
+    setTxt('#sc-right', u.scPlaceRight || 'Place on Right end / Rules');
+    setTxt('#sc-north', u.scPlaceNorth || 'Place on North end');
+    setTxt('#sc-south', u.scPlaceSouth || 'Place on South end');
+    setTxt('#sc-draw', u.scDraw || 'Draw from boneyard');
+    setTxt('#sc-hint', u.scHint || 'Use Hint (−5 pts)');
+    setTxt('#sc-pass', u.scPass || 'Pass turn');
+    setTxt('#sc-menu', u.scMenu || 'Open menu');
+    setTxt('#sc-log', u.scGameLog || 'Game log');
+    setTxt('#sc-tracker', u.scTracker || 'Tile tracker');
+    setTxt('#sc-stats', u.scStats || 'Stats & Achievements');
+    setTxt('#sc-prefs', u.scPrefs || 'Preferences');
+    setTxt('#sc-toggle', u.scToggle || 'Toggle this panel');
+    setTxt('#sc-close', u.scClose || 'Close any overlay');
     setTxt('#rules-close-btn', '← ' + (u.close || 'Back'));
 
     // Rules content
