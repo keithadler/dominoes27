@@ -2840,7 +2840,15 @@ class Game {
   _countPipSVG(n) {
     const size = 24;
     const s = size * 0.22;
-    const positions = [[0,0],[[- s,-s],[s,s]],[[-s,-s],[0,0],[s,s]],[[-s,-s],[s,-s],[-s,s],[s,s]],[[-s,-s],[s,-s],[0,0],[-s,s],[s,s]],[[-s,-s],[s,-s],[-s,0],[s,0],[-s,s],[s,s]]];
+    const positions = {
+      0: [],
+      1: [[0,0]],
+      2: [[-s,-s],[s,s]],
+      3: [[-s,-s],[0,0],[s,s]],
+      4: [[-s,-s],[s,-s],[-s,s],[s,s]],
+      5: [[-s,-s],[s,-s],[0,0],[-s,s],[s,s]],
+      6: [[-s,-s],[s,-s],[-s,0],[s,0],[-s,s],[s,s]]
+    };
     const dots = (positions[n] || []).map(([x,y]) =>
       `<circle cx="${size/2+x}" cy="${size/2+y}" r="2.5" fill="#333"/>`
     ).join('');
