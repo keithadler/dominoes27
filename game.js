@@ -445,6 +445,56 @@ class Game {
     }).catch(() => {});
   }
 
+  /** Replay the game log step by step on the board. */
+  _startReplay() {
+    if (!this.gameLog || this.gameLog.length === 0) return;
+    this.showScreen('game-screen');
+
+    // Reset board visually
+    this.board = new Board();
+    this.placements = [];
+    this._renderBoard();
+    this._updateUI();
+
+    const plays = this.gameLog.filter(e => e.action === 'play');
+    let idx = 0;
+
+    // Show replay banner
+    const banner = document.createElement('div');
+    banner.id = 'replay-banner';
+    banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:90;background:rgba(90,138,240,0.9);color:#fff;padding:10px 24px;border-radius:12px;font-weight:700;font-size:0.9rem;letter-spacing:1px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    banner.textContent = '🔄 REPLAY';
+    document.body.appendChild(banner);
+
+    const replayNext = () => {
+      if (idx >= plays.length) {
+        banner.textContent = '🔄 REPLAY COMPLETE';
+        setTimeout(() => { banner.remove(); this.showScreen('gameover-screen'); }, 2000);
+        return;
+      }
+      const entry = plays[idx];
+      const parts = entry.tile.split('|');
+      const tile = new Tile(parseInt(parts[0]), parseInt(parts[1]));
+      const placement = { end: entry.end };
+      if (entry.end !== 'first') {
+        const ends = this.board.getOpenEnds();
+        const match = ends.find(e => e.end === entry.end && tile.has(e.value));
+        if (match) placement.matchValue = match.value;
+      }
+
+      this.board.placeTile(tile, placement);
+      this._addVisualPlacement(tile, placement);
+      this._renderBoard();
+
+      banner.textContent = `🔄 REPLAY — ${entry.player} ${entry.score > 0 ? '+' + entry.score : ''}  (${idx + 1}/${plays.length})`;
+
+      idx++;
+      setTimeout(replayNext, 1200);
+    };
+
+    setTimeout(replayNext, 800);
+  }
+
   /** Wires up all DOM event listeners (menu buttons, game controls, drag/drop, keyboard, resize). */
   _initUI() {
     // Menu button groups
@@ -470,6 +520,7 @@ class Game {
     document.getElementById('play-again').addEventListener('click', () => this.showScreen('menu-screen'));
     document.getElementById('rematch-btn').addEventListener('click', () => this.startGame(true));
     document.getElementById('share-log-btn').addEventListener('click', () => this._exportGameLog());
+    document.getElementById('replay-btn').addEventListener('click', () => this._startReplay());
     document.getElementById('menu-btn').addEventListener('click', () => {
       document.getElementById('game-dropdown').classList.toggle('hidden');
     });
@@ -1399,7 +1450,7 @@ class Game {
       };
       tileHTML = `
         <div class="ra-tile">
-          <svg width="100" height="180" viewBox="0 0 100 180">
+          <svg width="60" height="108" viewBox="0 0 100 180">
             <rect x="2" y="2" width="96" height="176" rx="12" fill="url(#tg)" stroke="#e8a735" stroke-width="2.5"/>
             <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffef8"/><stop offset="0.3" stop-color="#f5f0dc"/><stop offset="1" stop-color="#e8e0c4"/></linearGradient></defs>
             <line x1="20" y1="90" x2="80" y2="90" stroke="rgba(0,0,0,0.15)" stroke-width="2"/>
@@ -2088,6 +2139,19 @@ class Game {
 
     // Save undo state for human — removed
 
+    // Track best possible score for post-game analysis
+    let _bestPossibleScore = 0;
+    if (player.isHuman) {
+      for (const t of player.hand) {
+        const pls = this.board.getValidPlacements(t);
+        for (const pl of pls) {
+          const sim = new AI('easy')._cloneBoard(this.board);
+          sim.placeTile(t, pl);
+          _bestPossibleScore = Math.max(_bestPossibleScore, sim.getScore());
+        }
+      }
+    }
+
     player.hand = player.hand.filter(t => !t.equals(tile));
     this.board.placeTile(tile, placement);
     this._lastPlayedBy = player.index;
@@ -2112,7 +2176,8 @@ class Game {
       end: placement.end,
       score: scored ? score : 0,
       scores: logScores,
-      moveTime
+      moveTime,
+      _bestPossibleScore
     });
     if (scored) {
       player.score += score;
@@ -2375,6 +2440,17 @@ class Game {
       const canPlay = p.hand.some(t => this.board.canPlay(t));
       if (canPlay || this.boneyard.length > 0) {
         allStuck = false;
+        // Log passes for any skipped players
+        for (let j = 0; j < i; j++) {
+          const skippedIdx = (this.currentPlayer + j) % this.players.length;
+          const skipped = this.players[skippedIdx];
+          this.gameLog.push({
+            turn: this._logTurn++,
+            player: skipped.name,
+            avatar: skipped.avatar,
+            action: 'pass'
+          });
+        }
         // Advance to this player
         this.currentPlayer = idx;
         break;
@@ -2840,6 +2916,23 @@ class Game {
       <div class="analysis-row"><span>${this._t('bestSinglePlay')}</span><span class="analysis-value">+${analysis.bestPlay}</span></div>
       <div class="analysis-row"><span>${this._t('avgPointsPlay')}</span><span class="analysis-value">${analysis.avgScore}</span></div>
     `;
+
+    // Post-game missed play analysis
+    let missedHTML = '';
+    if (this.gameLog) {
+      const pName = this.players[0] ? this.players[0].name : '';
+      let missedCount = 0;
+      for (const entry of this.gameLog) {
+        if (entry.action === 'play' && entry.player === pName && entry.score === 0 && entry._bestPossibleScore > 0) {
+          missedCount++;
+        }
+      }
+      if (missedCount > 0) {
+        missedHTML = `<div class="analysis-row" style="color:#e04a3a;"><span>Missed Scoring Plays</span><span class="analysis-value">${missedCount}</span></div>`;
+      }
+    }
+    analysisDiv.innerHTML += missedHTML;
+
     container.appendChild(analysisDiv);
 
     // Show "GAME OVER!" on the board first, then transition
@@ -3003,6 +3096,14 @@ class Game {
           </div>
           <span class="sb-target">${this._t('playingTo')} ${this.targetScore}</span>
         `;
+        // Animate score changes (team mode)
+        requestAnimationFrame(() => {
+          scoreBar.querySelectorAll('.sb-ps-score, .sb-team-score').forEach(el => {
+            el.classList.remove('score-bump');
+            void el.offsetWidth;
+            el.classList.add('score-bump');
+          });
+        });
       } else {
         let html = roundLabel;
         for (const p of this.players) {
@@ -3014,6 +3115,14 @@ class Game {
         }
         html += `<span class="sb-target">${this._t('playingTo')} ${this.targetScore}</span>`;
         scoreBar.innerHTML = html;
+        // Animate score changes
+        requestAnimationFrame(() => {
+          scoreBar.querySelectorAll('.sb-ps-score, .sb-team-score').forEach(el => {
+            el.classList.remove('score-bump');
+            void el.offsetWidth;
+            el.classList.add('score-bump');
+          });
+        });
       }
     }
 
@@ -3071,6 +3180,19 @@ class Game {
       const maxScore = Math.max(...this.players.map(p => p.score));
       const intensity = Math.min(1, maxScore / this.targetScore);
       this.music.setIntensity(intensity);
+    }
+
+    // Reactive board theme — felt color shifts as game gets intense
+    if (this.players && this.targetScore) {
+      const maxScore = Math.max(...this.players.map(p => p.score));
+      const progress = Math.min(1, maxScore / this.targetScore);
+      const boardArea = document.getElementById('board-area');
+      if (boardArea) {
+        // Subtle red tint as game gets close to ending
+        boardArea.style.boxShadow = progress > 0.7
+          ? `inset 0 0 ${60 + progress * 80}px rgba(232, 80, 40, ${(progress - 0.7) * 0.3})`
+          : 'none';
+      }
     }
 
     // Last played info in the end-sum panel
@@ -3490,6 +3612,11 @@ class Game {
         }).join('')}
       </div>
       <div class="stat-section" style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.06);padding-top:16px;">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button id="export-data-btn" class="gm-btn" style="flex:1;background:rgba(90,138,240,0.15);border:1px solid rgba(90,138,240,0.3);color:#5a8af0;">📤 Export</button>
+          <button id="import-data-btn" class="gm-btn" style="flex:1;background:rgba(74,175,108,0.15);border:1px solid rgba(74,175,108,0.3);color:#4aaf6c;">📥 Import</button>
+        </div>
+        <input type="file" id="import-file-input" accept=".json" style="display:none;">
         <button id="reset-stats-btn" class="gm-btn" style="width:100%;background:rgba(224,74,58,0.15);border:1px solid rgba(224,74,58,0.3);color:#e04a3a;">${this._t('resetStats')}</button>
       </div>
     `;
@@ -3505,6 +3632,35 @@ class Game {
           localStorage.removeItem('domino_xp');
           this._renderStats();
         }
+      });
+    }
+    const exportBtn = document.getElementById('export-data-btn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        const blob = new Blob([exportGameData()], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'dominoes27-save.json'; a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+    const importBtn = document.getElementById('import-data-btn');
+    const importFile = document.getElementById('import-file-input');
+    if (importBtn && importFile) {
+      importBtn.addEventListener('click', () => importFile.click());
+      importFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (importGameData(reader.result)) {
+            this._renderStats();
+            this._updateXPBar();
+            this._applyLocale();
+          }
+        };
+        reader.readAsText(file);
+        importFile.value = '';
       });
     }
   }

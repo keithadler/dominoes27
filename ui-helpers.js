@@ -449,3 +449,39 @@ function spawnConfetti() {
     }, i * 50);
   }
 }
+
+/**
+ * Apply ambient time-of-day lighting effect to the game.
+ * Changes the vignette color based on local time.
+ */
+function applyTimeOfDayFX() {
+  const hour = new Date().getHours();
+  let ambientColor, ambientOpacity;
+  if (hour >= 6 && hour < 10) {
+    // Morning — warm golden
+    ambientColor = 'rgba(255, 200, 100, 0.06)';
+    ambientOpacity = 0.06;
+  } else if (hour >= 10 && hour < 17) {
+    // Daytime — neutral
+    ambientColor = 'rgba(255, 255, 255, 0.02)';
+    ambientOpacity = 0.02;
+  } else if (hour >= 17 && hour < 20) {
+    // Sunset — warm orange
+    ambientColor = 'rgba(255, 140, 50, 0.08)';
+    ambientOpacity = 0.08;
+  } else {
+    // Night — cool blue
+    ambientColor = 'rgba(60, 80, 180, 0.08)';
+    ambientOpacity = 0.08;
+  }
+  let fx = document.getElementById('time-fx');
+  if (!fx) {
+    fx = document.createElement('div');
+    fx.id = 'time-fx';
+    fx.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:0;transition:background 60s linear;';
+    document.body.appendChild(fx);
+  }
+  fx.style.background = `radial-gradient(ellipse at 50% 30%, ${ambientColor}, transparent 70%)`;
+}
+applyTimeOfDayFX();
+setInterval(applyTimeOfDayFX, 300000); // Update every 5 minutes

@@ -272,3 +272,31 @@ function getXPProgress() {
   const needed = data.level * 100;
   return { level: data.level, xp: data.xp, needed, pct: Math.round(data.xp / needed * 100) };
 }
+
+/**
+ * Export all game data (stats, achievements, XP, settings) as a JSON string.
+ * @returns {string} JSON blob of all localStorage domino_ keys.
+ */
+function exportGameData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('domino_')) data[key] = localStorage.getItem(key);
+  }
+  return JSON.stringify(data, null, 2);
+}
+
+/**
+ * Import game data from a JSON string, overwriting existing data.
+ * @param {string} json - JSON blob from exportGameData().
+ * @returns {boolean} True if import succeeded.
+ */
+function importGameData(json) {
+  try {
+    const data = JSON.parse(json);
+    for (const [key, value] of Object.entries(data)) {
+      if (key.startsWith('domino_')) localStorage.setItem(key, value);
+    }
+    return true;
+  } catch(e) { return false; }
+}
