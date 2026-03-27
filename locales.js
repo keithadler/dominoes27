@@ -1,0 +1,472 @@
+// ============================================================
+// ALL FIVES DOMINOES — Localization
+// ============================================================
+// Phrases stored as compact arrays: [category][generation][tier] = [strings]
+// Categories: o=opponent, t=teammate, d=draw, w=domino(win)
+// Generations: z=gen_z, m=millennial, x=gen_x, b=boomer
+// Tiers: 0=low, 1=mid, 2=high
+
+const LOCALES = {};
+
+// ---- ENGLISH ----
+LOCALES.en = {
+  name: 'English',
+  flag: '🇺🇸',
+  dir: 'ltr',
+  names: [
+    'Carlos','Maria','James','Aisha','Yuki','Priya','Liam','Sofia','Omar','Elena',
+    'Diego','Fatima','Chen','Amara','Raj','Lucia','Kofi','Ingrid','Mateo','Zara',
+    'Dante','Mei','Nico','Isla','Tariq','Rosa','Sven','Leila','Marco','Anya',
+    'Felix','Nadia','Hugo','Cleo','Ravi','Mila','Axel','Dina','Leo','Vera'
+  ],
+  cities: [
+    'Miami, FL','Brooklyn, NY','Houston, TX','Chicago, IL','Atlanta, GA',
+    'Phoenix, AZ','Denver, CO','Seattle, WA','Boston, MA','Nashville, TN',
+    'Portland, OR','Austin, TX','Detroit, MI','Memphis, TN','Oakland, CA',
+    'Philly, PA','New Orleans, LA','San Diego, CA','Dallas, TX','Baltimore, MD'
+  ],
+  ui: {
+    startGame: 'Start Game', resumeGame: '▶ Resume Saved Game', rematch: 'Rematch',
+    newGame: 'New Game', copyLog: '📋 Copy Game Log', copied: '✅ Copied!',
+    gameMode: 'Game Mode', ffa: 'Free For All', teams: '2v2 Teams',
+    opponents: 'Opponents', playTo: 'Play To', custom: 'Custom',
+    aiDifficulty: 'AI Difficulty', easy: '😊 Easy', mixed: '🎲 Mixed', hard: '🧠 Hard',
+    gameSpeed: 'Game Speed', fast: '🐇 Fast', normal: '🎯 Normal', slow: '🐢 Slow',
+    players: 'Players', rules: '📖 Rules', tutorial: '🎓 Tutorial',
+    gameLog: '📋 Game Log', tileTracker: '🔍 Tile Tracker',
+    stats: '📊 Stats & Achievements', prefs: '🎨 Preferences',
+    shortcuts: '❓ Shortcuts', rageQuit: '💀 Rage Quit (counts as loss)',
+    draw: 'Draw', pass: 'Pass', hint: '💡 Hint (-5 pts)', tiles: '🔍 Tiles',
+    yourTurn: 'YOUR TURN', thinking: 'Thinking',
+    bones: 'bones', openEnds: 'Open Ends', noScore: 'No score',
+    scores: 'Scores', lastPlayed: 'Last Played', youPlayed: 'You played',
+    played: 'played', round: 'Round', gameOver: 'GAME OVER',
+    youWin: '🏆 You Win!', wins: 'Wins', close: 'Close', continue_: 'Continue',
+    autoPlayOnly: '⚡ Auto-playing your only move',
+    autoPass: '⚡ No moves available — auto-passing',
+    noDouble: 'No one has a double!\nReshuffling and redealing...',
+    countingBones: 'Counting Bones', blocked: 'Blocked',
+    pipsInHand: 'pips in hand', lastTile: '🔔 LAST TILE!', tilesLeft: 'tiles left',
+    theme: 'Theme', dark: '🌙 Dark', light: '☀️ Light',
+    tileSkin: 'Tile Skin', tableTheme: 'Table Theme', audio: 'Audio',
+    music: '🎵 Background Music', sfx: '🔊 Sound Effects',
+    trashTalk: 'AI Trash Talk', off: 'Off', low: 'Low', max: 'Max',
+    colorblind: '♿ Colorblind Mode', language: 'Language',
+    playerName: 'Player Name', accessibility: 'Accessibility',
+    overall: 'Overall', gamesPlayed: 'Games Played', winsLosses: 'Wins / Losses',
+    winRate: 'Win Rate', bestStreak: 'Best Win Streak',
+    totalScored: 'Total Points Scored', highestPlay: 'Highest Single Play',
+    highestBonus: 'Highest Round Bonus', lifetime: 'Lifetime',
+    totalTiles: 'Total Tiles Played', totalDraws: 'Total Draws',
+    totalPasses: 'Total Passes', achievements: 'Achievements',
+    highestDouble: 'the highest double',
+  },
+  p: {
+    z: {
+      o: [
+        ['no way that worked 💀','wait i scored??','lowkey didn\'t expect that','slay i guess?','bestie i\'m shook','not me actually scoring','it\'s giving beginner\'s luck','rent free in your head now','ate that up ngl','this is so unserious lol','me when i accidentally win','understood the assignment fr'],
+        ['no cap that was clean 🧹','it\'s giving strategy','stay mad about it','that play was bussin fr','slay 💅','main character energy','not you losing to me rn','this is my roman empire','period. 💅','touch grass after this L','skill issue on your part','ate and left no crumbs','the vibes are immaculate'],
+        ['you\'re literally cooked 💀','gg no re','it\'s giving domination era','this is my villain arc','ratio + you fell off','cope and seethe','built different fr fr','you\'re NPC energy rn','L + bozo + you\'re done','delulu if you think you\'re winning','your whole strategy is mid','i woke up and chose violence','the algorithm chose me 🤖']
+      ],
+      t: [
+        ['we\'re so real for this','bestie we got this 🥺','slay together fr','us coded 💕','team slay!','we\'re literally iconic'],
+        ['we\'re eating rn 🔥','duo diff no cap','the synergy is giving','we understood the assignment together','unmatched duo energy','we\'re that couple fr'],
+        ['we\'re literally unbeatable 💀','they should just forfeit ngl','iconic duo behavior','we\'re the main characters','this is our era','they can\'t touch us fr']
+      ],
+      d: [
+        ['this is not it 😭','boneyard arc begins','me when nothing works','down bad rn','not the boneyard again 💀','this timeline is cursed'],
+        ['slight setback ngl','it\'s giving struggle','loading new strategy...','character development arc','plot twist incoming','trust the process fr'],
+        ['strategic boneyard visit 🧠','all part of the lore','you think this matters? lol','building my final form','the comeback arc starts now','this is filler episode energy']
+      ],
+      w: [
+        ['WAIT I WON?? 💀','no way no way no way','i\'m literally shaking rn','screaming crying throwing up (happy)','MOM I DID IT','this can\'t be real'],
+        ['DOMINO let\'s gooo 🔥','cleared. 💅','that\'s a wrap bestie','mic drop energy','and scene. 🎬','gg that was so real'],
+        ['absolutely devoured 💀','they were never ready','this is my legacy','GOATED behavior 🐐','delete the app fr','i don\'t lose. it\'s not in my code.']
+      ]
+    },
+    m: {
+      o: [
+        ['I can\'t even 😂','Did that just happen?','Adulting at dominoes!','Hashtag blessed','This sparks joy ✨','Plot twist!','Living my best domino life','That was very on brand for me','I\'m literally dead 💀','Okay but like... nice?'],
+        ['It me. Scoring. 💁','That\'s the tea ☕','Sorry not sorry 💅','This is fine. 🔥🐕','Treat yourself! 🎁','Big mood.','That hit different','Core memory unlocked 🧠','I\'m something of a domino player myself','Chef\'s kiss 👨‍🍳💋'],
+        ['I\'m the captain now. 🚢','Bye Felicia 👋','Hold my craft beer 🍺','This is my TED talk.','It\'s giving winner energy','That\'s what therapy taught me 🧘','Sending thoughts and prayers... to you','This is the way.','Okay but this slaps','I have spoken.']
+      ],
+      t: [
+        ['We\'re adulting together! 🥺','Squad goals!','This is so wholesome','Friendship is magic ✨','We\'re literally the best','I can\'t even with how good we are'],
+        ['We\'re the dream team! 💪','Collab of the century','This partnership sparks joy','We\'re that meme of two people winning','Synergy is our love language','We\'re vibing so hard rn'],
+        ['We\'re literally unstoppable 🔥','They can\'t sit with us 💅','Power couple energy','Iconic. Legendary. Us.','This is our origin story','We didn\'t come to play... wait, we did']
+      ],
+      d: [
+        ['This is fine. 🔥🐕','I need a drink 🍷','Adulting is hard','I can\'t even right now','Mercury must be in retrograde','Why is this happening to me'],
+        ['Just a plot twist 📖','Manifesting good tiles ✨','The universe is testing me','Growth mindset activated','Building character rn','It\'s called strategy, look it up'],
+        ['All part of my five-year plan','You think this bothers me? I have student loans.','I\'ve survived worse Mondays','This is nothing compared to 2020','Calculated chaos','Strategic investment in future plays']
+      ],
+      w: [
+        ['I CAN\'T EVEN 😭','Is this real life??','I\'m literally shaking','Someone screenshot this!','MOM GET THE CAMERA','I\'m not crying YOU\'RE crying'],
+        ['DOMINO! That\'s the tweet. 🐦','Mic. Drop. 🎤','This is my Roman Empire','Living. My. Best. Life.','And that\'s on periodt.','Crushed it!'],
+        ['I didn\'t choose the domino life, it chose me 👑','Absolutely unhinged performance','They\'ll make a podcast about this','I peaked and I\'m okay with it','Legendary behavior only','This is my villain origin story']
+      ]
+    },
+    x: {
+      o: [
+        ['Huh, that worked.','I\'ll take it.','Not bad.','Hey, points are points.','Didn\'t see that coming.','Well alright then.','Lucky break.','Okay, cool.','That\'ll do.','Works for me.'],
+        ['That\'s how you do it. 😎','Smooth.','Been doing this a while.','Experience pays off.','Textbook.','Old school cool. 🕶️','Still got it.','Fundamentals, baby.','Quiet confidence.','No drama, just results.','Patience pays.'],
+        ['Sit down, kid.','I was playing dominoes before you were born.','Class is in session. 📚','Respect your elders.','Welcome to the real world.','I don\'t need luck.','Whatever. I win. 🤷','Don\'t hate the player.','I could do this all day.','Yawn. Next.']
+      ],
+      t: [
+        ['Good play, partner.','Solid.','We\'re getting there.','Nice one.','Teamwork.','That helps.'],
+        ['Now we\'re cooking. 🍳','Great minds think alike.','We\'re dialed in.','Like a well-oiled machine.','That\'s the stuff.','We\'ve got chemistry.'],
+        ['Unstoppable.','They don\'t stand a chance.','We own this table.','Veteran duo.','Flawless teamwork.','This is what winning looks like.']
+      ],
+      d: [
+        ['Whatever.','It happens.','Not ideal.','Meh.','Could be worse.','I\'ve had worse hands.'],
+        ['Just regrouping.','Patience.','I\'ve been here before.','No panic.','Steady.','Part of the game.'],
+        ['You think this rattles me?','I\'ve survived worse.','Strategic patience.','This changes nothing.','I\'ve got a plan.','Watch and learn.']
+      ],
+      w: [
+        ['Hey, I won!','Well how about that.','Not bad for an old timer.','I\'ll take it!','Still got the touch.','Pleasantly surprised.'],
+        ['DOMINO. Clean. 🧹','That\'s a wrap.','Job done.','Efficient.','No fuss, no muss.','Like clockwork.'],
+        ['And that\'s why experience matters.','Class dismissed. 📚','Another day at the office.','I make it look easy.','Decades of dominoes, baby.','Respect the craft.']
+      ]
+    },
+    b: {
+      o: [
+        ['Well I\'ll be!','How about that!','Lady luck smiled on me!','Even a broken clock!','Not too shabby!','The old dog learned a trick!','Ha! Take that!','Still kicking!','My grandkids would be proud!','The bones are with me today!'],
+        ['Now THAT\'S a play! 👆','They don\'t make \'em like me anymore.','Old school dominoes right there.','Read it like a book. 📖','Experience over everything.','That\'s a veteran move.','The classics never go out of style.','You can\'t teach this.','That\'s called table sense.','Fundamentals win games.'],
+        ['Back in MY day, we called that a whooping!','Son, you\'re out of your depth.','I\'ve been playing since before Google.','Respect your elders! 👴','They should put me in the hall of fame.','You young folks don\'t stand a chance.','The table respects experience.','Masterful. Simply masterful.','Take notes, youngster.','I\'ve seen it all and beaten it all.']
+      ],
+      t: [
+        ['Good play, partner!','That\'s the spirit!','We make a fine team!','Now we\'re talking!','That\'s what I like to see!','Atta boy!'],
+        ['We\'re a well-oiled machine!','Just like the old days!','Dynamic duo!','That\'s teamwork!','We\'re on fire!','Partners in crime!'],
+        ['Unstoppable force!','They\'ll tell stories about us!','Best team at the table!','Championship caliber!','Hall of fame duo!','We\'re making history!']
+      ],
+      d: [
+        ['Oh fiddlesticks.','Well, darn.','The bones aren\'t cooperating.','Back to the well.','These things happen.','Patience is a virtue.'],
+        ['Just a bump in the road.','I\'ve weathered worse storms.','Good things come to those who wait.','Steady now.','The tide will turn.','Building up my hand.'],
+        ['You think this bothers me? I raised teenagers.','I\'ve got more patience than you\'ve got years.','This is chess, not checkers.','The long game is MY game.','Watch the master work.','Strategic reserve building.']
+      ],
+      w: [
+        ['Well I\'ll be darned! I won!','Hot diggity! 🎉','Still got it after all these years!','Wait till I tell the grandkids!','Never count out experience!','The old timer pulls through!'],
+        ['DOMINO! That\'s how it\'s done! 🎯','Clean as a whistle!','Textbook finish!','That\'s old school dominoes!','Smooth as butter!','The classics never fail!'],
+        ['And THAT is why you respect your elders! 👑','Decades of dominoes, right there!','They don\'t make players like me anymore!','Hall of fame performance!','Absolute masterclass!','I\'ve still got the magic touch!']
+      ]
+    }
+  }
+};
+
+
+// ---- SPANISH ----
+LOCALES.es = {
+  name: 'Español',
+  flag: '🇪🇸',
+  dir: 'ltr',
+  names: [
+    'Alejandro','Valentina','Santiago','Camila','Matías','Isabella','Sebastián','Lucía',
+    'Emiliano','Sofía','Daniel','Mariana','Andrés','Gabriela','Nicolás','Fernanda',
+    'Diego','Paula','Tomás','Catalina','Javier','Elena','Rafael','Carmen',
+    'Miguel','Pilar','Roberto','Dolores','Enrique','Rosario','Pablo','Esperanza',
+    'Fernando','Consuelo','Ramón','Guadalupe','Arturo','Mercedes','Héctor','Beatriz'
+  ],
+  cities: [
+    'Ciudad de México','Buenos Aires','Madrid','Bogotá','Lima',
+    'Santiago, Chile','Barcelona','Medellín','Guadalajara','Montevideo',
+    'San Juan, PR','La Habana','Quito','Caracas','Santo Domingo',
+    'Panamá','San José, CR','Cartagena','Sevilla','Córdoba'
+  ],
+  ui: {
+    startGame: 'Iniciar Juego', resumeGame: '▶ Continuar Partida', rematch: 'Revancha',
+    newGame: 'Nuevo Juego', copyLog: '📋 Copiar Registro', copied: '✅ Copiado!',
+    gameMode: 'Modo de Juego', ffa: 'Todos contra Todos', teams: 'Equipos 2v2',
+    opponents: 'Oponentes', playTo: 'Jugar Hasta', custom: 'Otro',
+    aiDifficulty: 'Dificultad IA', easy: '😊 Fácil', mixed: '🎲 Mixto', hard: '🧠 Difícil',
+    gameSpeed: 'Velocidad', fast: '🐇 Rápido', normal: '🎯 Normal', slow: '🐢 Lento',
+    players: 'Jugadores', rules: '📖 Reglas', tutorial: '🎓 Tutorial',
+    gameLog: '📋 Registro', tileTracker: '🔍 Fichas', stats: '📊 Estadísticas',
+    prefs: '🎨 Preferencias', shortcuts: '❓ Atajos',
+    rageQuit: '💀 Abandonar (cuenta como derrota)',
+    draw: 'Robar', pass: 'Pasar', hint: '💡 Pista (-5 pts)', tiles: '🔍 Fichas',
+    yourTurn: 'TU TURNO', thinking: 'Pensando',
+    bones: 'fichas', openEnds: 'Extremos', noScore: 'Sin puntos',
+    scores: 'Puntos', lastPlayed: 'Última Jugada', youPlayed: 'Jugaste',
+    played: 'jugó', round: 'Ronda', gameOver: 'FIN DEL JUEGO',
+    youWin: '🏆 ¡Ganaste!', wins: 'Victorias', close: 'Cerrar', continue_: 'Continuar',
+    autoPlayOnly: '⚡ Jugada automática — única opción',
+    autoPass: '⚡ Sin jugadas — pasando turno',
+    noDouble: '¡Nadie tiene doble!\nBarajando de nuevo...',
+    countingBones: 'Contando Fichas', blocked: 'Bloqueado',
+    pipsInHand: 'puntos en mano', lastTile: '🔔 ¡ÚLTIMA FICHA!', tilesLeft: 'fichas restantes',
+    theme: 'Tema', dark: '🌙 Oscuro', light: '☀️ Claro',
+    tileSkin: 'Estilo de Ficha', tableTheme: 'Tema de Mesa', audio: 'Audio',
+    music: '🎵 Música', sfx: '🔊 Efectos', trashTalk: 'Charla IA',
+    off: 'No', low: 'Poco', max: 'Máx',
+    colorblind: '♿ Modo Daltónico', language: 'Idioma',
+    playerName: 'Tu Nombre', accessibility: 'Accesibilidad',
+    overall: 'General', gamesPlayed: 'Partidas Jugadas', winsLosses: 'Victorias / Derrotas',
+    winRate: 'Tasa de Victoria', bestStreak: 'Mejor Racha',
+    totalScored: 'Puntos Totales', highestPlay: 'Mejor Jugada',
+    highestBonus: 'Mejor Bono de Ronda', lifetime: 'Historial',
+    totalTiles: 'Fichas Jugadas', totalDraws: 'Fichas Robadas',
+    totalPasses: 'Turnos Pasados', achievements: 'Logros',
+    highestDouble: 'el doble más alto',
+  },
+  p: {
+    z: {
+      o: [
+        ['¿eso funcionó? 💀','no mames, anoté','ni yo me la creo','qué random jaja','literal no esperaba eso','bueno pues 🤷'],
+        ['eso estuvo limpio 🧹','se los comí fr','ni modo, soy crack','literal soy main character','tóxico pero ganador 💅','quédate llorando'],
+        ['están cocinados 💀','gg no re','esto es mi era de villano','ratio + se cayeron','cope harder','built different fr fr']
+      ],
+      t: [['somos iconiques 💕','equipo slay!','juntos somos real'],['estamos comiendo 🔥','duo diff','la sinergia está dando'],['literalmente imbatibles 💀','que se rindan ngl','somos los main characters']],
+      d: [['esto no está dando 😭','arco del cementerio','down bad rn'],['pequeño setback ngl','plot twist incoming','confía en el proceso'],['visita estratégica 🧠','todo parte del lore','construyendo mi forma final']],
+      w: [['¿¿GANÉ?? 💀','no way no way','literal temblando rn'],['DOMINÓ vamos 🔥','cleared 💅','gg estuvo real'],['los devoré 💀','nunca estuvieron listos','GOATED 🐐']]
+    },
+    m: {
+      o: [
+        ['¿Eso pasó? 😂','Hashtag bendecido','Esto genera alegría ✨','Viviendo mi mejor vida dominó','Muy on brand para mí'],
+        ['Eso soy yo. Anotando. 💁','Perdón, no perdón 💅','Gran mood.','Eso pegó diferente','Beso de chef 👨‍🍳💋'],
+        ['Soy el capitán ahora 🚢','Adiós Felicia 👋','Esta es mi charla TED.','Esto es el camino.','He hablado.']
+      ],
+      t: [['¡Adulteando juntos! 🥺','¡Metas de equipo!','Somos los mejores'],['¡Equipo soñado! 💪','Collab del siglo','Vibras increíbles'],['Literalmente imparables 🔥','Energía de power couple','Icónicos. Legendarios. Nosotros.']],
+      d: [['Esto está bien. 🔥🐕','Necesito un trago 🍷','Mercurio retrógrado seguro'],['Solo un plot twist 📖','Manifestando buenas fichas ✨','Mindset de crecimiento'],['Todo parte de mi plan','Sobreviví cosas peores','Caos calculado']],
+      w: [['¡NO PUEDO! 😭','¿Es la vida real??','¡Alguien capture esto!'],['¡DOMINÓ! Ese es el tweet. 🐦','Mic. Drop. 🎤','Viviendo. Mi. Mejor. Vida.'],['No elegí la vida dominó, ella me eligió 👑','Comportamiento legendario','Llegué a mi peak']]
+    },
+    x: {
+      o: [
+        ['Funcionó.','Me lo quedo.','Nada mal.','Puntos son puntos.','No lo vi venir.','Bueno, está bien.'],
+        ['Así se hace. 😎','Suave.','Llevo rato en esto.','La experiencia paga.','De manual.','Vieja escuela. 🕶️'],
+        ['Siéntate, chico.','Yo jugaba antes de que nacieras.','Clase en sesión. 📚','Respeta a tus mayores.','No necesito suerte.','Lo que sea. Gané. 🤷']
+      ],
+      t: [['Buena jugada.','Sólido.','Vamos bien.'],['Ahora sí estamos cocinando. 🍳','Grandes mentes piensan igual.','Estamos sincronizados.'],['Imparables.','No tienen chance.','Somos dueños de esta mesa.']],
+      d: [['Lo que sea.','Pasa.','No es ideal.','Meh.'],['Solo reagrupando.','Paciencia.','Ya estuve aquí antes.'],['¿Crees que esto me afecta?','He sobrevivido peores.','Paciencia estratégica.']],
+      w: [['¡Gané!','Mira nada más.','Nada mal para un veterano.'],['DOMINÓ. Limpio. 🧹','Trabajo hecho.','Eficiente.'],['Por eso importa la experiencia.','Clase terminada. 📚','Un día más en la oficina.']]
+    },
+    b: {
+      o: [
+        ['¡Válgame!','¡Mira nada más!','¡La suerte me sonrió!','¡Todavía puedo!','¡Nada mal!','¡El viejo aún puede!'],
+        ['¡ESA es una jugada! 👆','Ya no hacen jugadores como yo.','Dominó de la vieja escuela.','Lo leí como un libro. 📖','Eso se llama experiencia.','Los clásicos nunca pasan de moda.'],
+        ['¡En mis tiempos a eso le decíamos paliza!','Hijo, estás fuera de tu liga.','¡Respeta a tus mayores! 👴','Deberían ponerme en el salón de la fama.','La mesa respeta la experiencia.','Magistral. Simplemente magistral.']
+      ],
+      t: [['¡Buena jugada, compañero!','¡Ese es el espíritu!','¡Buen equipo!'],['¡Somos una máquina! ','¡Como en los viejos tiempos!','¡Eso es trabajo en equipo!'],['¡Fuerza imparable!','¡Contarán historias de nosotros!','¡Calibre de campeones!']],
+      d: [['¡Caramba!','Bueno, ni modo.','Las fichas no cooperan.'],['Solo un bache en el camino.','He pasado peores tormentas.','La paciencia es una virtud.'],['¿Crees que esto me molesta? Crié adolescentes.','Tengo más paciencia que tú años.','El juego largo es MI juego.']],
+      w: [['¡Válgame, gané!','¡Todavía tengo el toque!','¡Esperen que les cuente a los nietos!'],['¡DOMINÓ! ¡Así se hace! 🎯','¡Limpio como patena!','¡Dominó de la vieja escuela!'],['¡Por ESO se respeta a los mayores! 👑','¡Décadas de dominó!','¡Clase magistral!']]
+    }
+  }
+};
+
+
+// ---- ARABIC ----
+LOCALES.ar = {
+  name: 'العربية',
+  flag: '🇸🇦',
+  dir: 'rtl',
+  names: [
+    'أحمد','فاطمة','محمد','نورة','خالد','ليلى','عمر','سارة',
+    'يوسف','مريم','علي','هند','حسن','دانة','طارق','ريم',
+    'سعد','لمى','فيصل','جنى','ناصر','عبير','ماجد','أسماء',
+    'بدر','شهد','سلطان','نوف','تركي','غادة','عبدالله','منال',
+    'راشد','هيا','حمد','وفاء','سالم','رنا','زياد','ديمة'
+  ],
+  cities: [
+    'الرياض','جدة','دبي','القاهرة','بيروت',
+    'عمّان','الدوحة','الكويت','المنامة','مسقط',
+    'أبوظبي','الدار البيضاء','تونس','الخرطوم','بغداد',
+    'دمشق','الرباط','طرابلس','صنعاء','الجزائر'
+  ],
+  ui: {
+    startGame: 'ابدأ اللعبة', resumeGame: '▶ استئناف اللعبة', rematch: 'إعادة المباراة',
+    newGame: 'لعبة جديدة', copyLog: '📋 نسخ السجل', copied: '✅ تم النسخ!',
+    gameMode: 'نوع اللعبة', ffa: 'الكل ضد الكل', teams: 'فرق ٢ ضد ٢',
+    opponents: 'الخصوم', playTo: 'العب حتى', custom: 'مخصص',
+    aiDifficulty: 'صعوبة الذكاء', easy: '😊 سهل', mixed: '🎲 متنوع', hard: '🧠 صعب',
+    gameSpeed: 'السرعة', fast: '🐇 سريع', normal: '🎯 عادي', slow: '🐢 بطيء',
+    players: 'اللاعبون', rules: '📖 القواعد', tutorial: '🎓 الشرح',
+    gameLog: '📋 السجل', tileTracker: '🔍 تتبع القطع', stats: '📊 الإحصائيات',
+    prefs: '🎨 الإعدادات', shortcuts: '❓ الاختصارات',
+    rageQuit: '💀 انسحاب (يحسب خسارة)',
+    draw: 'اسحب', pass: 'تمرير', hint: '💡 تلميح (-٥)', tiles: '🔍 القطع',
+    yourTurn: 'دورك', thinking: 'يفكر',
+    bones: 'قطع', openEnds: 'الأطراف', noScore: 'لا نقاط',
+    scores: 'النقاط', lastPlayed: 'آخر لعبة', youPlayed: 'لعبت',
+    played: 'لعب', round: 'الجولة', gameOver: 'انتهت اللعبة',
+    youWin: '🏆 فزت!', wins: 'انتصارات', close: 'إغلاق', continue_: 'متابعة',
+    autoPlayOnly: '⚡ لعب تلقائي — خيار وحيد',
+    autoPass: '⚡ لا توجد حركات — تمرير تلقائي',
+    noDouble: 'لا أحد لديه دبل!\nإعادة التوزيع...',
+    countingBones: 'عد القطع', blocked: 'مسدود',
+    pipsInHand: 'نقاط في اليد', lastTile: '🔔 آخر قطعة!', tilesLeft: 'قطع متبقية',
+    theme: 'المظهر', dark: '🌙 داكن', light: '☀️ فاتح',
+    tileSkin: 'شكل القطعة', tableTheme: 'لون الطاولة', audio: 'الصوت',
+    music: '🎵 موسيقى', sfx: '🔊 مؤثرات', trashTalk: 'كلام اللاعبين',
+    off: 'إيقاف', low: 'قليل', max: 'أقصى',
+    colorblind: '♿ وضع عمى الألوان', language: 'اللغة',
+    playerName: 'اسمك', accessibility: 'إمكانية الوصول',
+    overall: 'عام', gamesPlayed: 'الألعاب', winsLosses: 'فوز / خسارة',
+    winRate: 'نسبة الفوز', bestStreak: 'أفضل سلسلة',
+    totalScored: 'مجموع النقاط', highestPlay: 'أعلى لعبة',
+    highestBonus: 'أعلى مكافأة', lifetime: 'الإجمالي',
+    totalTiles: 'القطع الملعوبة', totalDraws: 'القطع المسحوبة',
+    totalPasses: 'التمريرات', achievements: 'الإنجازات',
+    highestDouble: 'أعلى دبل',
+  },
+  p: {
+    z: {
+      o: [
+        ['والله ما توقعت 💀','سجلت؟؟','يا ساتر','حظ مبتدئ بس','ما صدقت','هههه نايس'],
+        ['كلين 🧹','ما عندكم فرصة','سكل إشو عندكم','أنا الماين كاراكتر','خلاص انتهيتوا 💅','ما في منافسة'],
+        ['انتهيتوا 💀','جي جي','هذي حقبتي','ما عندكم أمل','أنا مختلف fr','الخوارزمية اختارتني 🤖']
+      ],
+      t: [['فريق أسطوري 💕','يلا نكمل!','سوا أقوى'],['ناكلهم 🔥','ديو مختلف','السينرجي عالية'],['ما يقدرون علينا 💀','خلهم يستسلمون','نحن الأبطال']],
+      d: [['مو زينة 😭','بداية سيئة','ما في شي يمشي'],['انتكاسة بسيطة','بلوت تويست قادم','ثق بالعملية'],['زيارة استراتيجية 🧠','كل شي حسب الخطة','أبني شكلي النهائي']],
+      w: [['فزت؟؟ 💀','لا لا لا مو معقول','أرتجف حرفياً'],['دومينو يلا 🔥','خلصنا 💅','كان حلو'],['التهمتهم 💀','ما كانوا جاهزين','أسطورة 🐐']]
+    },
+    m: {
+      o: [
+        ['صار هالشي؟ 😂','هاشتاق محظوظ','هذا يبعث السعادة ✨','أعيش أفضل حياة دومينو','ما قدرت أصدق'],
+        ['أنا. أسجل. 💁','آسف مو آسف 💅','مود كبير.','هذا ضرب مختلف','قبلة الشيف 👨‍🍳💋'],
+        ['أنا القبطان الحين 🚢','مع السلامة 👋','هذي محاضرتي.','هذا هو الطريق.','تكلمت.']
+      ],
+      t: [['نكبر سوا! 🥺','أهداف فريق!','نحن الأفضل'],['فريق الأحلام! 💪','تعاون القرن','الفايبز خيالية'],['ما يوقفنا أحد 🔥','طاقة ثنائي قوي','أيقونيين. أسطوريين. نحن.']],
+      d: [['هذا طبيعي. 🔥🐕','أحتاج قهوة ☕','عطارد بالتراجع أكيد'],['بس بلوت تويست 📖','أجذب قطع حلوة ✨','عقلية نمو'],['كل شي حسب خطتي','عشت أسوأ','فوضى محسوبة']],
+      w: [['ما أقدر! 😭','هل هذا حقيقي؟؟','أحد يصور!'],['دومينو! هذا التغريدة. 🐦','مايك. دروب. 🎤','أعيش. أفضل. حياتي.'],['ما اخترت حياة الدومينو، هي اختارتني 👑','أداء أسطوري','وصلت القمة']]
+    },
+    x: {
+      o: [
+        ['هه، مشت.','أخذها.','مو سيئة.','نقاط هي نقاط.','ما توقعتها.','طيب.'],
+        ['هكذا تلعب. 😎','سلس.','صار لي فترة.','الخبرة تدفع.','من الكتاب.','المدرسة القديمة. 🕶️'],
+        ['اقعد يا ولد.','كنت ألعب قبل ما تنولد.','الحصة بدأت. 📚','احترم الكبار.','ما أحتاج حظ.','يعني. فزت. 🤷']
+      ],
+      t: [['لعبة حلوة.','صلب.','ماشيين.'],['الحين نطبخ. 🍳','العقول الكبيرة تفكر سوا.','متناغمين.'],['ما يوقفنا أحد.','ما عندهم فرصة.','نملك هالطاولة.']],
+      d: [['عادي.','يصير.','مو مثالي.'],['بس أعيد ترتيب.','صبر.','مريت بهالموقف.'],['تفتكر هذا يأثر علي؟','عشت أسوأ.','صبر استراتيجي.']],
+      w: [['فزت!','شوف كذا.','مو سيئ لواحد كبير.'],['دومينو. نظيف. 🧹','خلصنا.','فعّال.'],['عشان كذا الخبرة مهمة.','الحصة انتهت. 📚','يوم عادي بالشغل.']]
+    },
+    b: {
+      o: [
+        ['يا سلام!','شوفوا كذا!','الحظ ابتسم لي!','لسه فيني!','مو سيئة!','الكبير لسه يقدر!'],
+        ['هذي لعبة! 👆','ما يسوون مثلي بعد.','دومينو المدرسة القديمة.','قريتها مثل كتاب. 📖','الخبرة فوق كل شي.','الكلاسيكيات ما تموت.'],
+        ['أيامنا كنا نسمي هذا علقة!','يا ولدي، مو مستواك.','ألعب من قبل الإنترنت.','احترم كبارك! 👴','لازم يحطوني بقاعة المشاهير.','الطاولة تحترم الخبرة.']
+      ],
+      t: [['لعبة حلوة يا شريك!','هذي الروح!','فريق ممتاز!'],['مثل الآلة!','مثل الأيام الحلوة!','هذا شغل فريق!'],['قوة ما توقف!','بيحكون عنا!','مستوى بطولات!']],
+      d: [['يا حسرة.','طيب، ما علينا.','القطع ما تتعاون.'],['بس مطب بالطريق.','مريت بعواصف أقوى.','الصبر مفتاح.'],['تفتكر هذا يزعجني؟ ربيت مراهقين.','عندي صبر أكثر من عمرك.','اللعبة الطويلة لعبتي.']],
+      w: [['يا سلام فزت!','لسه عندي اللمسة!','بقول للأحفاد!'],['دومينو! هكذا تلعب! 🎯','نظيف!','دومينو المدرسة القديمة!'],['عشان كذا تحترم الكبار! 👑','عقود من الدومينو!','درس في الإتقان!']]
+    }
+  }
+};
+
+
+// ---- CHINESE ----
+LOCALES.zh = {
+  name: '中文',
+  flag: '🇨🇳',
+  dir: 'ltr',
+  names: [
+    '伟明','小红','建国','美玲','志强','丽华','浩然','雅琴',
+    '天宇','思琪','俊杰','晓燕','子轩','婷婷','明辉','雪梅',
+    '文博','佳怡','嘉豪','诗涵','宇航','欣怡','泽宇','梦瑶',
+    '瑞祥','秀英','国强','玉兰','德明','桂花','福生','淑芬',
+    '永康','凤英','金龙','翠花','大伟','春梅','海涛','月华'
+  ],
+  cities: [
+    '北京','上海','广州','深圳','成都',
+    '杭州','武汉','南京','重庆','西安',
+    '苏州','天津','长沙','青岛','大连',
+    '厦门','昆明','哈尔滨','台北','香港'
+  ],
+  ui: {
+    startGame: '开始游戏', resumeGame: '▶ 继续游戏', rematch: '再来一局',
+    newGame: '新游戏', copyLog: '📋 复制记录', copied: '✅ 已复制！',
+    gameMode: '游戏模式', ffa: '自由对战', teams: '2v2组队',
+    opponents: '对手', playTo: '目标分数', custom: '自定义',
+    aiDifficulty: 'AI难度', easy: '😊 简单', mixed: '🎲 混合', hard: '🧠 困难',
+    gameSpeed: '速度', fast: '🐇 快速', normal: '🎯 正常', slow: '🐢 慢速',
+    players: '玩家', rules: '📖 规则', tutorial: '🎓 教程',
+    gameLog: '📋 记录', tileTracker: '🔍 牌面追踪', stats: '📊 统计',
+    prefs: '🎨 设置', shortcuts: '❓ 快捷键',
+    rageQuit: '💀 退出（算作失败）',
+    draw: '摸牌', pass: '过牌', hint: '💡 提示（-5分）', tiles: '🔍 牌',
+    yourTurn: '你的回合', thinking: '思考中',
+    bones: '张牌', openEnds: '开放端', noScore: '未得分',
+    scores: '分数', lastPlayed: '上一手', youPlayed: '你出了',
+    played: '出了', round: '第', gameOver: '游戏结束',
+    youWin: '🏆 你赢了！', wins: '胜', close: '关闭', continue_: '继续',
+    autoPlayOnly: '⚡ 自动出牌——唯一选择',
+    autoPass: '⚡ 无牌可出——自动过牌',
+    noDouble: '没人有对子！\n重新洗牌发牌...',
+    countingBones: '计算点数', blocked: '堵牌',
+    pipsInHand: '手中点数', lastTile: '🔔 最后一张！', tilesLeft: '张剩余',
+    theme: '主题', dark: '🌙 深色', light: '☀️ 浅色',
+    tileSkin: '牌面样式', tableTheme: '桌面主题', audio: '音频',
+    music: '🎵 背景音乐', sfx: '🔊 音效', trashTalk: 'AI对话',
+    off: '关', low: '少', max: '最多',
+    colorblind: '♿ 色盲模式', language: '语言',
+    playerName: '你的名字', accessibility: '无障碍',
+    overall: '总览', gamesPlayed: '游戏场次', winsLosses: '胜/负',
+    winRate: '胜率', bestStreak: '最佳连胜',
+    totalScored: '总得分', highestPlay: '单次最高',
+    highestBonus: '最高奖励', lifetime: '累计',
+    totalTiles: '出牌总数', totalDraws: '摸牌总数',
+    totalPasses: '过牌总数', achievements: '成就',
+    highestDouble: '最大的对子',
+  },
+  p: {
+    z: {
+      o: [
+        ['不是吧💀','我居然得分了？？','没想到啊','运气来了哈哈','什么情况','随便赢赢'],
+        ['太干净了🧹','你们没机会了','纯实力没运气','我就是主角💅','别挣扎了','差距太大'],
+        ['你们完了💀','gg','这是我的时代','别做梦了','我天生不同','算法选择了我🤖']
+      ],
+      t: [['我们太强了💕','冲冲冲！','一起无敌'],['我们在吃🔥','双人差距','默契拉满'],['字面意义无敌💀','让他们投降吧','我们是主角']],
+      d: [['不太行😭','摸牌剧情开始','什么都不行'],['小挫折而已','剧情反转要来了','相信过程'],['战略性摸牌🧠','都在计划中','在构建最终形态']],
+      w: [['我赢了？？💀','不可能不可能','我在发抖'],['多米诺冲🔥','结束了💅','太真实了'],['吞噬了他们💀','他们从来没准备好','传奇🐐']]
+    },
+    m: {
+      o: [
+        ['这发生了？😂','小确幸','这带来快乐✨','活出最好的多米诺人生','太符合我的人设了'],
+        ['就是我在得分💁','不好意思不好意思💅','大心情','这感觉不一样','厨师之吻👨‍🍳💋'],
+        ['我是船长了🚢','再见了👋','这是我的TED演讲','这就是道路','我说完了']
+      ],
+      t: [['一起成长！🥺','团队目标！','我们最棒'],['梦之队！💪','世纪合作','默契满分'],['势不可挡🔥','强强联合','传奇组合']],
+      d: [['没事的🔥🐕','需要喝杯茶🍵','水逆了吧'],['只是剧情转折📖','在吸引好牌✨','成长心态'],['都在五年计划里','经历过更糟的','有计划的混乱']],
+      w: [['不敢相信😭','这是真的吗？？','快截图！'],['多米诺！🐦','话筒放下🎤','活出最好的人生'],['不是我选择多米诺，是它选择了我👑','传奇表现','我巅峰了']]
+    },
+    x: {
+      o: [
+        ['嗯，成了。','收下了。','还行。','分就是分。','没想到。','行吧。'],
+        ['就该这么打😎','稳。','打了这么多年了。','经验值钱。','教科书式。','老派风格🕶️'],
+        ['坐下吧小朋友。','我打牌的时候你还没出生。','上课了📚','尊重前辈。','不需要运气。','随便吧，我赢了🤷']
+      ],
+      t: [['好牌。','稳。','在路上了。'],['开始发力了🍳','英雄所见略同。','配合到位。'],['无人能挡。','他们没机会。','这桌子是我们的。']],
+      d: [['无所谓。','正常。','不理想。'],['调整一下。','耐心。','经历过。'],['你觉得这能影响我？','见过更糟的。','战略性耐心。']],
+      w: [['赢了！','看看。','老将不差。'],['多米诺，干净🧹','完事了。','高效。'],['所以经验很重要。','下课了📚','日常操作。']]
+    },
+    b: {
+      o: [
+        ['哎呀！','你看看！','运气来了！','还能行！','不错嘛！','老骥伏枥！'],
+        ['这才叫打牌！👆','现在不出我这样的了。','老派多米诺。','看得透透的📖','经验为王。','经典永不过时。'],
+        ['我们那时候管这叫完胜！','小伙子，你还嫩着呢。','我打牌比互联网还早。','尊重长辈！👴','该进名人堂了。','牌桌尊重经验。']
+      ],
+      t: [['好牌，搭档！','就是这个劲头！','好搭档！'],['配合默契！','像老时候一样！','团队精神！'],['势不可挡！','会有人讲我们的故事！','冠军水平！']],
+      d: [['哎。','算了。','牌不配合。'],['小坎坷而已。','经历过更大的风浪。','耐心是美德。'],['你觉得这能烦到我？我养过青春期的孩子。','我的耐心比你的年龄还大。','持久战是我的强项。']],
+      w: [['哎呀赢了！','宝刀未老！','等我告诉孙子们！'],['多米诺！就该这样！🎯','干干净净！','老派多米诺！'],['所以要尊重长辈！👑','几十年的功力！','大师级表现！']]
+    }
+  }
+};
+
+// ---- Helper to get locale ----
+function getLocale(lang) {
+  return LOCALES[lang] || LOCALES.en;
+}
+
+function getLocalePhrase(lang, gen, category, tier) {
+  const loc = getLocale(lang);
+  // Map category/gen to compact keys
+  const catMap = { opponent: 'o', teammate: 't', draw: 'd', domino: 'w' };
+  const genMap = { gen_z: 'z', millennial: 'm', gen_x: 'x', boomer: 'b' };
+  const tierIdx = tier === 'low' ? 0 : tier === 'mid' ? 1 : 2;
+  const c = catMap[category] || category;
+  const g = genMap[gen] || gen;
+  const pool = loc.p && loc.p[g] && loc.p[g][c] && loc.p[g][c][tierIdx];
+  if (pool && pool.length > 0) return pool[Math.floor(Math.random() * pool.length)];
+  // Fallback to English
+  const enPool = LOCALES.en.p[g] && LOCALES.en.p[g][c] && LOCALES.en.p[g][c][tierIdx];
+  if (enPool && enPool.length > 0) return enPool[Math.floor(Math.random() * enPool.length)];
+  return '';
+}

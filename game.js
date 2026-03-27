@@ -820,195 +820,27 @@ class Renderer {
 function avatarURL(seed) {
   return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 }
-// --- Trash talk / celebration phrases ---
-// Organized by generation for varied, realistic dialogue
+// --- Trash talk / celebration phrases (now in locales.js) ---
 const PHRASE_GENS = ['gen_z', 'millennial', 'gen_x', 'boomer'];
 
-const PHRASES_BY_GEN = {
-  gen_z: {
-    opponent: {
-      low: [
-        'no way that worked 💀', 'wait i scored??', 'lowkey didn\'t expect that', 'slay i guess?',
-        'that\'s giving main character', 'bestie i\'m shook', 'not me actually scoring',
-        'it\'s giving beginner\'s luck', 'rent free in your head now', 'understood the assignment fr',
-        'ate that up ngl', 'this is so unserious lol', 'me when i accidentally win',
-      ],
-      mid: [
-        'no cap that was clean 🧹', 'it\'s giving strategy', 'stay mad about it',
-        'that play was bussin fr', 'slay 💅', 'living rent free', 'main character energy',
-        'not you losing to me rn', 'this is my roman empire', 'understood the assignment',
-        'period. 💅', 'the vibes are immaculate', 'touch grass after this L',
-        'skill issue on your part', 'that\'s so real of me', 'ate and left no crumbs',
-      ],
-      high: [
-        'you\'re literally cooked 💀', 'gg no re', 'it\'s giving domination era',
-        'this is my villain arc', 'ratio + you fell off', 'cope and seethe',
-        'not even close lmao', 'built different fr fr', 'you\'re NPC energy rn',
-        'L + bozo + you\'re done', 'that\'s the tweet. 🐦', 'delulu if you think you\'re winning',
-        'this is canon now', 'your whole strategy is mid', 'i woke up and chose violence',
-        'no thoughts just wins', 'the algorithm chose me 🤖',
-      ]
-    },
-    teammate: {
-      low: ['we\'re so real for this', 'bestie we got this 🥺', 'slay together fr', 'us coded 💕', 'team slay!', 'we\'re literally iconic'],
-      mid: ['we\'re eating rn 🔥', 'duo diff no cap', 'we\'re that couple fr', 'the synergy is giving', 'we understood the assignment together', 'unmatched duo energy'],
-      high: ['we\'re literally unbeatable 💀', 'they should just forfeit ngl', 'iconic duo behavior', 'we\'re the main characters', 'this is our era', 'they can\'t touch us fr']
-    },
-    draw: {
-      low: ['this is not it 😭', 'boneyard arc begins', 'me when nothing works', 'down bad rn', 'not the boneyard again 💀', 'this timeline is cursed'],
-      mid: ['slight setback ngl', 'it\'s giving struggle', 'loading new strategy...', 'character development arc', 'plot twist incoming', 'trust the process fr'],
-      high: ['strategic boneyard visit 🧠', 'all part of the lore', 'you think this matters? lol', 'building my final form', 'the comeback arc starts now', 'this is filler episode energy']
-    },
-    domino: {
-      low: ['WAIT I WON?? 💀', 'no way no way no way', 'i\'m literally shaking rn', 'this can\'t be real', 'screaming crying throwing up (happy)', 'MOM I DID IT'],
-      mid: ['DOMINO let\'s gooo 🔥', 'cleared. 💅', 'that\'s a wrap bestie', 'mic drop energy', 'and scene. 🎬', 'gg that was so real'],
-      high: ['absolutely devoured 💀', 'they were never ready', 'this is my legacy', 'GOATED behavior 🐐', 'delete the app fr', 'i don\'t lose. it\'s not in my code.']
-    }
-  },
-  millennial: {
-    opponent: {
-      low: [
-        'I can\'t even 😂', 'Did that just happen?', 'Adulting at dominoes!',
-        'That\'s what avocado toast gets you', 'I\'m literally dead 💀', 'Hashtag blessed',
-        'This sparks joy ✨', 'I\'m not crying, you\'re crying', 'Plot twist!',
-        'Living my best domino life', 'That was very on brand for me', 'Okay but like... nice?',
-      ],
-      mid: [
-        'It me. Scoring. 💁', 'That\'s the tea ☕', 'I did a thing!',
-        'Netflix and score 📺', 'Sorry not sorry 💅', 'Mic drop moment',
-        'This is fine. 🔥🐕', 'Crushing it like my student loans crush me',
-        'Treat yourself! 🎁', 'Self care is scoring points', 'Big mood.',
-        'That hit different', 'Core memory unlocked 🧠', 'Main character moment',
-        'I\'m something of a domino player myself', 'Okay I see me',
-      ],
-      high: [
-        'I\'m the captain now. 🚢', 'Bye Felicia 👋', 'Hold my craft beer 🍺',
-        'This is my TED talk.', 'And I oop—', 'It\'s giving winner energy',
-        'You just got millennialed', 'I can\'t adult but I CAN domino',
-        'That\'s what therapy taught me 🧘', 'Namaste winning 🙏',
-        'I\'m literally obsessed with winning', 'Okay but this slaps',
-        'Chef\'s kiss on that play 👨‍🍳💋', 'Sending thoughts and prayers... to you',
-        'This is the way.', 'I have spoken.',
-      ]
-    },
-    teammate: {
-      low: ['We\'re adulting together! 🥺', 'Squad goals!', 'This is so wholesome', 'Friendship is magic ✨', 'We\'re literally the best', 'I can\'t even with how good we are'],
-      mid: ['We\'re the dream team! 💪', 'Collab of the century', 'We\'re vibing so hard rn', 'This partnership sparks joy', 'We\'re that meme of two people winning', 'Synergy is our love language'],
-      high: ['We\'re literally unstoppable 🔥', 'They can\'t sit with us 💅', 'Power couple energy', 'We didn\'t come to play... wait, we did', 'Iconic. Legendary. Us.', 'This is our origin story']
-    },
-    draw: {
-      low: ['This is fine. 🔥🐕', 'I need a drink 🍷', 'Adulting is hard', 'Why is this happening to me', 'I can\'t even right now', 'Mercury must be in retrograde'],
-      mid: ['Just a plot twist 📖', 'Building character rn', 'It\'s called strategy, look it up', 'Manifesting good tiles ✨', 'The universe is testing me', 'Growth mindset activated'],
-      high: ['All part of my five-year plan', 'Strategic investment in future plays', 'You think this bothers me? I have student loans.', 'I\'ve survived worse Mondays', 'This is nothing compared to 2020', 'Calculated chaos']
-    },
-    domino: {
-      low: ['I CAN\'T EVEN 😭', 'Is this real life?? Is this just fantasy??', 'I\'m literally shaking', 'Someone screenshot this!', 'MOM GET THE CAMERA', 'I\'m not crying YOU\'RE crying'],
-      mid: ['DOMINO! That\'s the tweet. 🐦', 'And that\'s on periodt.', 'Mic. Drop. 🎤', 'This is my Roman Empire', 'Crushed it like my dreams... wait', 'Living. My. Best. Life.'],
-      high: ['I didn\'t choose the domino life, it chose me 👑', 'This is my villain origin story', 'Absolutely unhinged performance', 'They\'ll make a podcast about this', 'I peaked and I\'m okay with it', 'Legendary behavior only']
-    }
-  },
-  gen_x: {
-    opponent: {
-      low: [
-        'Huh, that worked.', 'I\'ll take it.', 'Not bad, not bad.',
-        'Hey, points are points.', 'Didn\'t see that coming.', 'Well alright then.',
-        'Lucky break.', 'I\'ll take what I can get.', 'Okay, cool.',
-        'That\'ll do.', 'Pleasantly surprised.', 'Works for me.',
-      ],
-      mid: [
-        'That\'s how you do it. 😎', 'Smooth.', 'Been doing this a while.',
-        'Experience pays off.', 'Read the table, made the play.', 'Textbook.',
-        'Old school cool. 🕶️', 'Still got it.', 'Like riding a bike.',
-        'Fundamentals, baby.', 'That\'s called experience.', 'Quiet confidence.',
-        'No drama, just results.', 'Steady hand wins.', 'Patience pays.',
-        'I\'ve seen this board before.', 'Muscle memory.',
-      ],
-      high: [
-        'Sit down, kid.', 'I was playing dominoes before you were born.',
-        'Class is in session. 📚', 'Respect your elders.', 'That\'s a grown-up play.',
-        'Welcome to the real world.', 'I don\'t need luck.',
-        'Been there, dominated that.', 'This is what decades of practice looks like.',
-        'You\'re out of your league.', 'I invented that move.',
-        'Whatever. I win. 🤷', 'Don\'t hate the player.',
-        'I could do this all day.', 'Yawn. Next.',
-      ]
-    },
-    teammate: {
-      low: ['Good play, partner.', 'Solid.', 'We\'re getting there.', 'Nice one.', 'Teamwork.', 'That helps.'],
-      mid: ['Now we\'re cooking. 🍳', 'Great minds think alike.', 'We\'re dialed in.', 'Like a well-oiled machine.', 'That\'s the stuff.', 'We\'ve got chemistry.'],
-      high: ['Unstoppable.', 'They don\'t stand a chance.', 'We own this table.', 'Veteran duo.', 'This is what winning looks like.', 'Flawless teamwork.']
-    },
-    draw: {
-      low: ['Whatever.', 'It happens.', 'Not ideal.', 'Meh.', 'Could be worse.', 'I\'ve had worse hands.'],
-      mid: ['Just regrouping.', 'Patience.', 'I\'ve been here before.', 'No panic.', 'Steady.', 'Part of the game.'],
-      high: ['You think this rattles me?', 'I\'ve survived worse.', 'Strategic patience.', 'This changes nothing.', 'I\'ve got a plan.', 'Watch and learn.']
-    },
-    domino: {
-      low: ['Hey, I won!', 'Well how about that.', 'Not bad for an old timer.', 'I\'ll take it!', 'Still got the touch.', 'Pleasantly surprised.'],
-      mid: ['DOMINO. Clean. 🧹', 'That\'s a wrap.', 'Job done.', 'Efficient.', 'No fuss, no muss.', 'Like clockwork.'],
-      high: ['And that\'s why experience matters.', 'Class dismissed. 📚', 'Another day at the office.', 'I make it look easy because it is.', 'Decades of dominoes, baby.', 'Respect the craft.']
-    }
-  },
-  boomer: {
-    opponent: {
-      low: [
-        'Well I\'ll be!', 'How about that!', 'Lady luck smiled on me!',
-        'Even a broken clock!', 'I\'m still in this!', 'Not too shabby!',
-        'The old dog learned a trick!', 'Ha! Take that!', 'Still kicking!',
-        'My grandkids would be proud!', 'Back in my day... just kidding, nice play!',
-        'The bones are with me today!',
-      ],
-      mid: [
-        'Now THAT\'S a play! 👆', 'They don\'t make \'em like me anymore.',
-        'Old school dominoes right there.', 'That\'s how we did it back in the day.',
-        'Read it like a book. 📖', 'Experience over everything.',
-        'I\'ve forgotten more about dominoes than you know.',
-        'That\'s a veteran move.', 'Steady as she goes.',
-        'The classics never go out of style.', 'Fundamentals win games.',
-        'You can\'t teach this.', 'Wisdom of the ages.',
-        'That\'s called table sense.', 'I wrote the book on that play.',
-      ],
-      high: [
-        'Back in MY day, we called that a whooping!',
-        'Son, you\'re out of your depth.', 'I\'ve been playing since before Google.',
-        'Respect your elders! 👴', 'That\'s REAL dominoes.',
-        'They should put me in the hall of fame.',
-        'I didn\'t walk uphill both ways for nothing!',
-        'You young folks don\'t stand a chance.',
-        'That\'s decades of wisdom right there.',
-        'I\'ve seen it all and I\'ve beaten it all.',
-        'The table respects experience.', 'Masterful. Simply masterful.',
-        'When you\'ve played as long as I have...', 'Take notes, youngster.',
-      ]
-    },
-    teammate: {
-      low: ['Good play, partner!', 'That\'s the spirit!', 'We make a fine team!', 'Atta boy!', 'Now we\'re talking!', 'That\'s what I like to see!'],
-      mid: ['We\'re a well-oiled machine!', 'Just like the old days!', 'Dynamic duo!', 'That\'s teamwork!', 'We\'re on fire!', 'Partners in crime!'],
-      high: ['Unstoppable force!', 'They\'ll tell stories about us!', 'Best team at the table!', 'We\'re making history!', 'Championship caliber!', 'Hall of fame duo!']
-    },
-    draw: {
-      low: ['Oh fiddlesticks.', 'Well, darn.', 'The bones aren\'t cooperating.', 'Back to the well.', 'These things happen.', 'Patience is a virtue.'],
-      mid: ['Just a bump in the road.', 'I\'ve weathered worse storms.', 'Building up my hand.', 'Good things come to those who wait.', 'Steady now.', 'The tide will turn.'],
-      high: ['You think this bothers me? I raised teenagers.', 'Strategic reserve building.', 'I\'ve got more patience than you\'ve got years.', 'This is chess, not checkers.', 'The long game is MY game.', 'Watch the master work.']
-    },
-    domino: {
-      low: ['Well I\'ll be darned! I won!', 'Hot diggity! 🎉', 'Still got it after all these years!', 'Wait till I tell the grandkids!', 'The old timer pulls through!', 'Never count out experience!'],
-      mid: ['DOMINO! That\'s how it\'s done! 🎯', 'Clean as a whistle!', 'Textbook finish!', 'That\'s old school dominoes!', 'Smooth as butter!', 'The classics never fail!'],
-      high: ['And THAT is why you respect your elders! 👑', 'Decades of dominoes, right there!', 'I\'ve still got the magic touch!', 'They don\'t make players like me anymore!', 'Hall of fame performance!', 'Absolute masterclass!']
+function _buildPhrases(lang) {
+  const loc = getLocale(lang || 'en');
+  const catMap = { o: 'opponent', t: 'teammate', d: 'draw', w: 'domino' };
+  const tierMap = ['low', 'mid', 'high'];
+  const phrases = {};
+  for (const [ck, cv] of Object.entries(catMap)) {
+    phrases[cv] = { low: [], mid: [], high: [] };
+    for (const gen of ['z', 'm', 'x', 'b']) {
+      if (loc.p && loc.p[gen] && loc.p[gen][ck]) {
+        for (let ti = 0; ti < 3; ti++) {
+          phrases[cv][tierMap[ti]].push(...(loc.p[gen][ck][ti] || []));
+        }
+      }
     }
   }
-};
-
-// Legacy flat PHRASES for backward compat — merge all gens
-const PHRASES = {};
-for (const cat of ['opponent', 'teammate', 'draw', 'domino']) {
-  PHRASES[cat] = { low: [], mid: [], high: [] };
-  for (const gen of PHRASE_GENS) {
-    for (const tier of ['low', 'mid', 'high']) {
-      PHRASES[cat][tier].push(...(PHRASES_BY_GEN[gen][cat][tier] || []));
-    }
-  }
+  return phrases;
 }
+let PHRASES = _buildPhrases(localStorage.getItem('domino_lang') || 'en');
 
 function getPhrase(player, category) {
   const rec = getRecord(player.name);
@@ -1019,21 +851,19 @@ function getPhrase(player, category) {
   else if (ratio >= 0.35) tier = 'mid';
   else tier = 'low';
 
-  // Use generation-specific phrases if player has one
+  const lang = localStorage.getItem('domino_lang') || 'en';
   const gen = player.generation;
-  if (gen && PHRASES_BY_GEN[gen] && PHRASES_BY_GEN[gen][category]) {
-    const pool = PHRASES_BY_GEN[gen][category][tier];
-    if (pool && pool.length > 0) return pool[Math.floor(Math.random() * pool.length)];
+  if (gen) {
+    const phrase = getLocalePhrase(lang, gen, category, tier);
+    if (phrase) return phrase;
   }
 
-  // Fallback to merged pool
   const pool = PHRASES[category] && PHRASES[category][tier];
-  if (!pool) return '';
+  if (!pool || pool.length === 0) return '';
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
 
-// Persistent human avatar seed
 function getHumanAvatarSeed() {
   let seed = localStorage.getItem('domino_human_avatar');
   if (!seed) {
@@ -1043,27 +873,16 @@ function getHumanAvatarSeed() {
   return seed;
 }
 
-// Random real names pool
-const REAL_NAMES = [
-  'Carlos','Maria','James','Aisha','Yuki','Priya','Liam','Sofia','Omar','Elena',
-  'Diego','Fatima','Chen','Amara','Raj','Lucia','Kofi','Ingrid','Mateo','Zara',
-  'Dante','Mei','Nico','Isla','Tariq','Rosa','Sven','Leila','Marco','Anya',
-  'Felix','Nadia','Hugo','Cleo','Ravi','Mila','Axel','Dina','Leo','Vera'
-];
-
-const US_CITIES = [
-  'Miami, FL', 'Brooklyn, NY', 'Houston, TX', 'Chicago, IL', 'Atlanta, GA',
-  'Phoenix, AZ', 'Denver, CO', 'Seattle, WA', 'Boston, MA', 'Nashville, TN',
-  'Portland, OR', 'Austin, TX', 'Detroit, MI', 'Memphis, TN', 'Oakland, CA',
-  'Philly, PA', 'New Orleans, LA', 'San Diego, CA', 'Dallas, TX', 'Baltimore, MD',
-  'St. Louis, MO', 'Charlotte, NC', 'Tampa, FL', 'Las Vegas, NV', 'Honolulu, HI',
-  'Savannah, GA', 'Raleigh, NC', 'Tucson, AZ', 'Boise, ID', 'Richmond, VA'
-];
+// Random real names pool — now from locale
+const REAL_NAMES = (getLocale(localStorage.getItem('domino_lang') || 'en')).names;
+const US_CITIES = (getLocale(localStorage.getItem('domino_lang') || 'en')).cities;
 
 function pickRandomNames(count) {
-  const shuffled = [...REAL_NAMES].sort(() => Math.random() - 0.5);
-  const cities = [...US_CITIES].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count).map((name, i) => ({
+  const lang = localStorage.getItem('domino_lang') || 'en';
+  const loc = getLocale(lang);
+  const names = [...(loc.names || LOCALES.en.names)].sort(() => Math.random() - 0.5);
+  const cities = [...(loc.cities || LOCALES.en.cities)].sort(() => Math.random() - 0.5);
+  return names.slice(0, count).map((name, i) => ({
     name,
     city: cities[i % cities.length]
   }));
@@ -1142,6 +961,10 @@ class Game {
     // Theme
     this._theme = localStorage.getItem('domino_theme') || 'dark';
     document.body.setAttribute('data-theme', this._theme);
+
+    // Language direction
+    const savedLang = localStorage.getItem('domino_lang') || 'en';
+    document.documentElement.dir = getLocale(savedLang).dir || 'ltr';
 
     // Drag state
     this._dragTile = null;
@@ -2376,7 +2199,7 @@ class Game {
       if (playableTiles.length === 1) {
         const placements = this.board.getValidPlacements(playableTiles[0]);
         if (placements.length === 1) {
-          this._showAutoPlayBanner('Auto-playing your only move');
+          this._showAutoPlayBanner((getLocale(localStorage.getItem('domino_lang')||'en').ui||{}).autoPlayOnly||'⚡ Auto-playing your only move');
           setTimeout(() => {
             if (this.currentPlayer === player.index && !this.roundOver) {
               this._executePlay(player, playableTiles[0], placements[0]);
@@ -2389,7 +2212,7 @@ class Game {
       this._enableHumanPlay(player);
       // If human can't play and boneyard is empty, auto-pass
       if (playableTiles.length === 0 && this.boneyard.length === 0) {
-        this._showAutoPlayBanner('No moves available — auto-passing');
+        this._showAutoPlayBanner((getLocale(localStorage.getItem('domino_lang')||'en').ui||{}).autoPass||'⚡ No moves available — auto-passing');
         setTimeout(() => {
           if (this.currentPlayer === player.index && !this.roundOver) {
             this.pass();
@@ -2609,7 +2432,7 @@ class Game {
       for (const p of placements) playable.push({ tile, placement: p });
     }
     if (playable.length === 1) {
-      this._showAutoPlayBanner('Auto-playing your only move');
+      this._showAutoPlayBanner((getLocale(localStorage.getItem('domino_lang')||'en').ui||{}).autoPlayOnly||'⚡ Auto-playing your only move');
       setTimeout(() => {
         this._playLock = false;
         this._executePlay(player, playable[0].tile, playable[0].placement);
@@ -4245,14 +4068,25 @@ class Game {
       const sfxOn = !this._soundMuted;
 
       const currentTheme = this._theme || 'dark';
+      const currentLang = localStorage.getItem('domino_lang') || 'en';
 
       container.innerHTML = `
         <div class="pref-group">
-          <div class="pref-label">Player Name</div>
+          <div class="pref-label">${getLocale(currentLang).ui.playerName || 'Player Name'}</div>
           <input type="text" id="pref-name-input" class="name-edit" maxlength="12" value="${currentName}" style="width:100%;">
         </div>
         <div class="pref-group">
-          <div class="pref-label">Theme</div>
+          <div class="pref-label">${getLocale(currentLang).ui.language || 'Language'}</div>
+          <div class="skin-options" style="grid-template-columns: repeat(4, 1fr);" id="pref-lang-options">
+            ${Object.entries(LOCALES).map(([code, loc]) => `
+              <div class="skin-option ${code === currentLang ? 'active' : ''}" data-lang="${code}">
+                <span style="font-size:1.2rem;">${loc.flag}</span><span>${loc.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="pref-group">
+          <div class="pref-label">${getLocale(currentLang).ui.theme || 'Theme'}</div>
           <div class="skin-options" style="grid-template-columns: repeat(2, 1fr);">
             <div class="skin-option ${currentTheme === 'dark' ? 'active' : ''}" data-theme-val="dark">
               <div class="skin-preview" style="background:linear-gradient(135deg,#1e7a35,#0d3a18);"></div>
@@ -4436,6 +4270,25 @@ class Game {
           document.body.classList.toggle('colorblind', this._colorblindMode);
           if (this.renderer) this._renderBoard();
           this._renderHand();
+        });
+      }
+
+      // Language toggle
+      const langOpts = document.getElementById('pref-lang-options');
+      if (langOpts) {
+        langOpts.querySelectorAll('.skin-option').forEach(el => {
+          el.addEventListener('click', () => {
+            const lang = el.dataset.lang;
+            localStorage.setItem('domino_lang', lang);
+            PHRASES = _buildPhrases(lang);
+            // Set RTL if needed
+            document.documentElement.dir = getLocale(lang).dir || 'ltr';
+            // Re-roll AI names for new language
+            this._previewNames = null;
+            this._previewPersonalities = null;
+            this._updateRoster();
+            this._renderPrefs();
+          });
         });
       }
     }
