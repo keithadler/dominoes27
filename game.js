@@ -199,6 +199,7 @@ class Game {
     setHTML('#prefs-btn', (u.prefs || '🎨 Preferences') + ' <kbd class="dd-key">E</kbd>');
     setHTML('#shortcuts-btn', (u.shortcuts || '❓ Shortcuts') + ' <kbd class="dd-key">?</kbd>');
     setTxt('#ragequit-btn', u.rageQuit || '💀 Rage Quit (counts as loss)');
+    setTxt('#ragequit-loss-note', u.rageQuitLossNote || 'This counts as a loss on your record.');
 
     // Overlay titles and close buttons
     setTxt('#stats-overlay .stats-panel > h2', u.stats || 'Stats & Achievements');
@@ -526,20 +527,7 @@ class Game {
     document.getElementById('ragequit-btn').addEventListener('click', () => {
       document.getElementById('game-dropdown').classList.add('hidden');
       // Show confirmation with random taunt
-      const taunts = [
-        'Really? You\'re just gonna walk away? 🏃‍♂️\nThe bones aren\'t THAT scary...',
-        'Quitting already? The AI opponents are literally laughing at you right now. 😂',
-        'Winners never quit.\nQuitters never win.\nWhich one are you? 🤔',
-        'You sure? Your opponents will tell EVERYONE about this. 📢',
-        'The boneyard called. It said even IT has more backbone than you. 🦴',
-        'Rage quitting is just losing with extra steps. 💀',
-        'Your avatar is literally crying right now. Don\'t do this to them. 😢',
-        'Fun fact: 100% of rage quitters regret it.\nOkay I made that up. But still. 📊',
-        'The dominoes believe in you even if you don\'t believe in yourself. 🁣',
-        'Plot twist: you were about to win. Probably. Maybe. 🎬',
-        'Quitting now? But you were SO close to... well, something. 🤷',
-        'Your opponents are already practicing their victory dances. Don\'t let them. 💃',
-      ];
+      const taunts = getLocale(this._getLang()).ui.rageQuitTaunts || LOCALES.en.ui.rageQuitTaunts;
       const phrase = taunts[Math.floor(Math.random() * taunts.length)];
       document.getElementById('ragequit-phrase').innerHTML = phrase.replace(/\n/g, '<br>');
       document.getElementById('ragequit-overlay').classList.remove('hidden');
@@ -1006,7 +994,7 @@ class Game {
         const rerollBtn = document.createElement('button');
         rerollBtn.className = 'roster-reroll';
         rerollBtn.textContent = '🎲';
-        rerollBtn.title = 'Re-roll opponent';
+        rerollBtn.title = this._t('rerollOpponent');
         const oppIdx = pi - 1; // index into preview arrays (0-based for opponents)
         rerollBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1765,7 +1753,7 @@ class Game {
       } else {
         // AI must pass — show dialogue and pause
         this._hideThinking();
-        this._showSpeechBubble(player, 'I pass. 😤');
+        this._showSpeechBubble(player, this._t('aiPass'));
         this.gameLog.push({
           turn: this._logTurn++,
           player: player.name,
@@ -2592,7 +2580,7 @@ class Game {
       action: 'round-end', round: this._roundNum,
       player: winner.name,
       avatar: winner.avatar,
-      detail: `${winner.name} dominoes! +${bonusCalc.bonus} for ${bonusCalc.recipient}`,
+      detail: `${winner.name} ${this._t('dominoesDetail')} +${bonusCalc.bonus} ${this._t('for_')} ${bonusCalc.recipient}`,
       scores: logScores
     });
 
@@ -2979,7 +2967,7 @@ class Game {
         }
       }
       if (missedCount > 0) {
-        missedHTML = `<div class="analysis-row" style="color:#e04a3a;"><span>Missed Scoring Plays</span><span class="analysis-value">${missedCount}</span></div>`;
+        missedHTML = `<div class="analysis-row" style="color:#e04a3a;"><span>${this._t('missedScoringPlays')}</span><span class="analysis-value">${missedCount}</span></div>`;
       }
     }
     analysisDiv.innerHTML += missedHTML;
@@ -3673,8 +3661,8 @@ class Game {
       </div>
       <div class="stat-section" style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.06);padding-top:16px;">
         <div style="display:flex;gap:8px;margin-bottom:12px;">
-          <button id="export-data-btn" class="gm-btn" style="flex:1;background:rgba(90,138,240,0.15);border:1px solid rgba(90,138,240,0.3);color:#5a8af0;">📤 Export</button>
-          <button id="import-data-btn" class="gm-btn" style="flex:1;background:rgba(74,175,108,0.15);border:1px solid rgba(74,175,108,0.3);color:#4aaf6c;">📥 Import</button>
+          <button id="export-data-btn" class="gm-btn" style="flex:1;background:rgba(90,138,240,0.15);border:1px solid rgba(90,138,240,0.3);color:#5a8af0;">${this._t('exportData')}</button>
+          <button id="import-data-btn" class="gm-btn" style="flex:1;background:rgba(74,175,108,0.15);border:1px solid rgba(74,175,108,0.3);color:#4aaf6c;">${this._t('importData')}</button>
         </div>
         <input type="file" id="import-file-input" accept=".json" style="display:none;">
         <button id="reset-stats-btn" class="gm-btn" style="width:100%;background:rgba(224,74,58,0.15);border:1px solid rgba(224,74,58,0.3);color:#e04a3a;">${this._t('resetStats')}</button>
@@ -4031,7 +4019,7 @@ class Game {
     container.innerHTML = '';
 
     if (!this.gameLog || this.gameLog.length === 0) {
-      container.innerHTML = '<div style="opacity:0.4;text-align:center;padding:20px;">No moves yet</div>';
+      container.innerHTML = `<div style="opacity:0.4;text-align:center;padding:20px;">${this._t('noMovesYet')}</div>`;
       return;
     }
 
@@ -4060,7 +4048,7 @@ class Game {
     };
 
     if (!this.gameLog || this.gameLog.length === 0) {
-      container.innerHTML = '<div style="opacity:0.4;text-align:center;padding:20px;">No moves yet</div>';
+      container.innerHTML = `<div style="opacity:0.4;text-align:center;padding:20px;">${this._t('noMovesYet')}</div>`;
       return;
     }
 
