@@ -74,6 +74,9 @@ class Game {
     this._colorblindMode = localStorage.getItem('domino_colorblind') === '1';
     if (this._colorblindMode) document.body.classList.add('colorblind');
 
+    // Score combo counter for human player
+    this._humanCombo = 0;
+
     this._initUI();
   }
 
@@ -2025,9 +2028,29 @@ class Game {
       this._showScorePopup(score, player);
       if (this.sfx) this.sfx.score();
       this._haptic(30);
+      // Combo tracking for human player
+      if (player.isHuman) {
+        this._humanCombo++;
+        if (this._humanCombo >= 2) {
+          this._showComboPopup(this._humanCombo);
+        }
+      }
+      // Screen shake on big scores
+      if (score >= 20) {
+        const boardArea = document.getElementById('board-area');
+        if (boardArea) {
+          boardArea.classList.remove('board-shake');
+          void boardArea.offsetWidth;
+          boardArea.classList.add('board-shake');
+          setTimeout(() => boardArea.classList.remove('board-shake'), 500);
+        }
+      }
     } else {
       if (this.sfx) this.sfx.place();
       this._haptic(15);
+      if (player.isHuman) {
+        this._humanCombo = 0;
+      }
     }
 
     this.selectedTile = null;
@@ -2792,6 +2815,14 @@ class Game {
       if (score >= 20) { if (unlockAchievement('score_20')) showAchievementPopup('score_20'); }
       if (score >= 25) { if (unlockAchievement('score_25')) showAchievementPopup('score_25'); }
     }
+  }
+
+  _showComboPopup(count) {
+    const popup = document.createElement('div');
+    popup.className = 'combo-popup';
+    popup.textContent = `×${count} COMBO`;
+    document.body.appendChild(popup);
+    setTimeout(() => popup.remove(), 900);
   }
 
   _showSpeechBubble(player, text) {
