@@ -583,8 +583,8 @@ class Game {
       showTutorial();
     });
 
-    // Show language picker on first visit, then tutorial
-    if (!localStorage.getItem('domino_lang_chosen')) {
+    // Show language picker on first visit (skip if resuming a saved game), then tutorial
+    if (!localStorage.getItem('domino_lang_chosen') && !localStorage.getItem('domino_saved_game')) {
       this._showLangPicker(() => {
         if (!localStorage.getItem('domino_tutorial_done')) {
           showTutorial();
