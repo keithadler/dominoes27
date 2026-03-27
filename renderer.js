@@ -81,7 +81,7 @@ class Renderer {
     if (placements.length === 0) return;
     this.placedPositions = [];
 
-    const pad = 50;
+    const pad = 80;
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const p of placements) {
       const w = p.horizontal ? this.tileH : this.tileW;
@@ -97,15 +97,17 @@ class Renderer {
     const cw = this.canvas.width;
     const ch = this.canvas.height;
 
-    // Scale to fill the board — cap at 0.85x so tiles use ~80% of space
-    const baseScale = Math.min(0.85, cw / bw, ch / bh);
+    // Scale to fit board — adaptive cap based on tile count
+    const tileCount = placements.length;
+    const maxScale = tileCount <= 2 ? 1.8 : tileCount <= 6 ? 1.3 : 1.0;
+    const baseScale = Math.min(maxScale, cw / bw, ch / bh);
     const scale = baseScale * this.userZoom;
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
 
     this._viewScale = scale;
     this._viewOffsetX = cw / 2 - centerX * scale + this.userPanX;
-    this._viewOffsetY = ch / 2 - centerY * scale + this.userPanY;
+    this._viewOffsetY = ch / 2 - centerY * scale + this.userPanY - 40; // offset up to avoid hand overlap
 
     const ctx = this.ctx;
     ctx.save();

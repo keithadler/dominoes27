@@ -355,7 +355,8 @@ class Game {
       roundScores: this._roundScores,
       roundHistory: this._roundHistory,
       gameLog: this.gameLog,
-      logTurn: this._logTurn
+      logTurn: this._logTurn,
+      lastPlayedBy: this._lastPlayedBy
     };
     localStorage.setItem('domino_saved_game', JSON.stringify(state));
   }
@@ -391,6 +392,7 @@ class Game {
       this._roundHistory = s.roundHistory || [];
       this.gameLog = s.gameLog || [];
       this._logTurn = s.logTurn || 1;
+      this._lastPlayedBy = s.lastPlayedBy;
       this.roundOver = false;
       this.gameOver = false;
       this._playLock = false;
@@ -1325,8 +1327,8 @@ class Game {
         const cx = window.innerWidth / 2;
         const cy = window.innerHeight / 2;
         const tileCount = 28;
-        const tileW = 130;
-        const tileH = 65;
+        const tileW = 260;
+        const tileH = 130;
         const pileEls = [];
 
         // Phase 1: Show all tiles in a pile at center
