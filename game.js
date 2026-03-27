@@ -1656,7 +1656,7 @@ class Game {
       const pts = this.teamMode && this.teams ? this.teams[player.team].score : player.score;
       // Count playable tiles (not total moves)
       const playableTiles = player.hand.filter(t => this.board.canPlay(t));
-      hintBtn.disabled = pts < 5 || playableTiles.length <= 1;
+      hintBtn.disabled = pts < 5;
     }
   }
 
