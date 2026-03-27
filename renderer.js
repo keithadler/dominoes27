@@ -97,8 +97,8 @@ class Renderer {
     const cw = this.canvas.width;
     const ch = this.canvas.height;
 
-    // Scale to fill the board — cap at 1.2x so early tiles aren't too huge
-    const baseScale = Math.min(1.2, cw / bw, ch / bh);
+    // Scale to fill the board — cap at 0.85x so tiles use ~80% of space
+    const baseScale = Math.min(0.85, cw / bw, ch / bh);
     const scale = baseScale * this.userZoom;
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
