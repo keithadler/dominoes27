@@ -142,7 +142,11 @@ class AI {
     // Positive = need to score aggressively, negative = play safe
     const myDist = intel.targetScore - intel.myTeamScore;
     const oppDist = intel.targetScore - intel.oppTeamScore;
-    intel.scorePressure = (oppDist < myDist) ? Math.min(1, (myDist - oppDist) / 50) : -Math.min(1, (oppDist - myDist) / 100);
+    if (oppDist < myDist) {
+      intel.scorePressure = Math.min(1, (myDist - oppDist) / 50);
+    } else {
+      intel.scorePressure = -Math.min(1, (oppDist - myDist) / 50);
+    }
 
     // Draw tracking (#4): scan game log for draw events
     if (ctx.gameLog) {
@@ -212,25 +216,25 @@ class AI {
 
     // --- #3: Team awareness ---
     // In team mode, prefer keeping ends open that our teammate likely has
-    // (values that haven't been played much = more likely in teammate's hand)
-    if (intel.isTeammate) {
+    if (ctx && ctx.teamMode) {
       for (const val of openVals) {
-        // Count how many tiles with this value are still unaccounted for
         let unseen = 0;
         for (let other = 0; other <= 6; other++) {
           const key = `${Math.min(val, other)}-${Math.max(val, other)}`;
           if (!intel.knownTiles.has(key)) unseen++;
         }
-        // More unseen tiles with this value = more likely teammate has one
         score += unseen * 0.5;
       }
     }
 
     // --- #5: Endgame pip management ---
-    // Late in the round, prioritize dumping heavy tiles
+    // Late in the round, prioritize dumping heavy tiles (but only if they don't score)
     if (intel.roundProgress > 0.5) {
-      const pipWeight = 0.3 + intel.roundProgress * 0.7; // ramps from 0.3 to 1.0
-      score += tile.pips * pipWeight * 0.4;
+      const immediate = this._simulateScore(play, board);
+      if (immediate === 0) {
+        const pipWeight = 0.3 + intel.roundProgress * 0.7;
+        score += tile.pips * pipWeight * 0.4;
+      }
     }
 
     // --- #6: Score-aware play ---
@@ -262,13 +266,12 @@ class AI {
 
     // --- #9: Opening strategy ---
     // Early in the round, prefer tiles that keep many values open
-    if (intel.roundProgress < 0.3) {
+    if (intel.roundProgress < 0.3 && intel.totalTilesPlayed > 1) {
       const valDiversity = new Set();
       for (const t of remaining) { valDiversity.add(t.a); valDiversity.add(t.b); }
-      // Bonus for maintaining diversity in remaining hand
       score += valDiversity.size * 0.8;
-      // Prefer non-doubles early (doubles are harder to play later)
-      if (!tile.isDouble) score += 1.5;
+      // Prefer non-doubles early (they're more flexible)
+      if (!tile.isDouble && remaining.some(t => t.isDouble)) score += 1.5;
     }
 
     return score;
