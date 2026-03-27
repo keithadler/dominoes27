@@ -1377,6 +1377,7 @@ class Game {
         setTimeout(callback, totalTime);
       }
 
+  /** Shows a cinematic round announcement with the first player and spinner tile. */
   _showRoundAnnouncement(firstPlayer, spinnerTile, callback) {
     const overlay = document.getElementById('countdown-overlay');
     if (!overlay) { callback(); return; }
@@ -1384,7 +1385,7 @@ class Game {
 
     const whoLabel = firstPlayer.isHuman ? this._t('youHave') : `${firstPlayer.name} ${this._t('has')}`;
 
-    // Build SVG domino tile
+    // Build SVG domino tile with glow animation
     let tileHTML = '';
     if (spinnerTile) {
       const pipPos = (n, s) => {
@@ -1397,28 +1398,43 @@ class Game {
         ).join('');
       };
       tileHTML = `
-        <svg width="100" height="180" viewBox="0 0 100 180" style="display:inline-block;vertical-align:middle;filter:drop-shadow(0 6px 20px rgba(0,0,0,0.6)) drop-shadow(0 0 15px rgba(232,167,53,0.3));">
-          <rect x="2" y="2" width="96" height="176" rx="12" fill="url(#tg)" stroke="#e8a735" stroke-width="2.5"/>
-          <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffef8"/><stop offset="0.3" stop-color="#f5f0dc"/><stop offset="1" stop-color="#e8e0c4"/></linearGradient></defs>
-          <line x1="20" y1="90" x2="80" y2="90" stroke="rgba(0,0,0,0.15)" stroke-width="2"/>
-          <line x1="20" y1="91" x2="80" y2="91" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-          ${halfSVG(spinnerTile.a, 45)}
-          ${halfSVG(spinnerTile.b, 135)}
-        </svg>
+        <div class="ra-tile">
+          <svg width="100" height="180" viewBox="0 0 100 180">
+            <rect x="2" y="2" width="96" height="176" rx="12" fill="url(#tg)" stroke="#e8a735" stroke-width="2.5"/>
+            <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffef8"/><stop offset="0.3" stop-color="#f5f0dc"/><stop offset="1" stop-color="#e8e0c4"/></linearGradient></defs>
+            <line x1="20" y1="90" x2="80" y2="90" stroke="rgba(0,0,0,0.15)" stroke-width="2"/>
+            <line x1="20" y1="91" x2="80" y2="91" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            ${halfSVG(spinnerTile.a, 45)}
+            ${halfSVG(spinnerTile.b, 135)}
+          </svg>
+        </div>
       `;
     }
 
     overlay.innerHTML = `
-      <div style="text-align:center;animation:announceIn 0.5s ease-out forwards;">
-        <div style="font-size:6rem;font-weight:900;letter-spacing:8px;margin-bottom:20px;background:linear-gradient(180deg,#fff 20%,#f0b840 60%,#c07800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;line-height:1;">${this._t('round').toUpperCase()} ${this._roundNum}</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px;">
-          <img src="${firstPlayer.avatar}" style="width:72px;height:72px;border-radius:50%;border:3px solid rgba(232,167,53,0.6);box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 20px rgba(232,167,53,0.2);">
+      <div class="ra-container">
+        <div class="ra-label">${this._t('round').toUpperCase()}</div>
+        <div class="ra-number">${this._roundNum}</div>
+        <div class="ra-divider"></div>
+        <div class="ra-player">
+          <img class="ra-avatar" src="${firstPlayer.avatar}" alt="${firstPlayer.name}">
           ${tileHTML}
         </div>
-        <div style="font-size:1.4rem;font-weight:700;color:rgba(255,255,255,0.9);">${whoLabel} ${this._t('highestDouble')}</div>
+        <div class="ra-who">${whoLabel} ${this._t('highestDouble')}</div>
       </div>
     `;
-    if (this.sfx) this.sfx._play(660, 0.2, 'sine', 0.1);
+
+    // Spawn particles behind the number
+    setTimeout(() => {
+      spawnParticles(window.innerWidth / 2, window.innerHeight * 0.35, 20, 'particle-gold');
+    }, 400);
+
+    if (this.sfx) {
+      this.sfx._play(440, 0.15, 'sine', 0.08);
+      setTimeout(() => this.sfx._play(660, 0.2, 'sine', 0.1), 200);
+      setTimeout(() => this.sfx._play(880, 0.3, 'sine', 0.12), 400);
+    }
+
     setTimeout(() => {
       overlay.classList.add('hidden');
       overlay.innerHTML = '';
