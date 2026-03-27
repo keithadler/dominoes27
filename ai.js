@@ -96,6 +96,7 @@ class AI {
       roundProgress: 0,             // #5: 0=early, 1=late
       scorePressure: 0,             // #6: how urgently we need to score (-1 to 1)
       isTeammate: () => false,      // #3: check if a player is our teammate
+      teamMode: false,              // #3: whether 2v2 teams are active
       myTeamScore: 0,
       oppTeamScore: 0,
       targetScore: 200,
@@ -125,6 +126,7 @@ class AI {
 
     // Team awareness (#3)
     if (ctx.teamMode && ctx.playerIndex !== undefined && ctx.players) {
+      intel.teamMode = true;
       const myTeam = ctx.players[ctx.playerIndex].team;
       intel.isTeammate = (idx) => ctx.players[idx] && ctx.players[idx].team === myTeam;
     }
@@ -216,7 +218,7 @@ class AI {
 
     // --- #3: Team awareness ---
     // In team mode, prefer keeping ends open that our teammate likely has
-    if (ctx && ctx.teamMode) {
+    if (intel && intel.teamMode) {
       for (const val of openVals) {
         let unseen = 0;
         for (let other = 0; other <= 6; other++) {
