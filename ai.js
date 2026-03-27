@@ -1,12 +1,42 @@
-// ============================================================
-// ALL FIVES DOMINOES — AI
-// ============================================================
+/**
+ * @file ai.js — AI opponent logic for All Fives Dominoes.
+ *
+ * Three difficulty levels:
+ *  - **easy** — picks a random legal play.
+ *  - **medium** — scores each play with strategy heuristics, then picks
+ *    from the top 3 with weighted randomness.
+ *  - **hard** — always picks the highest-scoring play.
+ *
+ * Strategy scoring considers immediate points, tile weight, future
+ * playability, and optional personality tweaks (aggression, chaos, etc.).
+ *
+ * Also provides a minimax search with alpha-beta pruning for the hint
+ * system ({@link AI#bestMove}). Since opponent hands are hidden, the
+ * minimizing layer uses phantom tiles to simulate worst-case responses.
+ *
+ * @dependency tile.js  ({@link Tile})
+ * @dependency board.js ({@link Board})
+ */
 
+/**
+ * AI decision engine for a single difficulty level.
+ */
 class AI {
+  /**
+   * @param {'easy'|'medium'|'hard'} difficulty
+   */
   constructor(difficulty) {
-    this.difficulty = difficulty; // 'easy', 'medium', 'hard'
+    this.difficulty = difficulty;
   }
 
+  /**
+   * Choose the best play for the given hand and board state.
+   *
+   * @param {Tile[]}  hand        - Tiles in the AI's hand.
+   * @param {Board}   board       - Current board state.
+   * @param {object}  [personality] - Optional personality tweaks (see AI_PERSONALITIES).
+   * @returns {{tile: Tile, placement: object}|null} The chosen play, or null if no legal move.
+   */
   choosePlay(hand, board, personality) {
     const playable = [];
     for (const tile of hand) {
@@ -48,6 +78,13 @@ class AI {
     return scored[0];
   }
 
+  /**
+   * Simulate placing a tile and return the resulting board score.
+   * @param {{tile: Tile, placement: object}} play
+   * @param {Board} board
+   * @returns {number} Points scored (0 if end sum isn't a multiple of 5).
+   * @private
+   */
   _simulateScore(play, board) {
     // Simulate placing the tile and check score
     const sim = this._cloneBoard(board);
@@ -55,6 +92,19 @@ class AI {
     return sim.getScore();
   }
 
+  /**
+   * Heuristic strategy score for a candidate play.
+   *
+   * Considers: double bonus, tile weight, future playability after
+   * placing this tile, and optional personality tweaks (chaos, blocking, etc.).
+   *
+   * @param {{tile: Tile, placement: object}} play
+   * @param {Tile[]}  hand        - Full hand (before this play).
+   * @param {Board}   board
+   * @param {object}  [personality] - Personality tweaks object.
+   * @returns {number} Heuristic score (higher = better).
+   * @private
+   */
   _strategyScore(play, hand, board, personality) {
     let score = 0;
     const tile = play.tile;
@@ -78,6 +128,15 @@ class AI {
     return score;
   }
 
+  /**
+   * Create a shallow clone of a Board for simulation purposes.
+   * Copies all end-tracking state but shares the tiles array by reference
+   * (spread into a new array).
+   *
+   * @param {Board} board
+   * @returns {Board}
+   * @private
+   */
   _cloneBoard(board) {
     const b = new Board();
     b.tiles = [...board.tiles];
@@ -98,11 +157,17 @@ class AI {
     return b;
   }
 
-  // Minimax with alpha-beta pruning for hint system
-  // Since we can't see opponent hands, we do a self-play lookahead:
-  // - Maximizing: pick our best scoring move from our hand
-  // - Minimizing: assume opponent plays a tile that leaves the worst board for us
-  //   (simulated by trying all possible tiles that could match open ends)
+  /**
+   * Find the best move using minimax with alpha-beta pruning (hint system).
+   *
+   * Since opponent hands are hidden, the minimizing layer generates
+   * phantom tiles for every possible match on open ends.
+   *
+   * @param {Tile[]} hand  - Current hand.
+   * @param {Board}  board - Current board state.
+   * @param {number} [depth=4] - Search depth (plies).
+   * @returns {{tile: Tile, placement: object}|null}
+   */
   bestMove(hand, board, depth = 4) {
     const playable = [];
     for (const tile of hand) {
@@ -127,6 +192,21 @@ class AI {
     return bestPlay;
   }
 
+  /**
+   * Alpha-beta search node.
+   *
+   * Maximizing = our turn (try each tile in hand).
+   * Minimizing = opponent turn (phantom tiles on every open end).
+   *
+   * @param {Board}   board
+   * @param {Tile[]}  hand       - Our remaining hand.
+   * @param {number}  depth
+   * @param {number}  alpha
+   * @param {number}  beta
+   * @param {boolean} maximizing
+   * @returns {number} Evaluated score.
+   * @private
+   */
   _abSearch(board, hand, depth, alpha, beta, maximizing) {
     if (depth === 0 || hand.length === 0) return this._evalBoard(board, hand);
 
@@ -183,6 +263,17 @@ class AI {
     }
   }
 
+  /**
+   * Static board evaluation for leaf nodes.
+   *
+   * Factors: playability of remaining tiles, total pip count risk,
+   * potential future scoring, value diversity, and stuck penalty.
+   *
+   * @param {Board}  board
+   * @param {Tile[]} hand - Our remaining tiles.
+   * @returns {number}
+   * @private
+   */
   _evalBoard(board, hand) {
     let score = 0;
     // How many of our tiles can we play right now?

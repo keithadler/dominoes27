@@ -1,13 +1,38 @@
-// ============================================================
-// ALL FIVES DOMINOES — Audio (SFX + Music)
-// ============================================================
+/**
+ * @file audio.js — Sound effects and dynamic music for All Fives Dominoes.
+ *
+ * Two classes:
+ *  - {@link SFX} — Short oscillator-based sound effects (tile place, score,
+ *    boneyard draw, win fanfare) using the Web Audio API.
+ *  - {@link MusicEngine} — Ambient background music built from jazz chord
+ *    progressions that adapt tempo and timbre to the current game intensity.
+ *
+ * No external audio files — everything is synthesized at runtime.
+ */
 
-// --- Sound Effects ---
+// ---------------------------------------------------------------------------
+// Sound Effects
+// ---------------------------------------------------------------------------
+
+/**
+ * Oscillator-based sound effects using the Web Audio API.
+ * All sounds are synthesized — no audio files needed.
+ */
 class SFX {
   constructor() {
+    /** @type {AudioContext|null} */
     this.ctx = null;
     try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
+
+  /**
+   * Play a single oscillator tone.
+   * @param {number} freq     - Frequency in Hz.
+   * @param {number} duration - Duration in seconds.
+   * @param {string} [type='sine'] - Oscillator waveform type.
+   * @param {number} [vol=0.15]    - Peak volume (0–1).
+   * @private
+   */
   _play(freq, duration, type = 'sine', vol = 0.15) {
     if (!this.ctx || (window.game && window.game._soundMuted)) return;
     if (this.ctx.state === 'suspended') this.ctx.resume();
@@ -22,22 +47,26 @@ class SFX {
     osc.start();
     osc.stop(this.ctx.currentTime + duration);
   }
+  /** Play tile-placement sound (quick percussive tap). */
   place() {
     this._play(400, 0.06, 'square', 0.06);
     setTimeout(() => this._play(600, 0.08, 'sine', 0.08), 30);
   }
+  /** Play scoring sound (ascending arpeggio). */
   score() {
     this._play(523, 0.2, 'sine', 0.15);
     setTimeout(() => this._play(659, 0.2, 'sine', 0.15), 120);
     setTimeout(() => this._play(784, 0.25, 'sine', 0.15), 240);
     setTimeout(() => this._play(1047, 0.3, 'sine', 0.12), 360);
   }
+  /** Play boneyard draw sound (sad descending tone). */
   draw() {
     // Sad descending tone for boneyard draw
     this._play(400, 0.15, 'sine', 0.1);
     setTimeout(() => this._play(320, 0.15, 'sine', 0.1), 120);
     setTimeout(() => this._play(260, 0.25, 'sine', 0.08), 240);
   }
+  /** Play win fanfare (ascending six-note flourish). */
   win() {
     [523, 659, 784, 1047, 1319, 1568].forEach((f, i) =>
       setTimeout(() => this._play(f, 0.35, 'sine', 0.12), i * 120)
@@ -45,7 +74,17 @@ class SFX {
   }
 }
 
-// --- Dynamic Music (Web Audio) ---
+// ---------------------------------------------------------------------------
+// Dynamic Music Engine
+// ---------------------------------------------------------------------------
+
+/**
+ * Ambient background music built from jazz chord progressions.
+ *
+ * Adapts to game intensity: higher intensity → faster tempo, brighter
+ * timbre (triangle wave), and slightly sharper pitch. Cycles through
+ * four chord progressions (classic, ii-V-I, smooth, standard).
+ */
 class MusicEngine {
   constructor() {
     this.playing = false;
@@ -54,10 +93,12 @@ class MusicEngine {
     this.ctx = null;
     this._nodes = [];
   }
+  /** Initialize the AudioContext (lazy, called on first start). */
   init() {
     if (this.ctx) return;
     try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
+  /** Start playback (no-op if already playing or disabled). */
   start() {
     if (!this.enabled || this.playing) return;
     this.init();
@@ -66,17 +107,28 @@ class MusicEngine {
     this.playing = true;
     this._loop();
   }
+  /** Stop playback and clean up oscillator nodes. */
   stop() {
     this.playing = false;
     this._nodes.forEach(n => { try { n.stop(); } catch(e) {} });
     this._nodes = [];
   }
+  /**
+   * Set the game intensity level (affects tempo and timbre).
+   * @param {number} val - Intensity from 0 (calm) to 1 (intense).
+   */
   setIntensity(val) { this.intensity = Math.max(0, Math.min(1, val)); }
+  /** Toggle music on/off and persist preference to localStorage. */
   toggle() {
     this.enabled = !this.enabled;
     localStorage.setItem('domino_music', this.enabled ? '1' : '0');
     if (this.enabled) this.start(); else this.stop();
   }
+  /**
+   * Main music loop — schedules one chord voicing per call, then
+   * re-invokes itself after a tempo-dependent delay.
+   * @private
+   */
   _loop() {
       if (!this.playing || !this.ctx) return;
       const ctx = this.ctx;

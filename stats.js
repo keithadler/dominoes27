@@ -1,30 +1,70 @@
-// ============================================================
-// ALL FIVES DOMINOES — Stats, Achievements & XP
-// ============================================================
+/**
+ * @file stats.js — Statistics, achievements, and XP system for All Fives Dominoes.
+ *
+ * Persists all data to localStorage. Provides:
+ *  - Win/loss records per player name
+ *  - Rank system (Newcomer → Rookie → ... → Domino Master) based on win ratio
+ *  - Game stats tracking (games played, win streaks, high scores, etc.)
+ *  - Achievement system (17 achievements with locale-aware names via `_tUI` keys)
+ *  - XP / leveling system with per-achievement XP rewards
+ *  - Player name management
+ *
+ * @dependency locales.js (_tUI, getLocale, detectBrowserLang)
+ */
 
-// --- Win/Loss tracking ---
+// ---------------------------------------------------------------------------
+// Win / Loss Tracking
+// ---------------------------------------------------------------------------
+
+/**
+ * Load all player win/loss records from localStorage.
+ * @returns {Object<string, {wins: number, losses: number}>}
+ */
 function getStats() {
   try { return JSON.parse(localStorage.getItem('domino_stats') || '{}'); } catch(e) { return {}; }
 }
+/**
+ * Persist stats object to localStorage.
+ * @param {Object<string, {wins: number, losses: number}>} stats
+ */
 function saveStats(stats) {
   localStorage.setItem('domino_stats', JSON.stringify(stats));
 }
+/**
+ * Increment win count for a player.
+ * @param {string} name
+ */
 function recordWin(name) {
   const s = getStats();
   if (!s[name]) s[name] = { wins: 0, losses: 0 };
   s[name].wins++;
   saveStats(s);
 }
+/**
+ * Increment loss count for a player.
+ * @param {string} name
+ */
 function recordLoss(name) {
   const s = getStats();
   if (!s[name]) s[name] = { wins: 0, losses: 0 };
   s[name].losses++;
   saveStats(s);
 }
+/**
+ * Get a player's win/loss record.
+ * @param {string} name
+ * @returns {{wins: number, losses: number}}
+ */
 function getRecord(name) {
   const s = getStats();
   return s[name] || { wins: 0, losses: 0 };
 }
+/**
+ * Derive a rank title from a player's win/loss ratio.
+ * Ranks: Newcomer → Rookie → Beginner → Apprentice → Regular → Veteran → Domino Master.
+ * @param {string} name
+ * @returns {string} Localized rank title.
+ */
 function getRank(name) {
   const r = getRecord(name);
   const total = r.wins + r.losses;
@@ -38,6 +78,12 @@ function getRank(name) {
   return _tUI('beginner');
 }
 
+/**
+ * Seed a plausible win/loss record for a new AI player.
+ * Win rate is based on difficulty so AI players have realistic-looking stats.
+ * @param {string} name
+ * @param {'easy'|'medium'|'hard'} difficulty
+ */
 function seedAIRecord(name, difficulty) {
   const s = getStats();
   if (s[name]) return; // already has a record
@@ -51,19 +97,48 @@ function seedAIRecord(name, difficulty) {
   saveStats(s);
 }
 
-// --- Custom Player Name ---
+// ---------------------------------------------------------------------------
+// Custom Player Name
+// ---------------------------------------------------------------------------
+
+/**
+ * Get the human player's display name (falls back to locale default).
+ * @returns {string}
+ */
 function getPlayerName() {
   return localStorage.getItem('domino_player_name') || _tUI('playerName');
 }
+/**
+ * Save the human player's display name.
+ * @param {string} name
+ */
 function setPlayerName(name) {
   localStorage.setItem('domino_player_name', name || _tUI('playerName'));
 }
 
-// --- Game Stats ---
+// ---------------------------------------------------------------------------
+// Game Stats (aggregate play statistics)
+// ---------------------------------------------------------------------------
+
+/**
+ * Load aggregate game stats from localStorage.
+ * @returns {object}
+ */
 function getGameStats() {
   try { return JSON.parse(localStorage.getItem('domino_game_stats') || '{}'); } catch(e) { return {}; }
 }
+/** @param {object} s */
 function saveGameStats(s) { localStorage.setItem('domino_game_stats', JSON.stringify(s)); }
+
+/**
+ * Increment or update a single game stat.
+ *
+ * Supported keys: gamesPlayed, gamesWon, roundScore, playScore,
+ * totalScore, winStreak, loseStreak, totalTilesPlayed, totalDraws, totalPasses.
+ *
+ * @param {string} key   - Stat key to update.
+ * @param {number} [value] - Value (used by score/count keys).
+ */
 function trackStat(key, value) {
   const s = getGameStats();
   if (key === 'gamesPlayed') s.gamesPlayed = (s.gamesPlayed || 0) + 1;
@@ -79,7 +154,14 @@ function trackStat(key, value) {
   saveGameStats(s);
 }
 
-// --- Achievements ---
+// ---------------------------------------------------------------------------
+// Achievements
+// ---------------------------------------------------------------------------
+
+/**
+ * All 17 achievements. `name` and `desc` are _tUI locale keys.
+ * @type {{id: string, icon: string, name: string, desc: string}[]}
+ */
 const ACHIEVEMENTS = [
   { id: 'first_win', icon: '🏆', name: 'achFirstVictory', desc: 'achFirstVictoryDesc' },
   { id: 'five_star', icon: '⭐', name: 'achFiveStar', desc: 'achFiveStarDesc' },
@@ -99,9 +181,18 @@ const ACHIEVEMENTS = [
   { id: 'tiles_500', icon: '🎲', name: 'achTileVeteran', desc: 'achTileVeteranDesc' },
   { id: 'streak_10', icon: '🌟', name: 'achLegendary', desc: 'achLegendaryDesc' },
 ];
+/**
+ * Get the list of unlocked achievement IDs.
+ * @returns {string[]}
+ */
 function getUnlockedAchievements() {
   try { return JSON.parse(localStorage.getItem('domino_achievements') || '[]'); } catch(e) { return []; }
 }
+/**
+ * Unlock an achievement by ID. Awards 25 XP on first unlock.
+ * @param {string} id - Achievement ID.
+ * @returns {boolean} True if newly unlocked, false if already had it.
+ */
 function unlockAchievement(id) {
   const unlocked = getUnlockedAchievements();
   if (unlocked.includes(id)) return false;
@@ -110,6 +201,10 @@ function unlockAchievement(id) {
   addXP(25); // XP reward for achievements
   return true;
 }
+/**
+ * Evaluate all achievement conditions and unlock any that are newly met.
+ * @param {Game} [game] - Current game instance (needed for context-dependent checks).
+ */
 function checkAchievements(game) {
   const s = getGameStats();
   const checks = [
@@ -127,6 +222,10 @@ function checkAchievements(game) {
     if (cond && unlockAchievement(id)) showAchievementPopup(id);
   }
 }
+/**
+ * Show a toast-style popup when an achievement is unlocked.
+ * @param {string} id - Achievement ID.
+ */
 function showAchievementPopup(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   if (!ach) return;
@@ -137,10 +236,22 @@ function showAchievementPopup(id) {
   setTimeout(() => el.remove(), 4000);
 }
 
-// --- XP / Leveling ---
+// ---------------------------------------------------------------------------
+// XP / Leveling
+// ---------------------------------------------------------------------------
+
+/**
+ * Load XP data from localStorage.
+ * @returns {{xp: number, level: number}}
+ */
 function getXP() {
   try { return JSON.parse(localStorage.getItem('domino_xp') || '{"xp":0,"level":1}'); } catch(e) { return {xp:0,level:1}; }
 }
+/**
+ * Award XP and handle level-ups (100 × level XP per level).
+ * @param {number} amount - XP to add.
+ * @returns {{xp: number, level: number}}
+ */
 function addXP(amount) {
   const data = getXP();
   data.xp += amount;
@@ -152,6 +263,10 @@ function addXP(amount) {
   localStorage.setItem('domino_xp', JSON.stringify(data));
   return data;
 }
+/**
+ * Get current XP progress toward the next level.
+ * @returns {{level: number, xp: number, needed: number, pct: number}}
+ */
 function getXPProgress() {
   const data = getXP();
   const needed = data.level * 100;

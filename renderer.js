@@ -1,8 +1,25 @@
-// ============================================================
-// ALL FIVES DOMINOES — Renderer
-// ============================================================
+/**
+ * @file renderer.js — Canvas-based board renderer for All Fives Dominoes.
+ *
+ * Draws the domino board on an HTML canvas with 3D tile effects (bevels,
+ * drop shadows, depth edges). Supports zoom/pan, fly-in animations for
+ * newly placed tiles, configurable tile skins, and a pulsing spinner
+ * highlight.
+ *
+ * Also renders hand tiles as interactive HTML elements with click and
+ * drag support.
+ *
+ * @dependency tile.js       ({@link Tile})
+ * @dependency ui-helpers.js ({@link getSkinColors})
+ */
 
+/**
+ * Canvas renderer for the domino board and hand tiles.
+ */
 class Renderer {
+  /**
+   * @param {HTMLCanvasElement} canvas - The canvas element to draw on.
+   */
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -18,16 +35,22 @@ class Renderer {
     this.userPanY = 0;
   }
 
+  /** Resize the canvas to fill its parent container. */
   resize() {
     const area = this.canvas.parentElement;
     this.canvas.width = area.clientWidth;
     this.canvas.height = area.clientHeight;
   }
 
+  /** Clear the entire canvas. */
   clear() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
+  /**
+   * Draw the board from a Board model (simple mode, no animation).
+   * @param {Board} board
+   */
   drawBoard(board) {
     this.resize();
     this.clear();
@@ -41,6 +64,17 @@ class Renderer {
     if (board.tiles.length === 0) return;
   }
 
+  /**
+   * Render the board from pre-computed placement data with fly-in animation.
+   *
+   * Auto-scales and centers the board to fit the canvas, applies user
+   * zoom/pan, and animates the last-placed tile from a given direction.
+   *
+   * @param {object[]} placements  - Array of placement objects ({x, y, horizontal, tile, ...}).
+   * @param {number}   lastIndex   - Index of the tile currently animating in.
+   * @param {number}   animProgress - Animation progress 0→1 (eased cubic).
+   * @param {string}   [flyFrom]   - Direction the tile flies from ('top'|'bottom'|'left'|'right').
+   */
   renderFromPlacements(placements, lastIndex, animProgress, flyFrom) {
     this.resize();
     this.clear();
@@ -116,6 +150,12 @@ class Renderer {
     ctx.restore();
   }
 
+  /**
+   * Draw a single placed tile with 3D effects, bevels, and optional highlights.
+   * @param {object}  p      - Placement data (tile, x, y, horizontal, isSpinner, etc.).
+   * @param {boolean} isLast - Whether this is the most recently placed tile (golden glow).
+   * @private
+   */
   _drawPlacedTile(p, isLast) {
     const ctx = this.ctx;
     const { tile, x, y, horizontal } = p;
@@ -258,6 +298,15 @@ class Renderer {
     this.placedPositions.push({ ...p, drawW: w, drawH: h });
   }
 
+  /**
+   * Draw 3D-styled pips (dots) for one half of a tile.
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} cx    - Center X of the pip area.
+   * @param {number} cy    - Center Y of the pip area.
+   * @param {number} count - Number of pips (0–6).
+   * @param {number} size  - Layout size for pip spacing.
+   * @private
+   */
   _draw3DPips(ctx, cx, cy, count, size) {
     const skin = getSkinColors();
     const pipR = 4;
@@ -288,6 +337,13 @@ class Renderer {
     }
   }
 
+  /**
+   * Standard pip layout positions for 0–6 pips.
+   * @param {number} n - Pip count.
+   * @param {number} s - Spacing factor.
+   * @returns {number[][]} Array of [x, y] offsets from center.
+   * @private
+   */
   _pipPositions(n, s) {
     switch(n) {
       case 0: return [];
@@ -301,6 +357,16 @@ class Renderer {
     }
   }
 
+  /**
+   * Trace a rounded rectangle path (does not fill or stroke).
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} x - Top-left X.
+   * @param {number} y - Top-left Y.
+   * @param {number} w - Width.
+   * @param {number} h - Height.
+   * @param {number} r - Corner radius.
+   * @private
+   */
   _roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -315,6 +381,19 @@ class Renderer {
     ctx.closePath();
   }
 
+  /**
+   * Create an interactive hand-tile DOM element with click/drag support.
+   *
+   * @param {HTMLElement} container   - Parent element to append the tile to.
+   * @param {Tile}        tile        - The tile to render.
+   * @param {boolean}     playable    - Whether the tile can be played this turn.
+   * @param {Function}    onClick     - Click handler `(tile, element)`.
+   * @param {Function}    [onHover]   - Mouseenter handler `(tile)`.
+   * @param {Function}    [onLeave]   - Mouseleave handler.
+   * @param {number}      matchCount  - Number of valid placements for this tile.
+   * @param {Function}    [onDragStart] - Drag start handler `(tile, element, x, y)`.
+   * @returns {HTMLElement} The created tile element.
+   */
   drawHandTile(container, tile, playable, onClick, onHover, onLeave, matchCount, onDragStart) {
     const el = document.createElement('div');
     el.className = 'hand-tile' + (playable ? ' playable' : ' not-playable');
@@ -353,6 +432,13 @@ class Renderer {
     return el;
   }
 
+  /**
+   * Generate SVG markup for pips on a hand tile.
+   * @param {number} n        - Pip count (0–6).
+   * @param {string} pipColor - CSS color for the pips.
+   * @returns {string} SVG markup string.
+   * @private
+   */
   _pipHTML(n, pipColor) {
     const size = 50;
     const s = size * 0.24;

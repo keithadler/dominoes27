@@ -1,13 +1,30 @@
-// ============================================================
-// ALL FIVES DOMINOES — Board
-// ============================================================
+/**
+ * @file board.js — Board state for All Fives Dominoes.
+ *
+ * Tracks the line of play, open ends, the spinner (first double played),
+ * and scoring (multiples of 5 from the sum of open ends).
+ *
+ * Key concept: the spinner is the first double placed on the board.
+ * Once tiles exist on both sides of the spinner, its north and south
+ * arms open up, giving up to 4 playable ends.
+ *
+ * @dependency tile.js ({@link Tile})
+ */
 
+/**
+ * Represents the domino board — the line of play and all open ends.
+ */
 class Board {
   constructor() {
+    /** @type {Tile[]} All tiles placed on the board, in order. */
     this.tiles = [];
+    /** @type {Tile|null} The first double played (spinner). */
     this.spinner = null;
+    /** @type {number} Index of the spinner in `this.tiles`, or -1. */
     this.spinnerIndex = -1;
-    // Open ends: value is the pip value for matching, isDouble for scoring
+
+    // Open-end tracking: pip value at each end + whether it's a double
+    // (doubles count both sides for scoring).
     this.leftEnd = -1;
     this.leftIsDouble = false;
     this.rightEnd = -1;
@@ -16,15 +33,30 @@ class Board {
     this.spinnerNorthIsDouble = false;
     this.spinnerSouth = -1;
     this.spinnerSouthIsDouble = false;
+
+    /** @type {boolean} North arm of spinner is playable. */
     this.spinnerNorthOpen = false;
+    /** @type {boolean} South arm of spinner is playable. */
     this.spinnerSouthOpen = false;
+
+    /** @type {boolean} At least one tile has been placed left of the spinner. */
     this.hasLeftOfSpinner = false;
+    /** @type {boolean} At least one tile has been placed right of the spinner. */
     this.hasRightOfSpinner = false;
+
+    /** @type {Array} Visual placement data (used by renderer). */
     this.placed = [];
   }
 
+  /** @returns {boolean} True when no tiles have been played yet. */
   get isEmpty() { return this.tiles.length === 0; }
 
+  /**
+   * Get all currently open (playable) ends of the board.
+   * @returns {{end: string, value: number, isDouble: boolean}[]}
+   *   Each entry has the end name ('left'|'right'|'north'|'south'),
+   *   the pip value to match against, and whether it's a double.
+   */
   getOpenEnds() {
     if (this.isEmpty) return [];
     const ends = [];
@@ -39,15 +71,30 @@ class Board {
     return ends;
   }
 
+  /**
+   * Get just the pip values of all open ends.
+   * @returns {number[]}
+   */
   getOpenValues() {
     return this.getOpenEnds().map(e => e.value);
   }
 
-  // Scoring value for an end: doubles count both sides
+  /**
+   * Scoring value for a single end — doubles count both sides.
+   * @param {number}  value    - Pip value at the end.
+   * @param {boolean} isDouble - Whether the end tile is a double.
+   * @returns {number}
+   * @private
+   */
   _endScoreValue(value, isDouble) {
     return isDouble ? value * 2 : value;
   }
 
+  /**
+   * Sum of all open ends (used for scoring checks).
+   * Special case: if only the spinner is on the board, count both sides.
+   * @returns {number}
+   */
   getEndSum() {
     if (this.isEmpty) return 0;
     // Special: if only the spinner is on the board, count both sides
@@ -58,7 +105,10 @@ class Board {
     return ends.reduce((s, e) => s + this._endScoreValue(e.value, e.isDouble), 0);
   }
 
-  // Return breakdown string for display
+  /**
+   * Human-readable breakdown of the end sum, e.g. `"3 + (5+5) + 2"`.
+   * @returns {string}
+   */
   getEndSumBreakdown() {
     if (this.isEmpty) return '';
     if (this.tiles.length === 1 && this.spinner) {
@@ -71,17 +121,32 @@ class Board {
     }).join(' + ');
   }
 
+  /**
+   * Score for the current board state.
+   * @returns {number} The end sum if it's a multiple of 5, otherwise 0.
+   */
   getScore() {
     const sum = this.getEndSum();
     return sum % 5 === 0 ? sum : 0;
   }
 
+  /**
+   * Check whether a tile can be played on any open end.
+   * @param {Tile} tile
+   * @returns {boolean}
+   */
   canPlay(tile) {
     if (this.isEmpty) return true;
     const vals = this.getOpenValues();
     return vals.some(v => tile.has(v));
   }
 
+  /**
+   * Get all valid placements for a tile on the current board.
+   * @param {Tile} tile
+   * @returns {{end: string, matchValue?: number}[]}
+   *   Each placement specifies which end to play on and which pip value matches.
+   */
   getValidPlacements(tile) {
     if (this.isEmpty) return [{ end: 'first' }];
     const ends = this.getOpenEnds();
@@ -99,6 +164,15 @@ class Board {
     return placements;
   }
 
+  /**
+   * Place a tile on the board at the given end.
+   *
+   * Handles first-tile placement, spinner creation, and opening the
+   * spinner's north/south arms once both left and right sides have tiles.
+   *
+   * @param {Tile} tile
+   * @param {{end: string, matchValue?: number}} placement
+   */
   placeTile(tile, placement) {
     this.tiles.push(tile);
 

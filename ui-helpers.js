@@ -1,14 +1,48 @@
-// ============================================================
-// ALL FIVES DOMINOES — UI Helpers
-// ============================================================
+/**
+ * @file ui-helpers.js — UI utilities, theming, and content systems for All Fives Dominoes.
+ *
+ * A grab-bag of presentation-layer helpers:
+ *  - Avatar URLs (DiceBear API)
+ *  - AI trash talk phrase system (generation-based: gen_z, millennial, gen_x, boomer)
+ *  - Random name picker from locale
+ *  - Table themes (green, blue, red, purple, wood) with felt-style CSS vars
+ *  - Tile skins (classic, marble, wood, neon, gold, midnight)
+ *  - Interactive tutorial system (9 steps, fully localized)
+ *  - AI personality definitions (aggressive, defensive, chaotic, calculated, bully)
+ *  - Particle and confetti effects
+ *
+ * @dependency locales.js  (_tUI, getLocale, detectBrowserLang, getLocalePhrase, LOCALES)
+ * @dependency stats.js    (getRecord)
+ */
 
-// --- Avatar helper (DiceBear Adventurer style) ---
+// ---------------------------------------------------------------------------
+// Avatars
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate a DiceBear Adventurer avatar URL for a given seed.
+ * @param {string} seed - Unique seed (e.g. player name).
+ * @returns {string} SVG avatar URL.
+ */
 function avatarURL(seed) {
   return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 }
-// --- Trash talk / celebration phrases (now in locales.js) ---
+// ---------------------------------------------------------------------------
+// Trash Talk / Celebration Phrases
+// ---------------------------------------------------------------------------
+
+/** Available AI generation archetypes for phrase selection. */
 const PHRASE_GENS = ['gen_z', 'millennial', 'gen_x', 'boomer'];
 
+/**
+ * Build a phrase lookup table from locale data.
+ * Organizes phrases by category (opponent, teammate, draw, domino)
+ * and tier (low, mid, high) based on win ratio.
+ *
+ * @param {string} [lang] - Locale code (defaults to 'en').
+ * @returns {Object<string, {low: string[], mid: string[], high: string[]}>}
+ * @private
+ */
 function _buildPhrases(lang) {
   const loc = getLocale(lang || 'en');
   const catMap = { o: 'opponent', t: 'teammate', d: 'draw', w: 'domino' };
@@ -28,6 +62,16 @@ function _buildPhrases(lang) {
 }
 let PHRASES = _buildPhrases(localStorage.getItem('domino_lang') || detectBrowserLang());
 
+/**
+ * Pick a contextual trash-talk or celebration phrase for an AI player.
+ *
+ * Tier is derived from the player's win ratio; generation-specific
+ * phrases are preferred when available.
+ *
+ * @param {Player} player   - The AI player speaking.
+ * @param {string} category - 'opponent'|'teammate'|'draw'|'domino'.
+ * @returns {string} A phrase, or empty string if none available.
+ */
 function getPhrase(player, category) {
   const rec = getRecord(player.name);
   const total = rec.wins + rec.losses;
@@ -50,6 +94,10 @@ function getPhrase(player, category) {
 }
 
 
+/**
+ * Get or create a persistent avatar seed for the human player.
+ * @returns {string}
+ */
 function getHumanAvatarSeed() {
   let seed = localStorage.getItem('domino_human_avatar');
   if (!seed) {
@@ -59,10 +107,20 @@ function getHumanAvatarSeed() {
   return seed;
 }
 
-// Random real names pool — now from locale
+// ---------------------------------------------------------------------------
+// Random Names (from locale)
+// ---------------------------------------------------------------------------
+
+/** @type {string[]} Locale-specific name pool. */
 const REAL_NAMES = (getLocale(localStorage.getItem('domino_lang') || detectBrowserLang())).names;
+/** @type {string[]} Locale-specific city pool. */
 const US_CITIES = (getLocale(localStorage.getItem('domino_lang') || detectBrowserLang())).cities;
 
+/**
+ * Pick random name/city pairs from the current locale.
+ * @param {number} count - How many names to pick.
+ * @returns {{name: string, city: string}[]}
+ */
 function pickRandomNames(count) {
   const lang = localStorage.getItem('domino_lang') || detectBrowserLang();
   const loc = getLocale(lang);
@@ -74,7 +132,14 @@ function pickRandomNames(count) {
   }));
 }
 
-// --- Table Themes ---
+// ---------------------------------------------------------------------------
+// Table Themes
+// ---------------------------------------------------------------------------
+
+/**
+ * Available table felt themes. 'random' picks one at random each game.
+ * @type {{id: string, name: string, felt: string, dark: string}[]}
+ */
 const TABLE_THEMES = [
   { id: 'random', name: 'Random', felt: '', dark: '' },
   { id: 'green', name: 'Classic Green', felt: '#1e7a35', dark: '#0d3a18' },
@@ -83,11 +148,21 @@ const TABLE_THEMES = [
   { id: 'purple', name: 'Royal Purple', felt: '#4a1a6a', dark: '#2a0a3a' },
   { id: 'wood', name: 'Wooden', felt: '#6a4a2a', dark: '#3a2a14' },
 ];
+/** @returns {string} Current table theme ID from localStorage. */
 function getTableTheme() { return localStorage.getItem('domino_table_theme') || 'random'; }
+
+/**
+ * Set and apply a table theme.
+ * @param {string} id - Theme ID.
+ */
 function setTableTheme(id) {
   localStorage.setItem('domino_table_theme', id);
   applyTableTheme();
 }
+/**
+ * Apply the current table theme by setting CSS custom properties
+ * and injecting a body::before gradient override.
+ */
 function applyTableTheme() {
   const id = getTableTheme();
   let t;
@@ -107,7 +182,14 @@ function applyTableTheme() {
 }
 applyTableTheme();
 
-// --- Season Themes ---
+// ---------------------------------------------------------------------------
+// Season Themes
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect a seasonal theme based on the current month.
+ * @returns {'halloween'|'christmas'|'summer'|null}
+ */
 function getSeasonTheme() {
   const month = new Date().getMonth();
   if (month === 9) return 'halloween';
@@ -116,7 +198,20 @@ function getSeasonTheme() {
   return null;
 }
 
-// --- Tutorial System ---
+// ---------------------------------------------------------------------------
+// Tutorial System
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate an inline SVG of a domino tile for tutorial visuals.
+ *
+ * @param {number}  a         - Top half pip count.
+ * @param {number}  b         - Bottom half pip count.
+ * @param {number}  [w=50]    - Width in px.
+ * @param {number}  [h=90]    - Height in px.
+ * @param {boolean} [highlight] - If true, draw a golden highlight border.
+ * @returns {string} SVG markup.
+ */
 function tutTileSVG(a, b, w, h, highlight) {
   const pw = w || 50, ph = h || 90;
   const pipPos = (n, s) => ({0:[],1:[[0,0]],2:[[-s,-s],[s,s]],3:[[-s,-s],[0,0],[s,s]],4:[[-s,-s],[s,-s],[-s,s],[s,s]],5:[[-s,-s],[s,-s],[0,0],[-s,s],[s,s]],6:[[-s,-s],[s,-s],[-s,0],[s,0],[-s,s],[s,s]]}[n]||[]);
@@ -133,6 +228,11 @@ function tutTileSVG(a, b, w, h, highlight) {
 }
 
 
+/**
+ * The 9 interactive tutorial steps. Each step has a localized title,
+ * body text, and a visual callback that returns HTML.
+ * @type {{title: string, body: string, visual: function(): string}[]}
+ */
 const TUTORIAL_STEPS = [
   {
     get title() { return _tUI('tutWelcomeTitle'); },
@@ -191,6 +291,12 @@ const TUTORIAL_STEPS = [
   }
 ];
 
+/**
+ * Show the interactive tutorial overlay. Steps can be navigated
+ * forward/back or skipped entirely.
+ *
+ * @param {Function} [onClose] - Callback when tutorial is dismissed.
+ */
 function showTutorial(onClose) {
   let step = 0;
   const overlay = document.getElementById('tutorial-overlay');
@@ -229,7 +335,16 @@ function showTutorial(onClose) {
   render();
 }
 
-// --- AI Personalities ---
+// ---------------------------------------------------------------------------
+// AI Personalities
+// ---------------------------------------------------------------------------
+
+/**
+ * AI personality definitions. Each personality has strategy tweaks
+ * that modify the AI's scoring heuristics.
+ *
+ * @type {{id: string, name: string, desc: string, icon: string, tweaks: object}[]}
+ */
 const AI_PERSONALITIES = [
   { id: 'aggressive', name: 'aggressive', desc: 'Plays heavy tiles first, targets scoring', icon: '🔥',
     tweaks: { preferHeavy: 3, preferScore: 2, preferBlock: 0 } },
@@ -243,7 +358,16 @@ const AI_PERSONALITIES = [
     tweaks: { preferHeavy: 1, preferScore: 1, preferBlock: 4 } },
 ];
 
-// --- Tile Skins ---
+// ---------------------------------------------------------------------------
+// Tile Skins
+// ---------------------------------------------------------------------------
+
+/**
+ * Visual skin definitions for domino tiles.
+ * Each skin defines face gradient colors, pip color, border, and 3D depth color.
+ *
+ * @type {{id: string, name: string, face: string, faceDark: string, pip: string, border: string, depth: string}[]}
+ */
 const TILE_SKINS = [
   { id: 'classic', name: 'Classic', face: '#fffef8', faceDark: '#e8e0c4', pip: '#333', border: 'rgba(160,150,120,0.6)', depth: '#b0a888' },
   { id: 'marble', name: 'Marble', face: '#f0f0f0', faceDark: '#d0d0d0', pip: '#444', border: 'rgba(180,180,180,0.5)', depth: '#a0a0a0' },
@@ -253,18 +377,38 @@ const TILE_SKINS = [
   { id: 'midnight', name: 'Midnight', face: '#2a2a3e', faceDark: '#1a1a2e', pip: '#f0b840', border: 'rgba(100,100,140,0.4)', depth: '#18182a' },
 ];
 
+/** @returns {string} Current tile skin ID. */
 function getTileSkin() {
   return localStorage.getItem('domino_tile_skin') || 'classic';
 }
+/**
+ * Set the active tile skin.
+ * @param {string} id - Skin ID.
+ */
 function setTileSkin(id) {
   localStorage.setItem('domino_tile_skin', id);
 }
+/**
+ * Get the color palette for the currently selected tile skin.
+ * @returns {{face: string, faceDark: string, pip: string, border: string, depth: string}}
+ */
 function getSkinColors() {
   const id = getTileSkin();
   return TILE_SKINS.find(s => s.id === id) || TILE_SKINS[0];
 }
 
-// --- Particles ---
+// ---------------------------------------------------------------------------
+// Particle / Confetti Effects
+// ---------------------------------------------------------------------------
+
+/**
+ * Spawn decorative particles that fly outward and fade.
+ *
+ * @param {number} x     - Origin X (px).
+ * @param {number} y     - Origin Y (px).
+ * @param {number} count - Number of particles.
+ * @param {string} [type='particle-gold'] - CSS class ('particle-gold' or 'particle-confetti').
+ */
 function spawnParticles(x, y, count, type) {
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
@@ -294,6 +438,9 @@ function spawnParticles(x, y, count, type) {
     setTimeout(() => p.remove(), 1500);
   }
 }
+/**
+ * Spawn a full-screen confetti burst (60 particles staggered over ~3 s).
+ */
 function spawnConfetti() {
   for (let i = 0; i < 60; i++) {
     setTimeout(() => {

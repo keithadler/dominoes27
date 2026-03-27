@@ -1,6 +1,28 @@
-// ============================================================
-// ALL FIVES DOMINOES — Game Controller
-// ============================================================
+/**
+ * @file game.js — Main game controller for All Fives Dominoes.
+ *
+ * This is the central orchestrator (~3 800 lines). It wires together every
+ * other module and owns the full game lifecycle:
+ *
+ *  - UI initialization (menus, modals, settings, lobby)
+ *  - Game flow (new game, round start/end, win detection)
+ *  - Turn management (human input, AI turns, draw/pass logic)
+ *  - Board rendering and animation (delegates to {@link Renderer})
+ *  - Save / load game state (localStorage)
+ *  - Team mode, speed settings, theme/skin switching
+ *  - Hint system (delegates to {@link AI#bestMove})
+ *  - Achievement and stat tracking (delegates to stats.js)
+ *
+ * @dependency tile.js       ({@link Tile}, createSet, shuffle)
+ * @dependency board.js      ({@link Board})
+ * @dependency player.js     ({@link Player})
+ * @dependency ai.js         ({@link AI})
+ * @dependency renderer.js   ({@link Renderer})
+ * @dependency audio.js      ({@link SFX}, {@link MusicEngine})
+ * @dependency stats.js      (records, achievements, XP)
+ * @dependency ui-helpers.js (themes, skins, tutorial, phrases, particles)
+ * @dependency locales.js    (i18n: _t, _tUI, getLocale, detectBrowserLang)
+ */
 
 class Game {
   constructor() {
