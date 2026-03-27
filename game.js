@@ -1675,7 +1675,8 @@ class Game {
           turn: this._logTurn++,
           player: player.name,
           avatar: player.avatar,
-          action: 'draw'
+          action: 'draw',
+          _openValues: this.board.getOpenValues() // AI draw tracking
         });
         if (this.sfx) this.sfx.draw();
         this._animateBoneyardDraw(player);
@@ -1703,7 +1704,14 @@ class Game {
       }
     }
 
-    const play = player.ai.choosePlay(player.hand, this.board, player.personality);
+    const play = player.ai.choosePlay(player.hand, this.board, player.personality, {
+      players: this.players,
+      playerIndex: player.index,
+      targetScore: this.targetScore,
+      teamMode: this.teamMode,
+      teams: this.teams,
+      gameLog: this.gameLog
+    });
     if (!play) {
       this._hideThinking();
       this._nextTurn();
@@ -1805,7 +1813,8 @@ class Game {
       turn: this._logTurn++,
       player: player.name,
       avatar: player.avatar,
-      action: 'draw'
+      action: 'draw',
+      _openValues: this.board.getOpenValues() // AI draw tracking
     });
     if (this.sfx) this.sfx.draw();
     this._haptic(10);
