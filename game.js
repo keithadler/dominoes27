@@ -3622,12 +3622,13 @@ class Game {
       for (let b = a; b <= 6; b++) {
         const key = `${a}-${b}`;
         const isPlayed = played.has(key);
+        if (isPlayed) continue; // Only show unplayed tiles
         const el = document.createElement('div');
-        el.className = 'tracker-tile ' + (isPlayed ? 'played' : 'unplayed');
+        el.className = 'tracker-tile unplayed';
         const tw = 40, th = 72;
-        el.style.background = isPlayed ? 'rgba(232,167,53,0.15)' : `linear-gradient(160deg, ${skin.face}, ${skin.faceDark})`;
-        el.style.border = isPlayed ? '1.5px solid rgba(232,167,53,0.3)' : `1.5px solid ${skin.border}`;
-        el.innerHTML = `<svg width="${tw}" height="${th}" viewBox="0 0 ${tw} ${th}" style="opacity:${isPlayed ? '0.3' : '1'}">
+        el.style.background = `linear-gradient(160deg, ${skin.face}, ${skin.faceDark})`;
+        el.style.border = `1.5px solid ${skin.border}`;
+        el.innerHTML = `<svg width="${tw}" height="${th}" viewBox="0 0 ${tw} ${th}">
           <line x1="${tw*0.2}" y1="${th/2}" x2="${tw*0.8}" y2="${th/2}" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
           ${halfSVG(a, th*0.25, tw)}
           ${halfSVG(b, th*0.75, tw)}
