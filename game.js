@@ -92,24 +92,43 @@ class Game {
     this._initUI();
   }
 
+  /**
+   * Scale a millisecond duration by the current game speed setting.
+   * @param {number} ms - Base duration in milliseconds.
+   * @returns {number} Scaled duration.
+   */
   _speedMs(ms) {
     const mult = { fast: 0.4, normal: 1, slow: 1.6 };
     return Math.round(ms * (mult[this._gameSpeed] || 1));
   }
 
+  /**
+   * Trigger a short haptic vibration (mobile devices only).
+   * @param {number} [ms=15] - Vibration duration in milliseconds.
+   */
   _haptic(ms) {
     try { if (navigator.vibrate) navigator.vibrate(ms || 15); } catch(e) {}
   }
 
+  /**
+   * Get the current locale code from localStorage or browser detection.
+   * @returns {string} Locale code (e.g. 'en', 'es', 'ar', 'zh').
+   */
   _getLang() {
     return localStorage.getItem('domino_lang') || detectBrowserLang();
   }
 
+  /**
+   * Translate a UI key using the current locale, falling back to English.
+   * @param {string} key - Locale key from the `ui` object.
+   * @returns {string} Translated string.
+   */
   _t(key) {
     const loc = getLocale(this._getLang());
     return (loc.ui && loc.ui[key]) || (LOCALES.en.ui && LOCALES.en.ui[key]) || key;
   }
 
+  /** Apply all locale translations to the DOM (menu labels, buttons, overlays, etc.). */
   _applyLocale() {
     const lang = this._getLang();
     const u = getLocale(lang).ui || LOCALES.en.ui;
@@ -312,6 +331,11 @@ class Game {
     });
   }
 
+  /**
+   * Get a formatted head-to-head record string against a named opponent.
+   * @param {string} name - Opponent name.
+   * @returns {string} e.g. '3W-1L' or '' if no record.
+   */
   _getHeadToHead(name) {
     const s = getGameStats();
     const h2h = s.headToHead || {};
@@ -320,6 +344,11 @@ class Game {
     return `${rec.w || 0}W-${rec.l || 0}L`;
   }
 
+  /**
+   * Record a head-to-head result against a named opponent.
+   * @param {string}  name - Opponent name.
+   * @param {boolean} won  - Whether the human player won.
+   */
   _trackHeadToHead(name, won) {
     const s = getGameStats();
     if (!s.headToHead) s.headToHead = {};
@@ -413,6 +442,7 @@ class Game {
     } catch(e) { localStorage.removeItem('domino_saved_game'); return false; }
   }
 
+  /** Remove the saved game from localStorage. */
   _clearSavedGame() {
     localStorage.removeItem('domino_saved_game');
   }
@@ -432,6 +462,7 @@ class Game {
     this._doTurn();
   }
 
+  /** Copy the full game log as formatted text to the clipboard. */
   _exportGameLog() {
     if (!this.gameLog || this.gameLog.length === 0) return;
     let text = '🁣 ALL FIVES DOMINOES — Game Log\n';
@@ -878,6 +909,7 @@ class Game {
     });
   }
 
+  /** Handle menu option changes: toggle opponent count visibility, update speed, show/hide custom score input. */
   _onMenuChange() {
     const mode = this._getOption('game-mode');
     const oppGroup = document.getElementById('opponents-group');
@@ -901,6 +933,7 @@ class Game {
     this._updateRoster();
   }
 
+  /** Render the player roster preview on the menu screen with avatars, records, and re-roll buttons. */
   _updateRoster() {
     const roster = document.getElementById('player-roster');
     if (!roster) return;
@@ -992,6 +1025,11 @@ class Game {
   }
 
 
+  /**
+   * Get the currently selected value from a button group.
+   * @param {string} groupId - DOM id of the button group container.
+   * @returns {string|null} The `data-value` of the active button, or null.
+   */
   _getOption(groupId) {
     const el = document.getElementById(groupId);
     if (!el) return null;
@@ -1467,6 +1505,7 @@ class Game {
     }, this._speedMs(3000));
   }
 
+  /** Show a "3-2-1" countdown overlay before the first round begins. */
   _showCountdown(callback) {
     const overlay = document.getElementById('countdown-overlay');
     if (!overlay) { callback(); return; }
@@ -1496,6 +1535,7 @@ class Game {
     next();
   }
 
+  /** Start a requestAnimationFrame loop that re-renders the board for the pulsing spinner highlight. */
   _startSpinnerLoop() {
     if (this._spinnerRAF) cancelAnimationFrame(this._spinnerRAF);
     const loop = () => {
@@ -1515,6 +1555,11 @@ class Game {
     this._spinnerRAF = requestAnimationFrame(loop);
   }
 
+  /**
+   * Find the player holding the highest double to go first.
+   * Sets `this.forcedFirstTile` to the tile that must be played.
+   * @returns {number} Player index, or -1 if no doubles exist (triggers redeal).
+   */
   _findFirstPlayer() {
     // Player with highest double goes first and MUST play it
     for (let d = 6; d >= 0; d--) {
@@ -1627,6 +1672,7 @@ class Game {
     }
   }
 
+  /** Show a centered thinking overlay with the AI player's avatar and name. */
   _showThinking(player) {
     const el = document.getElementById('thinking-overlay');
     if (!el) return;
@@ -1670,6 +1716,7 @@ class Game {
       }
     }
   }
+  /** Spawn gold particles around the active player's avatar panel. */
   _spawnAvatarParticles(player) {
     const pos = this._getPlayerPosition(player.index);
     const panelId = pos === 'bottom' ? null : 'opponent-' + pos;
@@ -1681,6 +1728,7 @@ class Game {
     spawnParticles(r.left + r.width / 2, r.top + r.height / 2, 8, 'particle-gold');
   }
 
+  /** Hide the AI thinking overlay. */
   _hideThinking() {
     const el = document.getElementById('thinking-overlay');
     if (el) el.classList.add('hidden');
@@ -1870,6 +1918,7 @@ class Game {
     }, this._speedMs(400));
   }
 
+  /** Human passes their turn (only when no playable tiles and boneyard is empty). */
   pass() {
     const player = this.players[this.currentPlayer];
     if (!player.isHuman) return;
@@ -1882,6 +1931,7 @@ class Game {
     this._nextTurn();
   }
 
+  /** Handle click on a hand tile: select it and show valid placement ends on the board. */
   _onTileClick(tile, el) {
     const player = this.players[this.currentPlayer];
     if (!player.isHuman || this._playLock) return;
@@ -1903,6 +1953,7 @@ class Game {
     }
   }
 
+  /** Handle hover on a hand tile: preview valid placement ends on the board. */
   _onTileHover(tile) {
     if (this.currentPlayer !== 0 || this._playLock) return;
     if (!this.board.canPlay(tile)) return;
@@ -1919,17 +1970,20 @@ class Game {
     if (idx >= 0 && handTiles[idx]) handTiles[idx].classList.add('hover-active');
   }
 
+  /** Handle mouse leave on a hand tile (no-op — keeps last hover visible). */
   _onTileLeave() {
     // Don't clear — keep showing the last hovered tile's placements
     // They'll be replaced when hovering another tile or cleared on click/turn change
   }
 
+  /** Store pending placements and trigger a board re-render with highlighted ends. */
   _showEndChoices(tile, placements) {
     // Highlight available ends on the board
     this._pendingPlacements = placements;
     this._renderBoard(placements);
   }
 
+  /** Handle click on the board canvas: resolve which end was clicked and execute the play. */
   _onBoardClick(e) {
     const activeTile = this.selectedTile || this._hoverTile;
     const activePlacements = this._pendingPlacements || this._hoverPlacements;
@@ -1972,6 +2026,7 @@ class Game {
     }
   }
 
+  /** Begin a drag operation from a hand tile, tracking mouse/touch movement until drop. */
   _onDragStart(tile, el, startX, startY) {
     if (this._playLock || !this.board.canPlay(tile)) return;
     const placements = this.board.getValidPlacements(tile);
@@ -2073,6 +2128,11 @@ class Game {
     document.addEventListener('touchcancel', touchEnd);
   }
 
+  /**
+   * Get the screen position of a board end for drag-drop hit testing.
+   * @param {string} end - 'left'|'right'|'north'|'south'.
+   * @returns {{x: number, y: number}|null}
+   */
   _getEndPosition(end) {
     if (this.placements.length === 0) return null;
     const cx = this.renderer.canvas.width / 2;
@@ -2215,6 +2275,7 @@ class Game {
     }, delay);
   }
 
+  /** Compute visual placement data (x, y, orientation) for a tile and add it to the placements array. */
   _addVisualPlacement(tile, placement) {
     const tw = this.renderer.tileW;
     const th = this.renderer.tileH;
@@ -2296,6 +2357,7 @@ class Game {
     }
   }
 
+  /** Animate the last-placed tile flying in from the player's position to the board. */
   _animateFlyIn() {
     this._flyingIn = true;
     const duration = 700;
@@ -2314,6 +2376,11 @@ class Game {
     requestAnimationFrame(animate);
   }
 
+  /**
+   * Map a player index to their screen position.
+   * @param {number} playerIndex
+   * @returns {'bottom'|'top'|'left'|'right'}
+   */
   _getPlayerPosition(playerIndex) {
       if (playerIndex === 0) return 'bottom';
       const opponents = this.players.filter(p => p.index !== 0);
@@ -2337,6 +2404,7 @@ class Game {
       return oppIdx >= 0 ? posMap[oppIdx % posMap.length] : 'top';
     }
 
+  /** Animate a tile flying from the boneyard area to the player's hand. */
   _animateBoneyardDraw(player) {
     const boneArea = document.getElementById('boneyard-area');
     if (!boneArea) return;
@@ -2393,6 +2461,7 @@ class Game {
     setTimeout(() => flyTile.remove(), 600);
   }
 
+  /** Advance to the next player's turn, auto-passing stuck players and detecting blocked games. */
   _nextTurn() {
     // Clear any lingering highlights and suppress flag
     this.selectedTile = null;
@@ -2548,6 +2617,7 @@ class Game {
     setTimeout(showCounting, this._speedMs(2500));
   }
 
+  /** Handle a blocked round (no player can move): find lowest-pip player and award bonus. */
   _endRoundBlocked() {
     this.roundOver = true;
 
@@ -2612,6 +2682,7 @@ class Game {
     });
   }
 
+  /** Show the bone-counting ceremony overlay: animate each loser's tiles flipping, then show bonus. */
   _showBoneCounting(title, countPlayers, bonusCalc, callback) {
     const overlay = document.getElementById('count-overlay');
     overlay.classList.remove('hidden');
@@ -2941,6 +3012,7 @@ class Game {
     }
   }
 
+  /** Show a floating score popup with the player's name and points earned. */
   _showScorePopup(score, player) {
     const popup = document.createElement('div');
     popup.className = 'score-popup';
@@ -2988,6 +3060,7 @@ class Game {
     }
   }
 
+  /** Show a combo counter popup when the human scores multiple turns in a row. */
   _showComboPopup(count) {
     const popup = document.createElement('div');
     popup.className = 'combo-popup';
@@ -2996,6 +3069,7 @@ class Game {
     setTimeout(() => popup.remove(), 900);
   }
 
+  /** Show a speech bubble near an AI player's avatar with the given text. */
   _showSpeechBubble(player, text) {
     const pos = this._getPlayerPosition(player.index);
     let targetEl;
@@ -3032,12 +3106,14 @@ class Game {
     setTimeout(() => bubble.remove(), 2800);
   }
 
+  /** Show a modal message overlay with an OK button. */
   showMessage(text, callback) {
     document.getElementById('message-text').innerHTML = text.replace(/\n/g, '<br>');
     document.getElementById('message-overlay').classList.remove('hidden');
     this._messageCallback = callback;
   }
 
+  /** Show a brief auto-play banner (e.g. "Auto-playing only move"). */
   _showAutoPlayBanner(text) {
     const existing = document.querySelector('.auto-play-banner');
     if (existing) existing.remove();
@@ -3049,6 +3125,7 @@ class Game {
     setTimeout(() => banner.remove(), 2000);
   }
 
+  /** Hide the message overlay and invoke the stored callback. */
   hideMessage() {
     document.getElementById('message-overlay').classList.add('hidden');
     if (this._messageCallback) {
@@ -3219,6 +3296,7 @@ class Game {
     this._updateFloatingArrow();
   }
 
+  /** Update the floating arrow that points to the current player's position. */
   _updateFloatingArrow() {
     const arrow = document.getElementById('floating-arrow');
     if (!arrow || !this.players || this.players.length === 0) return;
@@ -3303,6 +3381,7 @@ class Game {
     }
   }
 
+  /** Render the human player's hand tiles as interactive DOM elements. */
   _renderHand() {
       const container = document.getElementById('player-hand');
       container.innerHTML = '';
@@ -3394,6 +3473,7 @@ class Game {
       this._renderBoneyard();
     }
 
+  /** Render all AI opponent panels (avatars, face-down tiles, thinking indicators). */
   _renderOpponentHands() {
     const opponents = this.players.filter(p => p.index !== 0);
     const positions = ['top', 'left', 'right'];
@@ -3508,6 +3588,7 @@ class Game {
     }
   }
 
+  /** Render the boneyard tile count and visual tile backs. */
   _renderBoneyard() {
     const tilesEl = document.getElementById('boneyard-tiles');
     const labelEl = document.getElementById('boneyard-count');
@@ -3544,6 +3625,7 @@ class Game {
       tilesEl.appendChild(t);
     }
   }
+  /** Render the stats and achievements overlay content. */
   _renderStats() {
     const container = document.getElementById('stats-content');
     if (!container) return;
@@ -3637,6 +3719,7 @@ class Game {
       });
     }
   }
+  /** Render the preferences overlay (theme, skin, sound, music, trash talk, colorblind toggles). */
   _renderPrefs() {
       const container = document.getElementById('prefs-content');
       if (!container) return;
@@ -3874,6 +3957,7 @@ class Game {
       }
     }
 
+  /** Update the XP progress bar below the player's hand. */
   _updateXPBar() {
     const wrap = document.getElementById('xp-bar-wrap');
     if (!wrap) return;
@@ -3885,7 +3969,7 @@ class Game {
   }
 
 
-  // --- Tile Tracker ---
+  /** Render the tile tracker grid showing which tiles have been played, are in hand, or are unknown. */
   _renderTracker() {
     const grid = document.getElementById('tracker-grid');
     if (!grid) return;
@@ -3920,7 +4004,10 @@ class Game {
     }
   }
 
-  // --- Post-Game Analysis ---
+  /**
+   * Compute post-game analysis stats for the human player.
+   * @returns {{plays: number, draws: number, totalScored: number, bestPlay: number, avgScore: string, scoringPlays: number}}
+   */
   _getAnalysis() {
     if (!this.gameLog) return {};
     const pName = this.players[0] ? this.players[0].name : _tUI('playerName');
@@ -3932,6 +4019,7 @@ class Game {
     const avgScore = myPlays.length > 0 ? Math.round(totalScored / myPlays.length * 10) / 10 : 0;
     return { plays: myPlays.length, draws: myDraws.length, totalScored, bestPlay, avgScore, scoringPlays: myScores.length };
   }
+  /** Render the game log overlay with all play, draw, pass, and round-end entries. */
   _renderLog() {
     const container = document.getElementById('log-entries');
     if (!container) return;
@@ -4030,6 +4118,7 @@ class Game {
     container.scrollTop = 0;
   }
 
+  /** Render the board on canvas, optionally highlighting valid placement ends. */
   _renderBoard(highlightEnds, animProgress, flyFrom) {
     if (!this.renderer) return;
     this.renderer.renderFromPlacements(this.placements, this.placements.length - 1, animProgress, flyFrom);
