@@ -20,12 +20,12 @@
 // ---------------------------------------------------------------------------
 
 /**
- * Generate a DiceBear Adventurer avatar URL for a given seed.
+ * Generate a DiceBear Personas avatar URL for a given seed.
  * @param {string} seed - Unique seed (e.g. player name).
  * @returns {string} SVG avatar URL.
  */
 function avatarURL(seed) {
-  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+  return `https://api.dicebear.com/9.x/open-peeps/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 }
 // ---------------------------------------------------------------------------
 // Trash Talk / Celebration Phrases
