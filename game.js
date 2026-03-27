@@ -1250,33 +1250,82 @@ class Game {
       // Cinematic intro: brief pause on empty table, then fade in avatars
       const introDelay = 400;
 
-      // Show avatar intro overlay
+      // Build contextual speech bubbles based on game state
+      const roundNum = (this._roundNum || 0) + 1;
+      const introPhrases = this._buildIntroComments(roundNum);
+
+      // Show avatar intro overlay — 2x2 grid layout
       const introEl = document.createElement('div');
       introEl.id = 'round-intro';
-      introEl.style.cssText = 'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:20px;pointer-events:none;flex-wrap:wrap;padding:20px;';
-      const isSmallScreen = window.innerWidth < 500;
-      const avatarSize = isSmallScreen ? 64 : 120;
-      const nameSize = isSmallScreen ? '0.8rem' : '1.2rem';
-      for (const p of this.players) {
-        const av = document.createElement('div');
-        av.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;transform:scale(0.5) translateY(30px);transition:all 0.6s cubic-bezier(0.34,1.56,0.64,1);';
-        av.innerHTML = `<img src="${p.avatar}" style="width:${avatarSize}px;height:${avatarSize}px;border-radius:50%;border:3px solid rgba(232,167,53,0.6);box-shadow:0 6px 24px rgba(0,0,0,0.6),0 0 20px rgba(232,167,53,0.2);">
-          <span style="font-weight:900;font-size:${nameSize};color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.7);letter-spacing:1px;">${escHTML(p.name)}</span>`;
-        introEl.appendChild(av);
+      introEl.style.cssText = 'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;pointer-events:none;padding:20px;';
+
+      const isSmall = window.innerWidth < 500;
+      const avatarSize = isSmall ? 56 : 90;
+      const grid = document.createElement('div');
+      grid.style.cssText = `display:grid;grid-template-columns:1fr 1fr;gap:${isSmall ? '12px' : '24px'};max-width:${isSmall ? '340px' : '560px'};width:100%;`;
+
+      for (let i = 0; i < this.players.length; i++) {
+        const p = this.players[i];
+        const c = p.color || { h: 0, s: 50, l: 50 };
+        const isHuman = p.isHuman;
+        const phrase = introPhrases[i] || '';
+        const rec = getRecord(p.name);
+        const rankText = getRank(p.name);
+        const teamBadge = this.teamMode ? (p.team === 0 ? '🤝' : '⚔️') : '';
+        const score = this.teamMode && this.teams ? this.teams[p.team].score : p.score;
+
+        const card = document.createElement('div');
+        card.style.cssText = `
+          display:flex;flex-direction:column;align-items:center;gap:${isSmall ? '4px' : '8px'};
+          padding:${isSmall ? '10px 8px' : '16px 14px'};border-radius:16px;
+          background:linear-gradient(145deg,hsla(${c.h},${c.s}%,${c.l}%,0.15),hsla(${c.h},${c.s}%,${Math.max(c.l-20,5)}%,0.25));
+          border:2px solid hsla(${c.h},${c.s}%,${c.l+15}%,${isHuman ? '0.5' : '0.25'});
+          opacity:0;transform:scale(0.7) translateY(20px);
+          transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+          position:relative;overflow:visible;
+        `;
+
+        card.innerHTML = `
+          <img src="${p.avatar}" style="width:${avatarSize}px;height:${avatarSize}px;border-radius:50%;border:3px solid hsla(${c.h},${c.s}%,${c.l+20}%,0.6);box-shadow:0 4px 16px rgba(0,0,0,0.5);">
+          <div style="text-align:center;">
+            <div style="font-weight:900;font-size:${isSmall ? '0.85rem' : '1.1rem'};color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.6);">${teamBadge} ${escHTML(p.name)}</div>
+            <div style="font-size:${isSmall ? '0.55rem' : '0.7rem'};opacity:0.5;margin-top:2px;">${escHTML(rankText)} · ${rec.wins}W ${rec.losses}L${score > 0 ? ' · ' + score + ' pts' : ''}</div>
+          </div>
+          ${phrase ? `<div class="intro-bubble" style="
+            font-size:${isSmall ? '0.65rem' : '0.8rem'};font-weight:600;color:#fff;
+            background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);
+            padding:${isSmall ? '4px 8px' : '6px 12px'};border-radius:10px;
+            max-width:${isSmall ? '140px' : '200px'};text-align:center;line-height:1.3;
+            opacity:0;transform:translateY(8px);
+            transition:all 0.4s ease-out 0.3s;
+          ">${phrase}</div>` : ''}
+        `;
+
+        grid.appendChild(card);
       }
+
+      introEl.appendChild(grid);
       document.body.appendChild(introEl);
 
-      // Stagger avatar fade-ins
-      const avatarEls = introEl.children;
-      for (let i = 0; i < avatarEls.length; i++) {
+      // Stagger card fade-ins
+      const cards = grid.children;
+      for (let i = 0; i < cards.length; i++) {
         setTimeout(() => {
-          avatarEls[i].style.opacity = '1';
-          avatarEls[i].style.transform = 'scale(1) translateY(0)';
-        }, introDelay + i * 150);
+          cards[i].style.opacity = '1';
+          cards[i].style.transform = 'scale(1) translateY(0)';
+          // Fade in speech bubble after card appears
+          const bubble = cards[i].querySelector('.intro-bubble');
+          if (bubble) {
+            setTimeout(() => {
+              bubble.style.opacity = '1';
+              bubble.style.transform = 'translateY(0)';
+            }, 200);
+          }
+        }, introDelay + i * 200);
       }
 
       // After avatars shown, start deal and fade out intro
-      const dealDelay = introDelay + avatarEls.length * 150 + 600;
+      const dealDelay = introDelay + cards.length * 200 + 1200;
       setTimeout(() => {
         // Fade out avatar intro
         introEl.style.transition = 'opacity 0.4s ease';
@@ -1567,6 +1616,71 @@ class Game {
     // No doubles at all — redeal
     this.forcedFirstTile = null;
     return -1;
+  }
+
+  /**
+   * Build contextual speech comments for the round intro overlay.
+   * Each player gets a short quip based on scores, round number, and game state.
+   * @param {number} roundNum - The upcoming round number.
+   * @returns {string[]} One comment per player (may be empty string).
+   */
+  _buildIntroComments(roundNum) {
+    const comments = [];
+    const maxScore = Math.max(...this.players.map(p => this.teamMode && this.teams ? this.teams[p.team].score : p.score));
+    const target = this.targetScore;
+
+    for (const p of this.players) {
+      const score = this.teamMode && this.teams ? this.teams[p.team].score : p.score;
+      const isLeading = score === maxScore && score > 0;
+      const isTrailing = score < maxScore && maxScore > 0;
+      const gap = maxScore - score;
+      const closeToWin = score >= target * 0.75 && score > 0;
+
+      let comment = '';
+
+      if (roundNum === 1) {
+        // First round — intro comments
+        if (p.isHuman) {
+          comment = ['Let\'s go! 🎯', 'Ready to dominate 🦴', 'My table. 😎', 'Feeling lucky 🍀'][Math.floor(Math.random() * 4)];
+        } else {
+          const openers = ['Bring it on 💪', 'Don\'t blink 👀', 'I came to win 🏆', 'Easy game 😏', 'Let\'s see what you got', 'No mercy today 🔥', 'Watch and learn 🧠'];
+          comment = openers[Math.floor(Math.random() * openers.length)];
+        }
+      } else if (closeToWin && isLeading) {
+        // About to win
+        if (p.isHuman) {
+          comment = ['Almost there! 🏁', 'One more round... 🤞', 'Victory is close 👑'][Math.floor(Math.random() * 3)];
+        } else {
+          comment = ['GG incoming 😎', 'Can you feel it? 💀', 'Too easy 🥱', 'Wrapping this up 🎁'][Math.floor(Math.random() * 4)];
+        }
+      } else if (isTrailing && gap > 50) {
+        // Far behind
+        if (p.isHuman) {
+          comment = ['Comeback time 🔄', 'Not over yet! 💪', 'I\'ve seen worse 😤'][Math.floor(Math.random() * 3)];
+        } else {
+          comment = ['I\'m not worried 😤', 'Still in this 💪', 'Watch me rally 🔥', 'Lucky streak incoming'][Math.floor(Math.random() * 4)];
+        }
+      } else if (isLeading && score > 0) {
+        // Leading
+        if (p.isHuman) {
+          comment = ['Keep it up! 📈', 'Feeling good 😊', 'Stay focused 🎯'][Math.floor(Math.random() * 3)];
+        } else {
+          comment = ['Catch me if you can 🏃', 'I like this lead 😏', 'Pressure\'s on you 👀'][Math.floor(Math.random() * 3)];
+        }
+      } else if (roundNum > 1) {
+        // Mid-game, no strong position
+        if (p.isHuman) {
+          comment = ['Let\'s go 🎲', 'New round, new chance', 'Focus up 🧠'][Math.floor(Math.random() * 3)];
+        } else {
+          // Use the existing phrase system for AI
+          const phrase = getPhrase(p, 'opponent');
+          comment = phrase || ['Here we go 🎲', 'My turn to shine ✨', 'Ready 💪'][Math.floor(Math.random() * 3)];
+        }
+      }
+
+      comments.push(comment);
+    }
+    return comments;
   }
 
   /** Main turn dispatcher: checks for round/game end, then routes to AI or human play. */
